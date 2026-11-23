@@ -61,9 +61,11 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 ## Lihat
 
 Untuk yang mau Compile dari source pastiin kalian di branch main dan Pull dari sini
+
 trs coba ururtan ini
 
 <b>php artisan fresh:migrate</b>
+
 <b>composer run dev</b>
 
 
