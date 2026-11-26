@@ -53,6 +53,7 @@ Route::middleware(['auth', 'role:petugas'])
     ->name('petugas.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.petugas')->name('dashboard');
+        Route::get('/opnams', [OpnamController::class, 'indexMine'])->name('opnams.index');
         Route::get('/opnams/create', [OpnamController::class, 'create'])->name('opnams.create');
         Route::post('/opnams/create', [OpnamController::class, 'storeStep'])->name('opnams.store-step');
     });

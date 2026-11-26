@@ -68,6 +68,7 @@
         .pagination a, .pagination span { padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 5px; }
         .pagination .current { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
         .dropzone { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 34px; text-align: center; color: #64748b; }
+        .dropzone.dragover { background: #eff6ff; border-color: #1d4ed8; color: #1d4ed8; }
     </style>
     @stack('styles')
 </head>
@@ -83,7 +84,7 @@
         'Dashboard' => route('petugas.dashboard'),
         'Data Kapal' => null,
         'Buat Opname' => route('petugas.opnams.create'),
-        'Opname Saya' => null,
+        'Opname Saya' => route('petugas.opnams.index'),
         'Status Pengajuan' => null,
         'Riwayat Aktivitas' => null,
         'Profil' => null,
@@ -122,7 +123,7 @@
             <p class="nav-label">Menu {{ $roleLabel }}</p>
             @foreach ($menu as $label => $url)
                 @if ($url)
-                    <a href="{{ $url }}" class="{{ request()->routeIs($label === 'Data Opname' ? 'admin.opnams.*' : ($label === 'Buat Opname' ? 'petugas.opnams.*' : 'none')) ? 'active' : '' }}">{{ $label }}</a>
+                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
                 @else
                     <span class="item">{{ $label }}</span>
                 @endif

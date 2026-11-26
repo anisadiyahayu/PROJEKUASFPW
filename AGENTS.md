@@ -3,7 +3,7 @@
 ## Baca dulu
 - `SKILL.md` — ERD revisi (17 tabel, 24 relasi): kolom, enum, FK/UK, snapshot, soft delete. Sumber kebenaran skema; ERD mengalahkan dokumen lain.
 - `prd.md` — use case, BR-01..BR-27, checklist kepemilikan Bagian 10. `taskinstruction.md` — pembagian tugas & aturan kerja; Bagian 8 = format pertanyaan konfirmasi.
-- `prompt.md` (log prompt + timestamp WIB) dan `tasklist.md` (progres pribadi). `UI_Project_FPW.pdf` bukan acuan; screenshot Figma di `docs/` dipakai untuk tampilan halaman Regina (keputusan 2026-11-25). Field di luar ERD tetap dilarang, **kecuali** `SHIPS.jenis_kapal`, `OPNAMS.lokasi`, `OPNAMS.adjustment_amount`, dan `OPNAM_ITEMS.faktor` yang ditambahkan atas permintaan 2026-11-25 — penyimpangan ERD yang masih perlu konfirmasi tim.
+- `prompt.md` (log prompt + timestamp WIB) dan `tasklist.md` (progres pribadi). `UI_Project_FPW.pdf` bukan acuan; screenshot Figma di `docs/` dipakai untuk tampilan halaman Regina (keputusan 2026-11-25). Field di luar ERD tetap dilarang, **kecuali** `SHIPS.jenis_kapal`, `OPNAMS.lokasi`, `OPNAMS.adjustment_amount`, `OPNAM_ITEMS.faktor`, `OPNAM_ITEMS.ketebalan`, `OPNAM_ITEMS.kompleksitas`, dan `OPNAM_ITEMS.catatan_tambahan` yang ditambahkan atas permintaan 2026-11-25/26 — penyimpangan ERD yang masih perlu konfirmasi tim. Jangan menulis ke tabel master Anisa/Rifqy dari modul opnam; cukup baca.
 
 ## Aturan kerja tim
 - Selalu pastikan siapa peminta. Kerjakan hanya item dengan `Pemilik` = peminta di `prd.md` Bagian 10.

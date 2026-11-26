@@ -101,21 +101,30 @@
                     <div class="card">
                         <h3 style="margin:0 0 4px;">04 &nbsp; Upload Bukti Pekerjaan</h3>
                         <p style="color:#64748b; font-size:12px; margin:0 0 16px;">Unggah foto kondisi kapal untuk mendukung hasil inspeksi.</p>
-                        <label class="dropzone" for="bukti">
-                            <div style="font-size:26px;">↑</div>
-                            <strong>Klik untuk mengunggah atau tarik file ke sini</strong><br>
-                            <small>JPG, PNG, atau PDF • Maksimal 10 MB per file</small>
-                            <input type="file" id="bukti" name="bukti[]" multiple accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
-                        </label>
-                        @if (! empty($draft['uploads']))
-                            <p style="margin-top:12px; color:#475569;">{{ count($draft['uploads']) }} file sudah diunggah:</p>
-                            <ul>
-                                @foreach ($draft['uploads'] as $upload)
-                                    <li>{{ $upload['original_name'] }} ({{ number_format($upload['file_size'] / 1024, 0) }} KB)</li>
-                                @endforeach
-                            </ul>
-                        @endif
-                        <div class="info">Unggah bersifat opsional.</div>
+                        @forelse ($draft['items'] ?? [] as $item)
+                            @php $uid = $item['uid'] ?? null; @endphp
+                            @if ($uid)
+                                <div class="card" style="background:#fff; margin-bottom:12px;">
+                                    <strong>{{ $loop->iteration }}. {{ $item['work_type_name'] ?? 'Item Pekerjaan' }}</strong>
+                                    <label class="dropzone" for="bukti-{{ $loop->iteration }}" style="margin-top:10px; padding:24px;">
+                                        <div style="font-size:22px;">↑</div>
+                                        <strong>Klik untuk mengunggah atau tarik file ke sini</strong><br>
+                                        <small>JPG, PNG, atau PDF • Maksimal 10 MB per file</small>
+                                        <input type="file" id="bukti-{{ $loop->iteration }}" name="bukti[{{ $uid }}][]" multiple accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
+                                    </label>
+                                    <div class="selected-files" style="margin-top:8px; color:#475569; font-size:12px;"></div>
+                                    @if (! empty($draft['uploads'][$uid]))
+                                        <ul style="margin-top:10px; color:#475569;">
+                                            @foreach ($draft['uploads'][$uid] as $upload)
+                                                <li>{{ $upload['original_name'] }} ({{ number_format($upload['file_size'] / 1024, 0) }} KB)</li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                </div>
+                            @endif
+                        @empty
+                            <p style="color:#94a3b8;">Belum ada item pekerjaan.</p>
+                        @endforelse
                     </div>
                 @else
                     <div class="card">
@@ -191,7 +200,6 @@
         const units = @json($unitJson);
         const tariffs = @json($tariffJson);
         const draftItems = @json($draft['items'] ?? []);
-        const defaultLokasi = @json($draft['lokasi'] ?? '');
 
         const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
@@ -213,22 +221,50 @@
 
         const container = document.getElementById('items');
         if (container) {
+            function updateItemTariffRow(row) {
+                const material = row.querySelector('.material').value;
+                const unit = row.querySelector('.unit').value;
+                const volume = Number(row.querySelector('.volume').value || 0);
+                const kompleksitas = row.querySelector('.kompleksitas:checked')?.value || 'low';
+                const faktor = ({low: 1, medium: 1.10, high: 1.25})[kompleksitas] ?? 1;
+                const tariff = tariffs.find((t) => String(t.material) === material && String(t.unit) === unit);
+                const unitPrice = tariff ? tariff.price : 0;
+                const base = unitPrice * volume;
+                const target = row.querySelector('.tarif-dasar-row');
+                if (!target) return;
+                target.querySelector('.tarif-harga').textContent = rupiah(unitPrice);
+                target.querySelector('.tarif-satuan').textContent = units.find((u) => String(u.id) === unit)?.name || '';
+                target.querySelector('.faktor-badge').textContent = `Faktor ${kompleksitas}: ${faktor}x`;
+                target.querySelector('.item-amount').textContent = rupiah(base + base * (faktor - 1));
+            }
+
             function updateSummary() {
                 let base = 0;
                 let adjustment = 0;
                 container.querySelectorAll('.item-row').forEach((row) => {
+                    updateItemTariffRow(row);
                     const material = row.querySelector('.material').value;
                     const unit = row.querySelector('.unit').value;
                     const volume = Number(row.querySelector('.volume').value || 0);
-                    const faktor = Number(row.querySelector('.faktor').value || 1);
+                    const kompleksitas = row.querySelector('.kompleksitas:checked')?.value || 'low';
+                    const faktor = ({low: 1, medium: 1.10, high: 1.25})[kompleksitas] ?? 1;
                     const tariff = tariffs.find((t) => String(t.material) === material && String(t.unit) === unit);
                     const amount = tariff ? tariff.price * volume : 0;
                     base += amount;
                     adjustment += amount * (faktor - 1);
                 });
+                document.getElementById('item-count').textContent = container.querySelectorAll('.item-row').length + ' item';
                 document.getElementById('subtotal').textContent = rupiah(base);
                 document.getElementById('faktor-tambahan').textContent = rupiah(adjustment);
                 document.getElementById('total').textContent = rupiah(base + adjustment);
+            }
+
+            function updateKompleksitasStyle(row) {
+                row.querySelectorAll('.kompleksitas-label').forEach((label) => {
+                    const aktif = label.querySelector('input').checked;
+                    label.style.background = aktif ? '#dbeafe' : '#fff';
+                    label.style.color = aktif ? '#1d4ed8' : '#475569';
+                });
             }
 
             function renumber() {
@@ -244,11 +280,13 @@
 
             function addItem(data) {
                 const i = container.querySelectorAll('.item-row').length;
+                const uid = data?.uid || 'item-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
                 const row = document.createElement('div');
                 row.className = 'card item-row';
                 row.dataset.index = i;
                 row.style.background = '#f8fafc';
                 row.innerHTML = `
+                    <input type="hidden" name="items[${i}][uid]" value="${esc(uid)}">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <strong class="item-title">Item Pekerjaan ${i + 1}</strong>
                         <button type="button" class="btn btn-light remove-item" style="padding:5px 10px;">Hapus</button>
@@ -276,19 +314,35 @@
                             <select name="items[${i}][unit_id]" class="unit" required>
                                 <option value="">-- Pilih --</option>${options(units, data?.unit_id, 'id', 'name')}
                             </select></div>
-                        <div><label>Faktor Tambahan *</label>
-                            <select name="items[${i}][faktor]" class="faktor" required>
-                                <option value="1" ${String(data?.faktor ?? 1) === '1' ? 'selected' : ''}>1x</option>
-                                <option value="1.25" ${String(data?.faktor ?? 1) === '1.25' ? 'selected' : ''}>1,25x</option>
-                            </select></div>
-                        <div><label>Lokasi Pekerjaan</label>
-                            <input type="text" name="items[${i}][lokasi]" value="${esc(data?.lokasi ?? defaultLokasi)}">
+                        <div><label>Ketebalan Pelat (mm)</label>
+                            <input type="number" name="items[${i}][ketebalan]" class="ketebalan" min="0" value="${esc(data?.ketebalan ?? '')}">
+                        </div>
+                        <div><label>Kompleksitas Pekerjaan *</label>
+                            <div style="display:flex; border:1px solid #cbd5e1; border-radius:6px; overflow:hidden;">
+                                ${['low', 'medium', 'high'].map((k) => {
+                                    const aktif = (data?.kompleksitas ?? 'low') === k;
+                                    return `<label class="kompleksitas-label" style="flex:1; text-align:center; padding:8px 0; cursor:pointer; font-size:12px; font-weight:600; background:${aktif ? '#dbeafe' : '#fff'}; color:${aktif ? '#1d4ed8' : '#475569'};">
+                                        <input type="radio" name="items[${i}][kompleksitas]" value="${k}" class="kompleksitas" ${aktif ? 'checked' : ''} style="display:none;">
+                                        ${k.charAt(0).toUpperCase() + k.slice(1)}
+                                    </label>`;
+                                }).join('')}
+                            </div>
                         </div>
                     </div>
                     <div style="margin-top:12px;"><label>Deskripsi Pekerjaan *</label>
                         <textarea name="items[${i}][description]" rows="2" required placeholder="Jelaskan lokasi dan lingkup pekerjaan...">${esc(data?.description ?? '')}</textarea>
+                    </div>
+                    <div style="margin-top:12px;"><label>Catatan Tambahan</label>
+                        <textarea name="items[${i}][catatan_tambahan]" rows="2" placeholder="Tambahkan catatan bila diperlukan...">${esc(data?.catatan_tambahan ?? '')}</textarea>
+                    </div>
+                    <div class="tarif-dasar-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:8px; background:#f8fafc; border-radius:6px; font-size:12px;">
+                        <span>Tarif dasar 🔒 <span class="tarif-harga">${rupiah(data?.unit_price ?? 0)}</span> / <span class="tarif-satuan">${esc(data?.unit_name || '')}</span>
+                            <span class="faktor-badge" style="background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:999px; margin-left:6px;">Faktor ${esc(data?.kompleksitas || 'low')}: ${data?.faktor ?? 1}x</span>
+                        </span>
+                        <strong class="item-amount">${rupiah((data?.subtotal || 0) + (data?.adjustment || 0))}</strong>
                     </div>`;
                 container.appendChild(row);
+                updateKompleksitasStyle(row);
                 updateSummary();
             }
 
@@ -316,6 +370,9 @@
                 if (e.target.classList.contains('material')) {
                     row.querySelector('.spec').value = materials.find((m) => String(m.id) === e.target.value)?.name || '';
                 }
+                if (e.target.classList.contains('kompleksitas')) {
+                    updateKompleksitasStyle(row);
+                }
                 updateSummary();
             });
 
@@ -327,5 +384,41 @@
                 addItem(null);
             }
         }
+
+        document.querySelectorAll('.dropzone').forEach((zone) => {
+            const input = zone.querySelector('input[type=file]');
+            if (!input) return;
+            const list = zone.parentElement.querySelector('.selected-files');
+            const renderNames = () => {
+                if (list) {
+                    list.textContent = input.files.length
+                        ? [...input.files].map((file) => file.name).join(', ')
+                        : '';
+                }
+            };
+
+            zone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.remove('dragover');
+                const transfer = new DataTransfer();
+                [...(e.dataTransfer?.files || [])].forEach((file) => transfer.items.add(file));
+                input.files = transfer.files;
+                renderNames();
+            });
+            input.addEventListener('change', renderNames);
+        });
     </script>
 @endpush

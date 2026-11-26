@@ -48,5 +48,28 @@ File ini mencatat **setiap prompt yang diberikan Regina** beserta timestamp (WIB
 | 32 | 2026-11-26 05:53 WIB | `jalankan` | PT-01 | Eksekusi perubahan langkah 1. |
 | 33 | 2026-11-26 06:06 WIB | `jalankan opsi b` | Data master (lokal) | Isi data contoh via tinker di DB `simship`; tanpa perubahan file kode. |
 | 34 | 2026-11-26 06:10 WIB | `logo ga bisa di sebelah simship?` + `pakai inline svg` | Layout | Tambah ikon kapal inline SVG di samping teks SIMSHIP. |
+| 35 | 2026-11-26 09:24 WIB | `yang bagian 2 liat ui nya, isinya apa aja` | PT-03 | Inventarisasi field langkah 2 vs screenshot. |
+| 36 | 2026-11-26 09:24 WIB | `coba baca lagi apa yang saya tambahkan` | docs/ | Baca 4 screenshot baru pukul 06:14. |
+| 37 | 2026-11-26 09:24 WIB | `apa yang akan di kerjakan` | PT-03 | Rencana langkah 2. |
+| 38 | 2026-11-26 09:24 WIB | `bagian kategori/jenis/material... ikutin ui; faktor & lokasi hapus; catatan tambahan ke mana?` | PT-03 | Instruksi field langkah 2. |
+| 39 | 2026-11-26 09:24 WIB | `1. gabung description aman? 2. masuk description gimana? 3. faktor dari kompleksitas? 4. beda pembagian tugas menyusul` | PT-03 | Diskusi storage & perhitungan. |
+| 40 | 2026-11-26 09:24 WIB | `kalo spesifikasi ga di ketik masuk ke db ke mana?` | PT-03 | Spesifikasi auto dari master. |
+| 41 | 2026-11-26 09:24 WIB | `kalo spesifikasi materialnya masuk ke db material bisa ga?` | PT-03 | Tidak menulis ke tabel Anisa. |
+| 42 | 2026-11-26 09:24 WIB | `baiknya gimana biar tidak menggangu modul anggota lain` | Scope | Baca master, tulis hanya tabel Regina. |
+| 43 | 2026-11-26 09:24 WIB | `sebentar dulu, coba liat yang sudah saya kerjakan... tugas anggota 2...` | Scope | Konfirmasi Anisa vs Regina. |
+| 44 | 2026-11-26 09:24 WIB | `apa yang akan di kerjakan?` | Scope | Rencana tanpa tugas Anisa. |
+| 45 | 2026-11-26 09:24 WIB | `1. iya 2. bikin kolom low, medium, high... 3. via tinker...` | PT-03, Scope | Setuju ketebalan; tanya faktor Medium. |
+| 46 | 2026-11-26 09:24 WIB | `yang catatan tambah itu di db bikin kolom baru dan sisanya apa yang akan di kerjakan?` | DB-10, PT-03 | Kolom baru `catatan_tambahan`. |
+| 47 | 2026-11-26 09:24 WIB | `yang tugas anggota 2 jangan saya kerjakan` | Scope | Tegasan batas modul. |
+| 48 | 2026-11-26 09:24 WIB | `kerjakan` | PT-03, PT-04 | Eksekusi field baru & lampiran per item. |
+| 49 | 2026-11-26 10:43 WIB | `kenapa saat klik kompleksitas pekerjaan ... warna saat klik ga ke pindah` + `jalankan` | PT-03 | Perbaiki highlight segmented kompleksitas saat dipilih. |
+| 50 | 2026-11-26 10:49 WIB | `saat tambah item pekerjaan kenapa di estimasi biaya bagian item pekerjaan tidak ke update` + `jalankan` | PT-03 | Tambah `id="item-count"` dan update dari `updateSummary()`. |
+| 51 | 2026-11-26 10:55 WIB | `jalankan` (lanjutan) | PT-03 | Tes kompleksitas medium pada item dinamis + cek upload per item. |
+| 52 | 2026-11-26 11:01 WIB | `setiap item tambahan ikutin gaya item paling atas; faktor low samakan dengan kompleksitas` + `jalankan` | PT-03 | Baris tarif dasar untuk semua item + badge faktor dinamis. |
+| 53 | 2026-11-26 11:13 WIB | `tidak jadi, hapus aja tulisan yang "unggah bersifat opsional"` + `jalankan` | PT-04 | Hapus teks info; validasi tetap opsional (BR-13). |
+| 54 | 2026-11-26 11:21 WIB | `ko ga bisa drop fotonya?` + `jalankan` | PT-04 | Tambah handler drag & drop ke input file per item. |
+| 55 | 2026-11-26 11:40 WIB | `masukkan opname saya ke jobdesk saya` + `jalankan` | PT-08, dokumen | Alihkan PT-08 dari parkir ke Regina; update 3 dokumen + tasklist. |
+| 56 | 2026-11-26 11:46 WIB | `jalankan` (lanjutan) | PT-08 | Implementasi halaman Opname Saya + tes. |
+| 57 | 2026-11-26 12:03 WIB | `status klik jadi filter, tanggal satu input, hapus tombol filter, ikon mata` + `jalankan` | PT-08 | Badge status jadi filter; satu input tanggal; auto-submit; ikon 👁. |
 
-> **Catatan timestamp:** entri 1-17 dicatat pada 2026-11-25 (18:28–23:04 WIB); entri 18-32 dicatat pukul 05:53 WIB; entri 33 pukul 06:06 WIB; entri 34 pukul 06:10 WIB pada 2026-11-26. Waktu di atas adalah waktu pencatatan, bukan waktu pengiriman persis tiap prompt.
+> **Catatan timestamp:** entri 1-17 dicatat pada 2026-11-25 (18:28–23:04 WIB); entri 18-34 dicatat pada 2026-11-26 (05:53–06:10 WIB); entri 35-48 pukul 09:24 WIB; entri 49 pukul 10:43 WIB; entri 50 pukul 10:49 WIB; entri 51 pukul 10:55 WIB; entri 52 pukul 11:01 WIB; entri 53 pukul 11:13 WIB; entri 54 pukul 11:21 WIB; entri 55 pukul 11:40 WIB; entri 56 pukul 11:46 WIB; entri 57 pukul 12:03 WIB pada 2026-11-26. Waktu di atas adalah waktu pencatatan, bukan waktu pengiriman persis tiap prompt.
