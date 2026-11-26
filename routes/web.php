@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\MaterialSpecController;
 use App\Http\Controllers\OpnamController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WorkCategoryController;
@@ -57,6 +58,9 @@ Route::middleware(['auth', 'role:admin'])
             ->parameters(['work-types' => 'workType']);
         Route::resource('units', UnitController::class)
             ->except('show');
+        Route::resource('material-specs', MaterialSpecController::class)
+            ->except('show')
+            ->parameters(['material-specs' => 'materialSpec']);
     });
 
 Route::middleware(['auth', 'role:direksi'])
