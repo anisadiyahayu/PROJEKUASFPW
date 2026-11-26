@@ -270,6 +270,13 @@ test('semua langkah wizard dapat dirender', function () {
     foreach ([1, 2, 3, 4, 5] as $step) {
         $this->get(route('petugas.opnams.create', ['step' => $step]))->assertOk();
     }
+
+    $this->get(route('petugas.opnams.create', ['step' => 2]))
+        ->assertOk()
+        ->assertSee('const tanggalOpnamDariDraft = "2026-06-25"', false)
+        ->assertSee('String(t.effective_from).slice(0, 10) <= tanggal', false)
+        ->assertSee('id="faktor-tambahan">1x', false)
+        ->assertDontSee('id="faktor-tambahan">Rp 0', false);
 });
 
 test('kompleksitas medium tidak mengubah faktor selama konfigurasi kosong', function () {

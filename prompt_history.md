@@ -161,3 +161,87 @@ yang nomor 2 ada di anggota mana?
 ## 2026-11-26 22:43 WIB
 
 **Regina:** setuju
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** apa langkah terbaik selanjutnya?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** apa yang perlu dikonfirmasi ke tim? dan ke siapa harus konfirmasinya?, bisakah kamu buatkan kalimat pertanyaan untuk ditanyakan ke anggota tim terkait?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** bagaimana kalau kerjakan yang murni bagianku dulu tanpa melibatkan bagian tim yang lain?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** selanjutnya apa lagi yang menjadi tupoksi ku?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** feature test bagaimana?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** yang sudah di kerjakan apa aja?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** apa yang di kerjakan?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** untuk saat ini, apakah tugas saya sudah selesai?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** berarti saya belum bisa menguji ui bagian saya ya?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** untuk menguji uinya saya buka apa?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** Illuminate\Database\QueryException — SQLSTATE[42S22]: Column not found: 1054 Unknown column 'last_login_at' in 'field list' ... ini kenapa?
+
+---
+
+## 2026-11-26 23:29 WIB (retroactive)
+
+**Regina:** aku ini agar kamu juga mencatat saat di mode plan
+
+---
+
+## 2026-11-26 23:29 WIB
+
+**Regina:** jalankan
+
+---
+
+## 2026-11-26 23:44 WIB
+
+**Regina:** setuju

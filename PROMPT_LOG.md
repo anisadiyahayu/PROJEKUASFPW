@@ -685,3 +685,143 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `artisan test`
 **Manual modifications:** -
 **Notes / follow-up:** Item/Modul: AD-05, PT-03. Tabel `USERS` hanya dibaca; tidak ada perubahan pada modul Halvina.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`apa langkah terbaik selanjutnya?`"
+**Output summary:** Mengusulkan solusi nilai terbuka menjadi konfigurasi, keputusan tim untuk item parkir, dan penyesuaian test login baseline. Tidak ada kode yang diubah (mode rencana).
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: perencanaan; dicatat belakangan sesuai permintaan Regina agar prompt saat mode rencana tetap masuk log.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`apa yang perlu dikonfirmasi ke tim? dan ke siapa harus konfirmasinya?, bisakah kamu buatkan kalimat pertanyaan untuk ditanyakan ke anggota tim terkait?`"
+**Output summary:** Menyusun kalimat konfirmasi siap kirim untuk Rifqy (log aktivitas, jenis kapal), Anisa (sumber faktor, tarif berlaku), Hazel (`STATUS_HISTORIES`, ST-08, nomor), Halvina (test baseline, policy), dan tim (PT-07/09, mesin ekspor).
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: koordinasi lintas tim; tidak ada perubahan file.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`bagaimana kalau kerjakan yang murni bagianku dulu tanpa melibatkan bagian tim yang lain?`"
+**Output summary:** Menyetujui pendekatan murni modul Regina: generator nomor aman, unggahan config-driven, input `catatan`, lalu verifikasi. Tidak ada kode yang diubah saat itu.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-01, PT-04, PT-06; rencana ini kemudian dijalankan setelah persetujuan.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`selanjutnya apa lagi yang menjadi tupoksi ku?`"
+**Output summary:** Merangkum status tupoksi Regina, mencatat ketidaksesuaian PT-08 di dokumen, dan mengusulkan PT-07/PT-09/ST-01/ST-04 jika tim menugaskan.
+**Files:** -
+**Commands:** `read` tupoksi.md dan tasklist.md (baca saja)
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: tupoksi; tidak ada perubahan file.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`feature test bagaimana?`"
+**Output summary:** Melaporkan 32 test opnam lolos dan 50/50 suite penuh setelah merge tim, memetakan cakupan per file, serta menemukan kekurangan filter operator AD-05 dan test otorisasi.
+**Files:** -
+**Commands:** `artisan test`, `artisan test --list-tests` (baca saja pada saat itu)
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: AD-05, PT-03; temuan ini kemudian dikerjakan pada prompt `setuju` 22:43.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`yang sudah di kerjakan apa aja?`"
+**Output summary:** Merangkum seluruh pekerjaan: snapshot faktor, PT-03 edit item, migrasi aditif, config-driven, UAT MySQL, commit/push, dan 53/53 test.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: rekap umum; tidak ada perubahan file.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`apa yang di kerjakan?`"
+**Output summary:** Menjelaskan bahwa tidak ada pekerjaan aktif; yang terakhir dikerjakan adalah filter operator AD-05 + 3 test (53/53) dan 7 file belum di-commit.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: status kerja; tidak ada perubahan file.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`untuk saat ini, apakah tugas saya sudah selesai?`"
+**Output summary:** Menyimpulkan tugas selesai secara teknis, tetapi belum secara administratif (PT-01/06 `Dikerjakan`, PT-04/05 `Perlu konfirmasi`, 7 file belum di-commit).
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: status progres; tidak ada perubahan file.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`berarti saya belum bisa menguji ui bagian saya ya?`"
+**Output summary:** Menjelaskan bahwa UI modul Regina justru sudah bisa diuji sekarang; yang belum bisa hanya alur PT-07/09 dan modul Hazel.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: UAT manual; tidak ada perubahan file.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`untuk menguji uinya saya buka apa?`"
+**Output summary:** Memberikan URL dan kredensial UAT: `/login` (petugas-uat/admin-uat, password), wizard, daftar petugas, edit draft, dan daftar Admin.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: panduan UAT; tidak ada perubahan file.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`Illuminate\Database\QueryException SQLSTATE[42S22] Unknown column 'last_login_at' in 'field list' ... ini kenapa?`"
+**Output summary:** Mendiagnosis bahwa `AuthController::login()` (modul Halvina, hasil merge) menulis `last_login_at`, sementara tabel `users` di DB dev tidak memiliki kolom itu meski migrasi lama tercatat Ran. Mengusulkan migrasi aditif oleh Halvina atau ALTER lokal sementara; tidak menyentuh modul tersebut.
+**Files:** -
+**Commands:** `read routes/web.php`, `read app/Http/Controllers/Auth/AuthController.php`, `artisan db:table users` (baca saja)
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: USERS/auth milik Halvina; bukan bug modul Regina.
+
+## 2026-11-26 23:29 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`aku ini agar kamu juga mencatat saat di mode plan`"
+**Output summary:** Mengakui kewajiban mencatat setiap prompt termasuk saat mode rencana, dan berjanji menambahkan blok retroactive setelah keluar dari mode rencana.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: aturan pencatatan `AGENTS.md`; tidak ada perubahan file saat itu.
+
+## 2026-11-26 23:29 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menambahkan 12 blok retroactive ke `PROMPT_LOG.md` dan entri yang sama ke `prompt_history.md` untuk prompt-prompt yang tidak tercatat saat mode rencana.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: pencatatan prompt. Tidak ada kode aplikasi atau file progres lain yang diubah.
+
+## 2026-11-26 23:44 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`setuju`"
+**Output summary:** Memperbaiki pratinjau kalkulasi di wizard: tanggal opnam dari session draft dikirim ke JS di semua langkah dan dipakai `tarifBerlaku()` (dengan normalisasi `effective_from`), sehingga tidak lagi memilih tarif masa depan; badge per item menampilkan tingkat kompleksitas terpilih; baris "Faktor" di ringkasan menampilkan pengali (mis. `1x`) bukan `Rp 0`. Suite lengkap 53/53 lolos (258 assertions).
+**Files:** `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/create.blade.php`, `resources/views/opnams/_summary.blade.php`, `tests/Feature/OpnamDraftTest.php`, `tasklist.md`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-01, PT-05. Nilai faktor masih default 1 karena `config/opnam.php` sengaja kosong; penyesuaian pratinjau ini tidak mengubah snapshot yang dihitung server.

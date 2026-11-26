@@ -129,10 +129,12 @@ class OpnamController extends Controller
     public function create(Request $request): View
     {
         $step = max(1, min(5, (int) $request->query('step', 1)));
+        $draft = session(self::SESSION_KEY, $this->emptyDraft());
 
         return view('opnams.create', [
             'step' => $step,
-            'draft' => session(self::SESSION_KEY, $this->emptyDraft()),
+            'draft' => $draft,
+            'tanggalOpnam' => $draft['tanggal_opnam'] ?? null,
             'ships' => Ship::with('owner')->orderBy('name')->get(),
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
