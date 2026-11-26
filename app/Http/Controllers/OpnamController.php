@@ -9,6 +9,7 @@ use App\Models\OpnamItem;
 use App\Models\Ship;
 use App\Models\Tariff;
 use App\Models\Unit;
+use App\Models\User;
 use App\Models\WorkCategory;
 use App\Models\WorkType;
 use App\Services\OpnamCostCalculator;
@@ -57,6 +58,11 @@ class OpnamController extends Controller
             $query->where('status', $status);
         }
 
+        $operator = (string) $request->query('operator', '');
+        if (ctype_digit($operator)) {
+            $query->where('created_by', (int) $operator);
+        }
+
         $dari = trim((string) $request->query('tanggal_dari', ''));
         if ($dari !== '') {
             $query->whereDate('tanggal_opnam', '>=', $dari);
@@ -72,7 +78,9 @@ class OpnamController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('opnams.index', compact('opnams', 'statuses'));
+        $operators = User::where('role', 'petugas')->orderBy('name')->get();
+
+        return view('opnams.index', compact('opnams', 'statuses', 'operators'));
     }
 
     public function indexMine(Request $request): View

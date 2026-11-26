@@ -675,3 +675,13 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `artisan tinker --execute` (seed + cek DB), `artisan serve --host=127.0.0.1 --port=8001`, `curl` dengan cookie/CSRF untuk seluruh alur, `kill` server
 **Manual modifications:** -
 **Notes / follow-up:** Item/Modul: PT-01, PT-03, PT-04, PT-05, PT-06, AD-05. Temuan lingkungan: DB dev tidak memiliki kolom `ships.jenis_kapal`, `opnams.lokasi`, dan `opnams.adjustment_amount` meski migrasi lama tercatat Ran — sengaja tidak diubah karena menyentuh modul/field yang masih menunggu konfirmasi; akibatnya snapshot `jenis_kapal` bernilai null di UAT MySQL (sudah diuji di SQLite). Percobaan unggah pertama gagal karena file PNG tiruan, bukan bug kode; setelah memakai PNG valid, unggah lolos.
+
+## 2026-11-26 22:43 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`setuju`"
+**Output summary:** Menambah filter operator pada AD-05 (membaca `USERS` dengan role petugas, filter `created_by`, dropdown di view) sesuai PRD 3.5, serta dua test pengaman: admin/direksi tidak bisa mengakses edit item draft dan item tidak bisa diubah pada status `perlu_revisi`. Suite lengkap 53/53 lolos (240 → 253 assertions).
+**Files:** `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/index.blade.php`, `tests/Feature/OpnamListTest.php`, `tests/Feature/OpnamItemEditTest.php`, `tasklist.md`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: AD-05, PT-03. Tabel `USERS` hanya dibaca; tidak ada perubahan pada modul Halvina.

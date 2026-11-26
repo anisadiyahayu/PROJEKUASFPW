@@ -122,3 +122,32 @@ test('daftar opnam dipaginasi', function () {
         ->assertOk()
         ->assertSee('OPN-001');
 });
+
+test('filter operator hanya menampilkan opnam milik petugas terpilih', function () {
+    $admin = adminUntukDaftarOpnam();
+    $petugasSatu = User::create([
+        'name' => 'Petugas Satu', 'username' => uniqid('petugas-satu-'),
+        'email' => uniqid('satu-').'@example.com', 'password' => 'password',
+        'role' => 'petugas', 'is_active' => true,
+    ]);
+    $petugasDua = User::create([
+        'name' => 'Petugas Dua', 'username' => uniqid('petugas-dua-'),
+        'email' => uniqid('dua-').'@example.com', 'password' => 'password',
+        'role' => 'petugas', 'is_active' => true,
+    ]);
+    $ship = kapalUntukDaftarOpnam('Kapal Satu', 'HULL-101');
+    opnamUntukDaftar($petugasSatu, $ship, 'OPN-101', Opnam::STATUS_DRAFT, '2026-01-05');
+    opnamUntukDaftar($petugasDua, $ship, 'OPN-202', Opnam::STATUS_DRAFT, '2026-01-06');
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.index', ['operator' => $petugasSatu->id]))
+        ->assertOk()
+        ->assertSee('OPN-101')
+        ->assertDontSee('OPN-202');
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.index'))
+        ->assertOk()
+        ->assertSee('Petugas Satu')
+        ->assertSee('Petugas Dua');
+});
