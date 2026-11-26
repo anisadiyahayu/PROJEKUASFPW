@@ -56,7 +56,7 @@ test('wizard menyimpan draft dengan status draft dan snapshot biaya', function (
         ->assertSee('Dock 01 — Graving Dock')
         ->assertSee('Dock 02 — Floating Dock')
         ->assertDontSee('Pilih Lokasi')
-        ->assertDontSee('Catatan');
+        ->assertDontSee('name="catatan"');
 
     $this->post(route('petugas.opnams.store-step'), [
         'step' => 1,
@@ -68,13 +68,15 @@ test('wizard menyimpan draft dengan status draft dan snapshot biaya', function (
     $this->post(route('petugas.opnams.store-step'), [
         'step' => 2,
         'items' => [[
+            'uid' => 'item-a',
             'work_category_id' => $data['category']->id,
             'work_type_id' => $data['type']->id,
             'material_spec_id' => $data['material']->id,
             'unit_id' => $data['unit']->id,
             'volume' => 2,
-            'faktor' => 1.25,
-            'lokasi' => 'Dock 01',
+            'ketebalan' => 12,
+            'kompleksitas' => 'high',
+            'catatan_tambahan' => 'Mohon lengkapi foto kondisi pelat.',
             'description' => 'Penggantian pelat sisi kanan',
         ]],
     ])->assertRedirect(route('petugas.opnams.create', ['step' => 3]));
@@ -100,7 +102,10 @@ test('wizard menyimpan draft dengan status draft dan snapshot biaya', function (
     expect((float) $item->unit_price)->toBe(1000.0)
         ->and((float) $item->subtotal)->toBe(2000.0)
         ->and((float) $item->faktor)->toBe(1.25)
-        ->and($item->lokasi)->toBe('Dock 01')
+        ->and($item->kompleksitas)->toBe('high')
+        ->and($item->ketebalan)->toBe(12)
+        ->and($item->catatan_tambahan)->toBe('Mohon lengkapi foto kondisi pelat.')
+        ->and($item->lokasi)->toBe('Dock 02 — Floating Dock')
         ->and($item->tariff_id)->toBe($data['tariff']->id);
 });
 
@@ -111,16 +116,16 @@ test('bukti pekerjaan divalidasi format dan ukurannya', function () {
 
     $this->post(route('petugas.opnams.store-step'), [
         'step' => 4,
-        'bukti' => [UploadedFile::fake()->create('bukti.txt', 100, 'text/plain')],
-    ])->assertSessionHasErrors('bukti.0');
+        'bukti' => ['item-a' => [UploadedFile::fake()->create('bukti.txt', 100, 'text/plain')]],
+    ])->assertSessionHasErrors('bukti.item-a.0');
 
     $this->post(route('petugas.opnams.store-step'), [
         'step' => 4,
-        'bukti' => [UploadedFile::fake()->create('bukti.pdf', 1024 * 11, 'application/pdf')],
-    ])->assertSessionHasErrors('bukti.0');
+        'bukti' => ['item-a' => [UploadedFile::fake()->create('bukti.pdf', 1024 * 11, 'application/pdf')]],
+    ])->assertSessionHasErrors('bukti.item-a.0');
 });
 
-test('lampiran bukti tersimpan dan terhubung ke item', function () {
+test('tiap bukti tersimpan dan terhubung ke item yang benar', function () {
     Storage::fake('public');
     $data = siapkanDataOpnam();
     $this->actingAs($data['petugas']);
@@ -131,26 +136,47 @@ test('lampiran bukti tersimpan dan terhubung ke item', function () {
     ]);
     $this->post(route('petugas.opnams.store-step'), [
         'step' => 2,
-        'items' => [[
-            'work_category_id' => $data['category']->id,
-            'work_type_id' => $data['type']->id,
-            'material_spec_id' => $data['material']->id,
-            'unit_id' => $data['unit']->id,
-            'volume' => 1, 'faktor' => 1, 'lokasi' => 'Dock 01', 'description' => 'Inspeksi lambung',
-        ]],
+        'items' => [
+            [
+                'uid' => 'item-a',
+                'work_category_id' => $data['category']->id,
+                'work_type_id' => $data['type']->id,
+                'material_spec_id' => $data['material']->id,
+                'unit_id' => $data['unit']->id,
+                'volume' => 1, 'kompleksitas' => 'low', 'description' => 'Inspeksi A',
+            ],
+            [
+                'uid' => 'item-b',
+                'work_category_id' => $data['category']->id,
+                'work_type_id' => $data['type']->id,
+                'material_spec_id' => $data['material']->id,
+                'unit_id' => $data['unit']->id,
+                'volume' => 2, 'kompleksitas' => 'high', 'description' => 'Inspeksi B',
+            ],
+        ],
     ]);
     $this->post(route('petugas.opnams.store-step'), ['step' => 3]);
     $this->post(route('petugas.opnams.store-step'), [
         'step' => 4,
-        'bukti' => [UploadedFile::fake()->create('bukti.jpg', 100, 'image/jpeg')],
+        'bukti' => [
+            'item-a' => [UploadedFile::fake()->create('a.jpg', 100, 'image/jpeg')],
+            'item-b' => [UploadedFile::fake()->create('b.pdf', 100, 'application/pdf')],
+        ],
     ]);
     $this->post(route('petugas.opnams.store-step'), ['step' => 5]);
 
-    $attachment = OpnamAttachment::firstOrFail();
-    expect($attachment->opnam_item_id)->toBe(OpnamItem::firstOrFail()->id)
-        ->and($attachment->original_name)->toBe('bukti.jpg')
-        ->and($attachment->uploaded_by)->toBe($data['petugas']->id);
-    Storage::disk('public')->assertExists($attachment->file_path);
+    $items = OpnamItem::orderBy('sort_order')->get();
+    $attachments = OpnamAttachment::orderBy('id')->get();
+
+    expect($attachments)->toHaveCount(2)
+        ->and($attachments[0]->opnam_item_id)->toBe($items[0]->id)
+        ->and($attachments[0]->original_name)->toBe('a.jpg')
+        ->and($attachments[1]->opnam_item_id)->toBe($items[1]->id)
+        ->and($attachments[1]->original_name)->toBe('b.pdf')
+        ->and($attachments[0]->uploaded_by)->toBe($data['petugas']->id);
+
+    Storage::disk('public')->assertExists($attachments[0]->file_path);
+    Storage::disk('public')->assertExists($attachments[1]->file_path);
 });
 
 test('semua langkah wizard dapat dirender', function () {
@@ -161,6 +187,7 @@ test('semua langkah wizard dapat dirender', function () {
         'lokasi' => null,
         'catatan' => null,
         'items' => [[
+            'uid' => 'item-a',
             'work_category_id' => $data['category']->id,
             'work_type_id' => $data['type']->id,
             'material_spec_id' => $data['material']->id,
@@ -169,6 +196,9 @@ test('semua langkah wizard dapat dirender', function () {
             'volume' => 2,
             'unit_price' => 1000,
             'faktor' => 1,
+            'ketebalan' => 12,
+            'kompleksitas' => 'low',
+            'catatan_tambahan' => 'Catatan uji',
             'subtotal' => 2000,
             'adjustment' => 0,
             'lokasi' => 'Dock 01',
@@ -177,15 +207,76 @@ test('semua langkah wizard dapat dirender', function () {
             'material_name' => 'Marine Plate AH36',
             'unit_name' => 'm²',
         ]],
-        'uploads' => [[
-            'file_path' => 'opnam-attachments/bukti.jpg',
-            'original_name' => 'bukti.jpg',
-            'mime_type' => 'image/jpeg',
-            'file_size' => 102400,
-        ]],
+        'uploads' => [
+            'item-a' => [[
+                'file_path' => 'opnam-attachments/bukti.jpg',
+                'original_name' => 'bukti.jpg',
+                'mime_type' => 'image/jpeg',
+                'file_size' => 102400,
+            ]],
+        ],
     ]]);
 
     foreach ([1, 2, 3, 4, 5] as $step) {
         $this->get(route('petugas.opnams.create', ['step' => $step]))->assertOk();
     }
+});
+
+test('kompleksitas medium pada item tambahan dihitung dengan faktor 1,10', function () {
+    $data = siapkanDataOpnam();
+    $this->actingAs($data['petugas']);
+
+    $this->post(route('petugas.opnams.store-step'), [
+        'step' => 1,
+        'ship_id' => $data['ship']->id,
+        'tanggal_opnam' => '2026-06-25',
+        'lokasi' => 'Dock 01 — Graving Dock',
+    ]);
+
+    $this->post(route('petugas.opnams.store-step'), [
+        'step' => 2,
+        'items' => [
+            [
+                'uid' => 'item-a',
+                'work_category_id' => $data['category']->id,
+                'work_type_id' => $data['type']->id,
+                'material_spec_id' => $data['material']->id,
+                'unit_id' => $data['unit']->id,
+                'volume' => 10,
+                'kompleksitas' => 'medium',
+                'description' => 'Item tambahan medium',
+            ],
+            [
+                'uid' => 'item-b',
+                'work_category_id' => $data['category']->id,
+                'work_type_id' => $data['type']->id,
+                'material_spec_id' => $data['material']->id,
+                'unit_id' => $data['unit']->id,
+                'volume' => 2,
+                'kompleksitas' => 'low',
+                'description' => 'Item kedua low',
+            ],
+        ],
+    ])->assertRedirect(route('petugas.opnams.create', ['step' => 3]));
+
+    $this->get(route('petugas.opnams.create', ['step' => 4]))
+        ->assertOk()
+        ->assertSee('bukti[item-a][]')
+        ->assertSee('bukti[item-b][]');
+
+    $this->post(route('petugas.opnams.store-step'), ['step' => 3]);
+    $this->post(route('petugas.opnams.store-step'), ['step' => 4]);
+    $this->post(route('petugas.opnams.store-step'), ['step' => 5]);
+
+    $items = OpnamItem::orderBy('sort_order')->get();
+    $opnam = Opnam::firstOrFail();
+
+    expect($items)->toHaveCount(2)
+        ->and((float) $items[0]->faktor)->toBe(1.10)
+        ->and($items[0]->kompleksitas)->toBe('medium')
+        ->and((float) $items[0]->subtotal)->toBe(10000.0)
+        ->and((float) $items[1]->faktor)->toBe(1.0)
+        ->and($items[1]->kompleksitas)->toBe('low')
+        ->and((float) $opnam->adjustment_amount)->toBe(1000.0)
+        ->and((float) $opnam->total_biaya)->toBe(13000.0);
 });

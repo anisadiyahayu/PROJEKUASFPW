@@ -67,6 +67,49 @@ class OpnamController extends Controller
         return view('opnams.index', compact('opnams', 'statuses'));
     }
 
+    public function indexMine(Request $request): View
+    {
+        $statuses = [
+            Opnam::STATUS_DRAFT,
+            Opnam::STATUS_MENUNGGU_REVIEW,
+            Opnam::STATUS_PERLU_REVISI,
+            Opnam::STATUS_MENUNGGU_APPROVAL_DIREKSI,
+            Opnam::STATUS_DITOLAK,
+            Opnam::STATUS_DISETUJUI,
+            Opnam::STATUS_DOKUMEN_TERBIT,
+        ];
+
+        $query = Opnam::query()->where('created_by', auth()->id())->with('ship');
+
+        $q = trim((string) $request->query('q', ''));
+        if ($q !== '') {
+            $query->where(function ($builder) use ($q) {
+                $builder->where('opnam_number', 'like', "%{$q}%")
+                    ->orWhereHas('ship', function ($shipQuery) use ($q) {
+                        $shipQuery->where('name', 'like', "%{$q}%")
+                            ->orWhere('hull_number', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        $status = (string) $request->query('status', '');
+        if (in_array($status, $statuses, true)) {
+            $query->where('status', $status);
+        }
+
+        $tanggal = trim((string) $request->query('tanggal', ''));
+        if ($tanggal !== '') {
+            $query->whereDate('tanggal_opnam', $tanggal);
+        }
+
+        $opnams = $query->orderByDesc('tanggal_opnam')
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('opnams.mine', compact('opnams', 'statuses'));
+    }
+
     public function create(Request $request): View
     {
         $step = max(1, min(5, (int) $request->query('step', 1)));
@@ -113,6 +156,7 @@ class OpnamController extends Controller
                     'items.*.kompleksitas' => ['required', 'in:low,medium,high'],
                     'items.*.catatan_tambahan' => ['nullable', 'string'],
                     'items.*.description' => ['required', 'string'],
+                    'items.*.uid' => ['nullable', 'string', 'max:100'],
                 ]);
 
                 $items = [];
@@ -137,10 +181,12 @@ class OpnamController extends Controller
 
                     $unitPrice = (float) $tariff->price;
                     $volume = (float) $item['volume'];
-                    $faktor = (float) $item['faktor'];
+                    $kompleksitas = $item['kompleksitas'];
+                    $faktor = ['low' => 1, 'medium' => 1.10, 'high' => 1.25][$kompleksitas] ?? 1;
                     $base = round($unitPrice * $volume, 2);
                     $adjustment = round($base * ($faktor - 1), 2);
                     $items[] = [
+                        'uid' => $item['uid'] ?? uniqid('item-'),
                         'work_category_id' => (int) $item['work_category_id'],
                         'work_type_id' => (int) $item['work_type_id'],
                         'material_spec_id' => (int) $item['material_spec_id'],
@@ -149,6 +195,9 @@ class OpnamController extends Controller
                         'volume' => $volume,
                         'unit_price' => $unitPrice,
                         'faktor' => $faktor,
+                        'ketebalan' => $item['ketebalan'] ?? null,
+                        'kompleksitas' => $kompleksitas,
+                        'catatan_tambahan' => $item['catatan_tambahan'] ?? null,
                         'subtotal' => $base,
                         'adjustment' => $adjustment,
                         'lokasi' => $item['lokasi'] ?? null,
@@ -168,15 +217,20 @@ class OpnamController extends Controller
                 break;
 
             case 4:
-                $data = $request->validate([
-                    'bukti' => ['nullable', 'array', 'max:10'],
-                    'bukti.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+                $request->validate([
+                    'bukti' => ['nullable', 'array'],
+                    'bukti.*' => ['array'],
+                    'bukti.*.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
                 ]);
 
+                $validUids = collect($draft['items'] ?? [])->pluck('uid')->filter()->all();
                 $uploads = $draft['uploads'] ?? [];
-                if ($request->hasFile('bukti')) {
-                    foreach ($request->file('bukti') as $file) {
-                        $uploads[] = [
+                foreach ($request->file('bukti', []) as $uid => $files) {
+                    if (! in_array($uid, $validUids, true) || ! is_array($files)) {
+                        continue;
+                    }
+                    foreach ($files as $file) {
+                        $uploads[$uid][] = [
                             'file_path' => $file->store('opnam-attachments', 'public'),
                             'original_name' => $file->getClientOriginalName(),
                             'mime_type' => $file->getClientMimeType(),
@@ -226,6 +280,7 @@ class OpnamController extends Controller
             'total_biaya' => $total,
         ]);
 
+        $itemIds = [];
         $firstItemId = null;
         foreach ($draft['items'] as $sort => $item) {
             $created = OpnamItem::create([
@@ -235,23 +290,32 @@ class OpnamController extends Controller
                 'unit_price' => $item['unit_price'],
                 'subtotal' => $item['subtotal'],
                 'faktor' => $item['faktor'],
+                'ketebalan' => $item['ketebalan'] ?? null,
+                'kompleksitas' => $item['kompleksitas'] ?? 'low',
+                'catatan_tambahan' => $item['catatan_tambahan'] ?? null,
                 'description' => $item['description'],
                 'sort_order' => $sort + 1,
-                'lokasi' => $item['lokasi'] ?: ($draft['lokasi'] ?? null),
+                'lokasi' => ($item['lokasi'] ?? null) ?: ($draft['lokasi'] ?? null),
             ]);
+            if (! empty($item['uid'])) {
+                $itemIds[$item['uid']] = $created->id;
+            }
             $firstItemId ??= $created->id;
         }
 
-        foreach ($draft['uploads'] ?? [] as $upload) {
-            OpnamAttachment::create([
-                'opnam_item_id' => $firstItemId,
-                'uploaded_by' => auth()->id(),
-                'file_path' => $upload['file_path'],
-                'original_name' => $upload['original_name'],
-                'mime_type' => $upload['mime_type'],
-                'file_size' => $upload['file_size'],
-                'keterangan' => null,
-            ]);
+        foreach ($draft['uploads'] ?? [] as $uid => $files) {
+            $itemId = $itemIds[$uid] ?? $firstItemId;
+            foreach ($files as $upload) {
+                OpnamAttachment::create([
+                    'opnam_item_id' => $itemId,
+                    'uploaded_by' => auth()->id(),
+                    'file_path' => $upload['file_path'],
+                    'original_name' => $upload['original_name'],
+                    'mime_type' => $upload['mime_type'],
+                    'file_size' => $upload['file_size'],
+                    'keterangan' => null,
+                ]);
+            }
         }
 
         session()->forget(self::SESSION_KEY);

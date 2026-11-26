@@ -793,7 +793,7 @@ Modul yang bisa dipakai sebagai dasar pembagian: Umum (UC-U), Petugas (PT), Admi
 | DB-07 | MATERIAL_SPECS | Anisa | Belum | |
 | DB-08 | TARIFFS | Anisa | Belum | |
 | DB-09 | OPNAMS | Regina | Selesai | Migrasi & model: `tanggal_opnam`, `catatan`, `total_biaya`, 7 konstanta status; + `lokasi` & `adjustment_amount` (di luar ERD, permintaan 2026-11-25). |
-| DB-10 | OPNAM_ITEMS | Regina | Selesai | Migrasi baru + model (`lokasi`, `faktor`, cast `volume`/`faktor` decimal:2); `faktor` di luar ERD (permintaan 2026-11-25). |
+| DB-10 | OPNAM_ITEMS | Regina | Selesai | `lokasi`, `faktor`, `ketebalan`, `kompleksitas`, `catatan_tambahan`; 4 kolom terakhir di luar ERD (disetujui 2026-11-26). |
 | DB-11 | OPNAM_ATTACHMENTS | Regina | Selesai | Migrasi & model: `keterangan`, `file_size` = `integer` (byte); terverifikasi via `db:table`. |
 | DB-12 | STATUS_HISTORIES | Di luar tupoksi | Belum | Dipakai Regina dan Hazel, lihat 10.5 |
 | DB-13 | BILLINGS | Hazel | Belum | |
@@ -813,12 +813,12 @@ Modul yang bisa dipakai sebagai dasar pembagian: Umum (UC-U), Petugas (PT), Admi
 | UC-U5 | Melihat dan Mengubah Profil | Halvina | Belum | |
 | PT-01 | Mencatat Opnam Pekerjaan | Regina | Selesai | Langkah 1: wajib kapal/tanggal/`lokasi` (select 2 dock); Catatan tidak ditampilkan (kolom tetap). Faktor 1x/1,25x dihitung & disimpan. |
 | PT-02 | Memilih Data Kapal | Regina | Selesai | Pilih `SHIPS` + `OWNERS`, auto-fill (BR-11). |
-| PT-03 | Menambahkan Detail Pekerjaan | Regina | Selesai | Item dinamis; `lokasi` per item; field mockup di luar ERD tidak dibuat. |
-| PT-04 | Mengunggah Foto/Bukti Pekerjaan | Regina | Selesai | JPG/PNG/PDF maks 10 MB; `storage/app/public/opnam-attachments`. |
+| PT-03 | Menambahkan Detail Pekerjaan | Regina | Selesai | Item dinamis; `Ketebalan`, `Kompleksitas`→`faktor`, `Catatan Tambahan`; UI Faktor & Lokasi dihapus; spesifikasi auto dari master. |
+| PT-04 | Mengunggah Foto/Bukti Pekerjaan | Regina | Selesai | Upload per item via UID (`bukti[uid][]`); tiap file ke `opnam_item_id` benar; JPG/PNG/PDF ≤10 MB. |
 | PT-05 | Melihat Perhitungan Biaya | Regina | Selesai | Snapshot `unit_price`/`subtotal`; `total_biaya` = jumlah subtotal. |
 | PT-06 | Menyimpan Draft Opnam | Regina | Selesai | Tombol Simpan Draft di Final Review; nomor `OPN-{tahun}-{3 digit}`. |
 | PT-07 | Mengajukan Opnam untuk Review | Di luar tupoksi | Belum | Lihat 10.5 |
-| PT-08 | Melihat Status Pengajuan | Di luar tupoksi | Belum | Lihat 10.5 |
+| PT-08 | Melihat Status Pengajuan | Regina | Selesai | Opname Saya: daftar opnam milik petugas login; filter & paginasi; 3 tes lulus. |
 | PT-09 | Memperbaiki Opnam yang Dikembalikan | Di luar tupoksi | Belum | Lihat 10.5 |
 | PT-10 | Melihat Riwayat Aktivitas | Rifqy | Belum | Konfirmasi, cakupan belum jelas |
 | PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat 10.5 |
@@ -877,7 +877,7 @@ Item berikut tidak tercantum di tugas anggota mana pun, atau pemiliknya belum je
 
 | No | Item | Alasan belum ada di tupoksi | Keputusan yang dibutuhkan |
 |---|---|---|---|
-| 1 | PT-07, PT-08, PT-09, ST-01, ST-04 | Alur pengajuan dan perbaikan opnam oleh Petugas belum masuk tugas siapa pun | Tentukan pemilik |
+| 1 | PT-07, PT-09, ST-01, ST-04 | Alur pengajuan dan perbaikan opnam oleh Petugas belum masuk tugas siapa pun | Tentukan pemilik. PT-08 (Opname Saya) sudah menjadi milik Regina. |
 | 2 | AD-07, DR-03 | Revisi data opnam oleh Admin dan Direksi belum masuk tugas siapa pun | Tentukan pemilik |
 | 3 | AD-12, DR-10 | Revisi invoice belum masuk tugas siapa pun | Tentukan pemilik |
 | 4 | PT-11, AD-15, DR-17 | Ekspor riwayat aktivitas belum masuk tugas siapa pun | Tentukan pemilik |
