@@ -9,6 +9,7 @@ use App\Models\OpnamItem;
 use App\Models\Ship;
 use App\Models\Tariff;
 use App\Models\Unit;
+use App\Models\User;
 use App\Models\WorkCategory;
 use App\Models\WorkType;
 use App\Services\OpnamCostCalculator;
@@ -57,6 +58,11 @@ class OpnamController extends Controller
             $query->where('status', $status);
         }
 
+        $operator = (string) $request->query('operator', '');
+        if (ctype_digit($operator)) {
+            $query->where('created_by', (int) $operator);
+        }
+
         $dari = trim((string) $request->query('tanggal_dari', ''));
         if ($dari !== '') {
             $query->whereDate('tanggal_opnam', '>=', $dari);
@@ -72,7 +78,9 @@ class OpnamController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('opnams.index', compact('opnams', 'statuses'));
+        $operators = User::where('role', 'petugas')->orderBy('name')->get();
+
+        return view('opnams.index', compact('opnams', 'statuses', 'operators'));
     }
 
     public function indexMine(Request $request): View
@@ -121,15 +129,17 @@ class OpnamController extends Controller
     public function create(Request $request): View
     {
         $step = max(1, min(5, (int) $request->query('step', 1)));
+        $draft = session(self::SESSION_KEY, $this->emptyDraft());
 
         return view('opnams.create', [
             'step' => $step,
-            'draft' => session(self::SESSION_KEY, $this->emptyDraft()),
+            'draft' => $draft,
+            'tanggalOpnam' => $draft['tanggal_opnam'] ?? null,
             'ships' => Ship::with('owner')->orderBy('name')->get(),
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::orderBy('name')->get(),
-            'units' => Unit::orderBy('name')->get(),
+            'units' => Unit::whereIn('name', ['m²', 'm'])->orderBy('id')->get()->unique('name')->values(),
             'tariffs' => Tariff::orderByDesc('effective_from')->get(),
         ]);
     }
@@ -281,7 +291,9 @@ class OpnamController extends Controller
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::orderBy('name')->get(),
-            'units' => Unit::orderBy('name')->get(),
+            'units' => Unit::whereIn('name', ['m²', 'm'])->orderBy('id')->get(),
+            'tariffs' => Tariff::orderByDesc('effective_from')->get(),
+            'tanggalOpnam' => $opnam->tanggal_opnam,
         ]);
     }
 

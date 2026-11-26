@@ -203,3 +203,32 @@ test('halaman edit menampilkan item draft milik sendiri', function () {
         ->get(route('petugas.opnams.edit', $data['opnam']))
         ->assertForbidden();
 });
+
+test('admin dan direksi tidak dapat mengakses edit item draft petugas', function () {
+    $data = siapkanDraftUntukEdit();
+    $direksi = User::create([
+        'name' => 'Direksi', 'username' => 'direksi-edit', 'email' => 'direksi-edit@example.com',
+        'password' => 'password', 'role' => 'direksi', 'is_active' => true,
+    ]);
+
+    foreach ([$data['admin'], $direksi] as $user) {
+        $this->actingAs($user)
+            ->get(route('petugas.opnams.edit', $data['opnam']))
+            ->assertForbidden();
+        $this->actingAs($user)
+            ->put(route('petugas.opnams.items.update', [$data['opnam'], $data['item']]), dataItemEdit($data))
+            ->assertForbidden();
+        $this->actingAs($user)
+            ->delete(route('petugas.opnams.items.destroy', [$data['opnam'], $data['item']]))
+            ->assertForbidden();
+    }
+});
+
+test('item tidak dapat diubah pada status perlu_revisi', function () {
+    $data = siapkanDraftUntukEdit();
+    $data['opnam']->update(['status' => Opnam::STATUS_PERLU_REVISI]);
+
+    $this->actingAs($data['petugas'])
+        ->put(route('petugas.opnams.items.update', [$data['opnam'], $data['item']]), dataItemEdit($data))
+        ->assertForbidden();
+});

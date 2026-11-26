@@ -32,6 +32,14 @@
                     @endforeach
                 </select>
             </div>
+            <div style="width: 180px;">
+                <select name="operator">
+                    <option value="">Semua Operator</option>
+                    @foreach ($operators as $operator)
+                        <option value="{{ $operator->id }}" @selected(request('operator') === (string) $operator->id)>{{ $operator->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div style="width: 170px;">
                 <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" aria-label="Tanggal dari">
             </div>

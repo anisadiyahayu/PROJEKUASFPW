@@ -43,7 +43,7 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | PT-02 | Memilih Data Kapal | Regina | Selesai | Kapal wajib, pemilik & nomor lambung tampil otomatis (BR-11). |
 | PT-03 | Menambahkan Detail Pekerjaan | Regina | Selesai | Item pada draft tersimpan dapat ditambah, diubah, dan dihapus hanya oleh pemiliknya (PRD 4.6). `total_biaya` dihitung ulang lewat `OpnamCostCalculator`; `unit_price` hanya dicari ulang bila material/satuan diubah (BR-35). Status `perlu_revisi` tidak disentuh (PT-09 parkir). |
 | PT-04 | Mengunggah Foto/Bukti Pekerjaan | Regina | Perlu konfirmasi | Validasi format/ukuran dan disk/path kini dibaca dari `config/opnam.php` (default JPG/PNG/PDF, 10 MB, disk public). Format final menunggu PRD 9 no. 5. |
-| PT-05 | Melihat Perhitungan Biaya | Regina | Perlu konfirmasi | `OpnamCostCalculator` terpasang di form dan halaman edit draft; kedua faktor tersimpan terpisah sebagai snapshot di `OPNAM_ITEMS`. Config faktor sengaja kosong (semua faktor = 1); nilai faktor dan aturan pembulatan masih menunggu PRD 9 no. 19–21, 23. |
+| PT-05 | Melihat Perhitungan Biaya | Regina | Perlu konfirmasi | `OpnamCostCalculator` terpasang di form dan halaman edit draft; kedua faktor tersimpan terpisah sebagai snapshot di `OPNAM_ITEMS`. Kompleksitas mengikuti keputusan Regina: low 1x, medium 1,10x, high 1,15x. Faktor ketebalan tetap 1x karena aturan rentang belum diberikan. Satuan di wizard dibatasi m²/m dan mengikuti tarif material. Aturan pembulatan masih menunggu PRD 9 no. 19, 21. |
 | PT-06 | Menyimpan Draft Opnam | Regina | Dikerjakan | Tombol Simpan Draft berjalan; nomor dibuat `OpnamNumberGenerator` dalam transaksi dengan kunci baris (tidak ada duplikat). Prefix/panjang seq dari `config/opnam.php`; format final menunggu PRD 9 no. 8. |
 | PT-07 | Mengajukan Opnam untuk Review | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
 | PT-08 | Melihat Status Pengajuan | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
@@ -54,7 +54,7 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
 | AD-03 | Mengelola Kategori Pekerjaan | Anisa | Belum | |
 | AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Belum | |
-| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status/tanggal, paginasi berjalan (BR-27). |
+| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status, operator (dari `USERS.role=petugas`), tanggal, dan paginasi berjalan (BR-27). |
 | AD-06 | Memeriksa Opnam | Hazel | Belum | Halaman review opnam |
 | AD-07 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
 | AD-08 | Menyetujui Hasil Review | Hazel | Belum | |

@@ -95,18 +95,18 @@ test('wizard menyimpan draft dengan status draft dan snapshot biaya', function (
     $opnam = Opnam::firstOrFail();
     expect($opnam->status)->toBe(Opnam::STATUS_DRAFT)
         ->and($opnam->opnam_number)->toMatch('/^OPN-\d{4}-\d{3}$/')
-        ->and((float) $opnam->total_biaya)->toBe(2000.0)
+        ->and((float) $opnam->total_biaya)->toBe(2300.0)
         ->and($opnam->catatan)->toBe('Catatan uji opnam')
         ->and($opnam->jenis_kapal)->toBe('Kapal Kargo');
 
     $item = OpnamItem::firstOrFail();
     expect((float) $item->unit_price)->toBe(1000.0)
-        ->and((float) $item->subtotal)->toBe(2000.0)
+        ->and((float) $item->subtotal)->toBe(2300.0)
         ->and($item->lokasi)->toBe('Dock 02 — Floating Dock')
         ->and($item->tariff_id)->toBe($data['tariff']->id)
-        ->and((float) $item->faktor)->toBe(1.0)
+        ->and((float) $item->faktor)->toBe(1.15)
         ->and((float) $item->faktor_ketebalan)->toBe(1.0)
-        ->and((float) $item->faktor_kompleksitas)->toBe(1.0)
+        ->and((float) $item->faktor_kompleksitas)->toBe(1.15)
         ->and($item->ketebalan)->toBe(12)
         ->and($item->kompleksitas)->toBe('high')
         ->and($item->catatan_tambahan)->toBe('Mohon lengkapi foto kondisi pelat.');
@@ -270,9 +270,18 @@ test('semua langkah wizard dapat dirender', function () {
     foreach ([1, 2, 3, 4, 5] as $step) {
         $this->get(route('petugas.opnams.create', ['step' => $step]))->assertOk();
     }
+
+    $this->get(route('petugas.opnams.create', ['step' => 2]))
+        ->assertOk()
+        ->assertSee('const tanggalOpnamDariDraft = "2026-06-25"', false)
+        ->assertSee('String(t.effective_from).slice(0, 10) <= tanggal', false)
+        ->assertSee('id="faktor-tambahan">1x', false)
+        ->assertDontSee('id="faktor-tambahan">Rp 0', false)
+        ->assertSee('"name":"m\\u00b2"', false)
+        ->assertDontSee('"name":"unit"', false);
 });
 
-test('kompleksitas medium tidak mengubah faktor selama konfigurasi kosong', function () {
+test('kompleksitas medium dan low memakai faktor bawaan 1,10x dan 1x', function () {
     $data = siapkanDataOpnam();
     $this->actingAs($data['petugas']);
 
@@ -322,9 +331,11 @@ test('kompleksitas medium tidak mengubah faktor selama konfigurasi kosong', func
     $opnam = Opnam::firstOrFail();
 
     expect($items)->toHaveCount(2)
-        ->and((float) $items[0]->subtotal)->toBe(10000.0)
+        ->and((float) $items[0]->subtotal)->toBe(11000.0)
+        ->and((float) $items[0]->faktor_kompleksitas)->toBe(1.1)
         ->and((float) $items[1]->subtotal)->toBe(2000.0)
-        ->and((float) $opnam->total_biaya)->toBe(12000.0);
+        ->and((float) $items[1]->faktor_kompleksitas)->toBe(1.0)
+        ->and((float) $opnam->total_biaya)->toBe(13000.0);
 });
 
 test('validasi dan lokasi unggahan mengikuti config opnam', function () {

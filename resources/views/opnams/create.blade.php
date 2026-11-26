@@ -205,18 +205,40 @@
         const faktorKetebalan = @json($faktorKetebalanJson);
         const faktorKompleksitas = @json($faktorKompleksitasJson);
         const draftItems = @json($draft['items'] ?? []);
+        // Tanggal opnam diambil dari session draft supaya tetap tersedia di
+        // langkah 2-5, tempat input tanggal tidak dirender.
+        const tanggalOpnamDariDraft = @json($tanggalOpnam ?? null);
         const tanggalOpnamInput = document.querySelector('input[name="tanggal_opnam"]');
+        const tanggalEfektif = () => tanggalOpnamInput?.value
+            || tanggalOpnamDariDraft
+            || new Date().toISOString().slice(0, 10);
         const tarifBerlaku = () => {
-            const tanggal = tanggalOpnamInput?.value || '';
-            return tariffs.filter((t) => !tanggal || t.effective_from <= tanggal);
+            const tanggal = tanggalEfektif();
+            return tariffs.filter((t) => String(t.effective_from).slice(0, 10) <= tanggal);
         };
 
         const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+        const formatFaktor = (n) => Number(n || 1).toFixed(2).replace(/\.00$/, '').replace(/0$/, '') + 'x';
         const options = (list, selected, valueKey, labelKey, filter) => list
             .filter(filter || (() => true))
             .map((o) => `<option value="${o[valueKey]}" ${String(o[valueKey]) === String(selected) ? 'selected' : ''}>${esc(o[labelKey])}</option>`)
             .join('');
+
+        // Satuan mengikuti material yang dipilih dan tarif yang berlaku,
+        // sehingga hanya m² atau m yang muncul dan harga tidak pernah 0
+        // karena salah pilih satuan.
+        const unitOptions = (material, selected) => {
+            const daftar = material
+                ? tarifBerlaku()
+                    .filter((t) => String(t.material) === String(material))
+                    .map((t) => ({ id: t.unit, name: units.find((u) => String(u.id) === String(t.unit))?.name || '' }))
+                    .filter((u, i, arr) => arr.findIndex((x) => x.name === u.name) === i)
+                : units;
+            return '<option value="">-- Pilih --</option>' + daftar
+                .map((o) => `<option value="${o.id}" ${String(o.id) === String(selected) ? 'selected' : ''}>${esc(o.name)}</option>`)
+                .join('');
+        };
 
         const shipSelect = document.getElementById('pilih-kapal');
         if (shipSelect) {
@@ -246,12 +268,14 @@
                 if (!target) return;
                 target.querySelector('.tarif-harga').textContent = rupiah(unitPrice);
                 target.querySelector('.tarif-satuan').textContent = units.find((u) => String(u.id) === unit)?.name || '';
-                target.querySelector('.faktor-badge').textContent = `Faktor tebal ${faktorTebal}x / kompleksitas ${faktorKompleks}x`;
+                target.querySelector('.faktor-badge').textContent = `Faktor tebal ${faktorTebal}x / kompleksitas ${faktorKompleks}x (${kompleksitas})`;
                 target.querySelector('.item-amount').textContent = rupiah(subtotal);
             }
 
             function updateSummary() {
                 let total = 0;
+                let faktorUtama = 1;
+                let barisPertama = true;
                 container.querySelectorAll('.item-row').forEach((row) => {
                     updateItemTariffRow(row);
                     const material = row.querySelector('.material').value;
@@ -261,12 +285,16 @@
                     const ketebalan = row.querySelector('.ketebalan').value;
                     const faktorTebal = faktorKetebalan[ketebalan] ?? 1;
                     const faktorKompleks = faktorKompleksitas[kompleksitas] ?? 1;
+                    if (barisPertama) {
+                        faktorUtama = faktorTebal * faktorKompleks;
+                        barisPertama = false;
+                    }
                     const tariff = tarifBerlaku().find((t) => String(t.material) === material && String(t.unit) === unit);
                     total += (tariff ? tariff.price * volume : 0) * faktorTebal * faktorKompleks;
                 });
                 document.getElementById('item-count').textContent = container.querySelectorAll('.item-row').length + ' item';
                 document.getElementById('subtotal').textContent = rupiah(total);
-                document.getElementById('faktor-tambahan').textContent = rupiah(0);
+                document.getElementById('faktor-tambahan').textContent = formatFaktor(faktorUtama);
                 document.getElementById('total').textContent = rupiah(total);
             }
 
@@ -323,7 +351,7 @@
                         </div>
                         <div><label>Satuan *</label>
                             <select name="items[${i}][unit_id]" class="unit" required>
-                                <option value="">-- Pilih --</option>${options(units, data?.unit_id, 'id', 'name')}
+                                ${unitOptions(data?.material_spec_id, data?.unit_id)}
                             </select></div>
                         <div><label>Ketebalan Pelat (mm)</label>
                             <input type="number" name="items[${i}][ketebalan]" class="ketebalan" min="0" value="${esc(data?.ketebalan ?? '')}">
@@ -373,13 +401,16 @@
                     row.querySelector('.type').innerHTML = '<option value="">-- Pilih --</option>' + options(types, null, 'id', 'name', (t) => String(t.category) === e.target.value);
                     row.querySelector('.material').innerHTML = '<option value="">-- Pilih --</option>';
                     row.querySelector('.spec').value = '';
+                    row.querySelector('.unit').innerHTML = unitOptions(null, null);
                 }
                 if (e.target.classList.contains('type')) {
                     row.querySelector('.material').innerHTML = '<option value="">-- Pilih --</option>' + options(materials, null, 'id', 'name', (m) => String(m.type) === e.target.value);
                     row.querySelector('.spec').value = '';
+                    row.querySelector('.unit').innerHTML = unitOptions(null, null);
                 }
                 if (e.target.classList.contains('material')) {
                     row.querySelector('.spec').value = materials.find((m) => String(m.id) === e.target.value)?.name || '';
+                    row.querySelector('.unit').innerHTML = unitOptions(e.target.value, null);
                 }
                 if (e.target.classList.contains('kompleksitas')) {
                     updateKompleksitasStyle(row);
