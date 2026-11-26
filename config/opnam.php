@@ -17,9 +17,21 @@ return [
     |
     */
 
+    /*
+     * Faktor ketebalan masih 1x untuk semua input karena aturan rentang
+     * belum ditetapkan (PRD 9 no. 19). Nilai faktor ketebalan tidak diubah
+     * di sini mengikuti keputusan Regina.
+     */
     'faktor_ketebalan' => [],
 
-    'faktor_kompleksitas' => [],
+    /*
+     * Sesuai keputusan Regina: low = 1x, medium = 1,10x, high = 1,15x.
+     */
+    'faktor_kompleksitas' => [
+        'low' => 1.0,
+        'medium' => 1.10,
+        'high' => 1.15,
+    ],
 
     /*
      * PRD 3.10.4 memberi default sementara pembulatan 2 desimal untuk

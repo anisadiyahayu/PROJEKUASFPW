@@ -825,3 +825,33 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `artisan test`
 **Manual modifications:** -
 **Notes / follow-up:** Item/Modul: PT-01, PT-05. Nilai faktor masih default 1 karena `config/opnam.php` sengaja kosong; penyesuaian pratinjau ini tidak mengubah snapshot yang dihitung server.
+
+## 2026-11-26 23:52 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`ambil data baru yang ada di github`"
+**Output summary:** `git fetch --all --prune`, lalu menggabungkan `origin/main` ke branch `regina/opnam` (merge `43e8088`, tanpa konflik). Perubahan tim yang masuk: CRUD Jenis Pekerjaan milik Anisa (`WorkTypeController`, views `work-types/*`, rute, `WorkTypeTest`) dan satu perubahan layout. Pekerjaan Regina tetap utuh; suite lengkap 61/61 lolos (290 assertions).
+**Files:** `app/Http/Controllers/WorkTypeController.php`, `resources/views/work-types/*`, `resources/views/layouts/simship.blade.php`, `routes/web.php`, `tests/Feature/WorkTypeTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `git fetch --all --prune`, `git merge origin/main --no-edit`, `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: sinkronisasi tim. Merge commit belum di-push; `origin/regina/opnam` masih di `4947729`. Branch Hazel `Feature/Reviews-Approval-Disposisi-Billing` baru saja muncul di remote tetapi belum masuk `main`.
+
+## 2026-11-27 00:02 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`lakukan pengujian uinya, pastikan langkah atau tahapannya masuk akal dam mudah di mgerti. untuk pengujiannya gunakan akun saya suda teman saya gunakan`"
+**Output summary:** UAT UI menyeluruh lewat HTTP dengan akun `regina_petugas`/`password` dan `regina_admin`/`password`: kelima tahapan wizard merender 200 dan labelnya jelas; alur lengkap sampai draft `OPN-2026-005` tersimpan; pratinjau langkah 3 memakai tarif 1.000 (bukan 9.999 masa depan) dengan subtotal 2.000; edit item volume 3 → total 3.000; filter operator Admin menampilkan "Petugas Uji Regina". Sebelum login, kolom `last_login_at` ditambahkan secara lokal di DB dev karena belum ada (perbaikan formal masih milik Halvina).
+**Files:** `PROMPT_LOG.md`, `prompt_history.md`; file sementara di direktori temp di luar repo (skrip curl, cookie, HTML)
+**Commands:** `artisan tinker --execute` (tambah kolom lokal + cek DB), `artisan serve --port=8001`, `curl` untuk seluruh alur, `kill` server
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-01, PT-03, PT-04, PT-05, PT-06, AD-05. Tahapan: Informasi Kapal → Detail Pekerjaan → Estimasi Biaya → Bukti Pekerjaan → Final Review; tombol "Kirim untuk Review" sengaja disabled (PT-07 parkir). Baris "Faktor" = `1x` karena config masih kosong. Data uji `OPN-2026-005` sengaja dibiarkan di DB dev untuk diperiksa Regina. Tidak ada kode aplikasi yang diubah.
+
+## 2026-11-27 00:21 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`kerjakan saja yang hasilnya sesuai yang sudah saya bilang`"
+**Output summary:** Mengisi `config/opnam.php` sesuai keputusan Regina: kompleksitas low 1x, medium 1,10x, high 1,15x; faktor ketebalan sengaja tetap kosong (1x) karena belum ada aturan. Satuan di wizard dan halaman edit dibatasi m²/m serta otomatis mengikuti material dan tarif berlaku (dedupe nama) agar harga tidak 0. Test disesuaikan dengan nilai baru; suite lengkap 61/61 lolos (296 assertions).
+**Files:** `config/opnam.php`, `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/create.blade.php`, `resources/views/opnams/edit.blade.php`, `tests/Feature/OpnamCostCalculatorTest.php`, `tests/Feature/OpnamDraftTest.php`, `tasklist.md`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-03, PT-05. Tidak ada file master Anisa/Rifqy yang diubah; `UNITS` hanya dibaca. Faktor ketebalan masih 1x sampai Regina memberi aturan rentang/nilai.

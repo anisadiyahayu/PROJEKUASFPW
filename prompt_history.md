@@ -245,3 +245,21 @@ yang nomor 2 ada di anggota mana?
 ## 2026-11-26 23:44 WIB
 
 **Regina:** setuju
+
+---
+
+## 2026-11-26 23:52 WIB
+
+**Regina:** ambil data baru yang ada di github
+
+---
+
+## 2026-11-27 00:02 WIB
+
+**Regina:** lakukan pengujian uinya, pastikan langkah atau tahapannya masuk akal dam mudah di mgerti. untuk pengujiannya gunakan akun saya suda teman saya gunakan
+
+---
+
+## 2026-11-27 00:21 WIB
+
+**Regina:** kerjakan saja yang hasilnya sesuai yang sudah saya bilang

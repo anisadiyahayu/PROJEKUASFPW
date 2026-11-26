@@ -139,7 +139,7 @@ class OpnamController extends Controller
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::orderBy('name')->get(),
-            'units' => Unit::orderBy('name')->get(),
+            'units' => Unit::whereIn('name', ['m²', 'm'])->orderBy('id')->get()->unique('name')->values(),
             'tariffs' => Tariff::orderByDesc('effective_from')->get(),
         ]);
     }
@@ -291,7 +291,9 @@ class OpnamController extends Controller
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::orderBy('name')->get(),
-            'units' => Unit::orderBy('name')->get(),
+            'units' => Unit::whereIn('name', ['m²', 'm'])->orderBy('id')->get(),
+            'tariffs' => Tariff::orderByDesc('effective_from')->get(),
+            'tanggalOpnam' => $opnam->tanggal_opnam,
         ]);
     }
 

@@ -225,6 +225,21 @@
             .map((o) => `<option value="${o[valueKey]}" ${String(o[valueKey]) === String(selected) ? 'selected' : ''}>${esc(o[labelKey])}</option>`)
             .join('');
 
+        // Satuan mengikuti material yang dipilih dan tarif yang berlaku,
+        // sehingga hanya m² atau m yang muncul dan harga tidak pernah 0
+        // karena salah pilih satuan.
+        const unitOptions = (material, selected) => {
+            const daftar = material
+                ? tarifBerlaku()
+                    .filter((t) => String(t.material) === String(material))
+                    .map((t) => ({ id: t.unit, name: units.find((u) => String(u.id) === String(t.unit))?.name || '' }))
+                    .filter((u, i, arr) => arr.findIndex((x) => x.name === u.name) === i)
+                : units;
+            return '<option value="">-- Pilih --</option>' + daftar
+                .map((o) => `<option value="${o.id}" ${String(o.id) === String(selected) ? 'selected' : ''}>${esc(o.name)}</option>`)
+                .join('');
+        };
+
         const shipSelect = document.getElementById('pilih-kapal');
         if (shipSelect) {
             shipSelect.addEventListener('change', () => {
@@ -336,7 +351,7 @@
                         </div>
                         <div><label>Satuan *</label>
                             <select name="items[${i}][unit_id]" class="unit" required>
-                                <option value="">-- Pilih --</option>${options(units, data?.unit_id, 'id', 'name')}
+                                ${unitOptions(data?.material_spec_id, data?.unit_id)}
                             </select></div>
                         <div><label>Ketebalan Pelat (mm)</label>
                             <input type="number" name="items[${i}][ketebalan]" class="ketebalan" min="0" value="${esc(data?.ketebalan ?? '')}">
@@ -386,13 +401,16 @@
                     row.querySelector('.type').innerHTML = '<option value="">-- Pilih --</option>' + options(types, null, 'id', 'name', (t) => String(t.category) === e.target.value);
                     row.querySelector('.material').innerHTML = '<option value="">-- Pilih --</option>';
                     row.querySelector('.spec').value = '';
+                    row.querySelector('.unit').innerHTML = unitOptions(null, null);
                 }
                 if (e.target.classList.contains('type')) {
                     row.querySelector('.material').innerHTML = '<option value="">-- Pilih --</option>' + options(materials, null, 'id', 'name', (m) => String(m.type) === e.target.value);
                     row.querySelector('.spec').value = '';
+                    row.querySelector('.unit').innerHTML = unitOptions(null, null);
                 }
                 if (e.target.classList.contains('material')) {
                     row.querySelector('.spec').value = materials.find((m) => String(m.id) === e.target.value)?.name || '';
+                    row.querySelector('.unit').innerHTML = unitOptions(e.target.value, null);
                 }
                 if (e.target.classList.contains('kompleksitas')) {
                     updateKompleksitasStyle(row);

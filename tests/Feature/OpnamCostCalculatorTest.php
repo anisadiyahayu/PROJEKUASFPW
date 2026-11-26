@@ -2,12 +2,14 @@
 
 use App\Services\OpnamCostCalculator;
 
-test('item dengan semua faktor bernilai 1 menghasilkan subtotal volume kali unit price', function () {
+test('subtotal tanpa faktor eksplisit tetap volume kali unit price', function () {
     $calculator = new OpnamCostCalculator();
 
     expect($calculator->subtotalItem(10, 100000))->toBe(1000000.0)
         ->and($calculator->faktorKetebalan(12))->toBe(1.0)
-        ->and($calculator->faktorKompleksitas('high'))->toBe(1.0);
+        ->and($calculator->faktorKompleksitas('low'))->toBe(1.0)
+        ->and($calculator->faktorKompleksitas('medium'))->toBe(1.1)
+        ->and($calculator->faktorKompleksitas('high'))->toBe(1.15);
 });
 
 test('contoh kalkulasi PRD 3.10.4 menghasilkan 1.320.000', function () {

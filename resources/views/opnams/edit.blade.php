@@ -176,3 +176,43 @@
         </form>
     </div>
 @endsection
+
+@push('scripts')
+    @php
+        $unitJson = $units->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values();
+        $tariffJson = $tariffs->map(fn ($t) => [
+            'material' => $t->material_spec_id,
+            'unit' => $t->unit_id,
+            'effective_from' => (string) $t->effective_from,
+        ])->values();
+    @endphp
+    <script>
+        const units = @json($unitJson);
+        const tariffs = @json($tariffJson);
+        const tanggalOpnam = @json($tanggalOpnam ? $tanggalOpnam->toDateString() : now()->toDateString());
+        const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        const unitOptions = (material, selected) => {
+            const daftar = material
+                ? tariffs
+                    .filter((t) => String(t.effective_from).slice(0, 10) <= tanggalOpnam
+                        && String(t.material) === String(material))
+                    .map((t) => ({ id: t.unit, name: units.find((u) => String(u.id) === String(t.unit))?.name || '' }))
+                    .filter((u, i, arr) => arr.findIndex((x) => x.name === u.name) === i)
+                : units;
+            return '<option value="">-- Pilih --</option>' + daftar
+                .map((o) => `<option value="${o.id}" ${String(o.id) === String(selected) ? 'selected' : ''}>${esc(o.name)}</option>`)
+                .join('');
+        };
+
+        document.querySelectorAll('form').forEach((form) => {
+            const material = form.querySelector('select[name="material_spec_id"]');
+            const unit = form.querySelector('select[name="unit_id"]');
+            if (!material || !unit) return;
+            unit.innerHTML = unitOptions(material.value, unit.value);
+            material.addEventListener('change', () => {
+                unit.innerHTML = unitOptions(material.value, null);
+            });
+        });
+    </script>
+@endpush
