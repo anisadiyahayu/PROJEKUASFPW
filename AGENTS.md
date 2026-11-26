@@ -3,7 +3,10 @@
 ## Baca dulu
 - `SKILL.md` — ERD revisi (17 tabel, 24 relasi): kolom, enum, FK/UK, snapshot, soft delete. Sumber kebenaran skema; ERD mengalahkan dokumen lain.
 - `prd.md` — use case, BR-01..BR-27, checklist kepemilikan Bagian 10. `taskinstruction.md` — pembagian tugas & aturan kerja; Bagian 8 = format pertanyaan konfirmasi.
-- `prompt.md` (log prompt + timestamp WIB) dan `tasklist.md` (progres pribadi). `UI_Project_FPW.pdf` bukan acuan; screenshot Figma di `docs/` dipakai untuk tampilan halaman Regina (keputusan 2026-11-25). Field di luar ERD tetap dilarang, **kecuali** `SHIPS.jenis_kapal`, `OPNAMS.lokasi`, `OPNAMS.adjustment_amount`, `OPNAM_ITEMS.faktor`, `OPNAM_ITEMS.ketebalan`, `OPNAM_ITEMS.kompleksitas`, dan `OPNAM_ITEMS.catatan_tambahan` yang ditambahkan atas permintaan 2026-11-25/26 — penyimpangan ERD yang masih perlu konfirmasi tim. Jangan menulis ke tabel master Anisa/Rifqy dari modul opnam; cukup baca.
+- `tasklist.md` (progres pribadi). `UI_Project_FPW.pdf` bukan acuan; screenshot Figma di `docs/` dipakai untuk tampilan halaman Regina (keputusan 2026-11-25). Field di luar ERD tetap dilarang, **kecuali** `SHIPS.jenis_kapal`, `OPNAMS.lokasi`, `OPNAMS.adjustment_amount`, `OPNAM_ITEMS.faktor`, `OPNAM_ITEMS.ketebalan`, `OPNAM_ITEMS.kompleksitas`, dan `OPNAM_ITEMS.catatan_tambahan` yang ditambahkan atas permintaan 2026-11-25/26 — penyimpangan ERD yang masih perlu konfirmasi tim. Jangan menulis ke tabel master Anisa/Rifqy dari modul opnam; cukup baca.
+- Keep UI changes consistent with the existing Tailwind patterns; clickable elements should have `hover:` states plus `transition-colors`.
+- Use named routes with `route()`, never hardcoded URLs.
+- Setiap prompt dari Pemilik mana pun dicatat sebagai satu blok di `PROMPT_LOG.md`, mengikuti format di kepala file. Entri yang ditulis belakangan ditandai `retroactive`. Log owner lain dipindahkan ke file ini dan log di luar file ini dihapus.
 
 ## Aturan kerja tim
 - Selalu pastikan siapa peminta. Kerjakan hanya item dengan `Pemilik` = peminta di `prd.md` Bagian 10.
@@ -11,7 +14,7 @@
 - Item "Di luar tupoksi" (`taskinstruction.md` Bagian 6) dilarang dikerjakan sebelum tim menetapkan pemilik. USERS/login/middleware/policy hanya Halvina.
 - Nilai "Tidak dispesifikasikan" → berhenti dan tanyakan pakai format Bagian 8, jangan menebak. Pakai nilai persis: `petugas`/`admin`/`direksi`, `draft`/`menunggu_review`/`perlu_revisi`/`menunggu_approval_direksi`/`ditolak`/`disetujui`/`dokumen_terbit`, `menunggu_approval`, `diskon`/`markup`.
 - Snapshot (`unit_price`, `subtotal`, `total_biaya`, field kapal/owner/nominal di invoice & technical report) ditulis sekali; jangan hitung ulang dari master. `deleted_at` hanya di OWNERS, SHIPS, WORK_CATEGORIES, WORK_TYPES, MATERIAL_SPECS.
-- Item selesai → update Status/Catatan di `tasklist.md` **dan** `prd.md` Bagian 10 dalam satu perubahan. Tiap prompt baru → tambah entri di `prompt.md`.
+- Item selesai → update Status/Catatan di `tasklist.md` **dan** `prd.md` Bagian 10 dalam satu perubahan. Tiap prompt baru → tambah blok di `PROMPT_LOG.md`.
 
 ## Perintah & environment
 - `php` di PATH = 8.3.30, tapi vendor butuh PHP ≥ 8.4.1. Pakai `/Applications/MAMP/bin/php/php8.5.2/bin/php` untuk semua perintah artisan/composer, mis. `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan migrate`.

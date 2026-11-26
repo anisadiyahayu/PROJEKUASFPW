@@ -17,6 +17,7 @@
 - Kolom snapshot (`unit_price`, `subtotal`, `total_biaya`, `ship_name`, `hull_number`, `owner_name`, `owner_address`, `subtotal_amount`, `adjustment_amount`, `total_amount`) ditulis sekali saat transaksi terjadi dan tidak dihitung ulang dari data master setelahnya.
 - Data master yang dihapus memakai `deleted_at` hanya jika ERD mendefinisikannya. Jangan berasumsi soft delete di tempat lain.
 
+
 ### Transisi status opnam
 
 | Dari | Ke | Pemicu | Dasar |
