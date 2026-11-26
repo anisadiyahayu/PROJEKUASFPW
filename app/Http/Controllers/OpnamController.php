@@ -63,14 +63,9 @@ class OpnamController extends Controller
             $query->where('created_by', (int) $operator);
         }
 
-        $dari = trim((string) $request->query('tanggal_dari', ''));
-        if ($dari !== '') {
-            $query->whereDate('tanggal_opnam', '>=', $dari);
-        }
-
-        $sampai = trim((string) $request->query('tanggal_sampai', ''));
-        if ($sampai !== '') {
-            $query->whereDate('tanggal_opnam', '<=', $sampai);
+        $tanggal = trim((string) $request->query('tanggal', ''));
+        if ($tanggal !== '') {
+            $query->whereDate('tanggal_opnam', $tanggal);
         }
 
         $opnams = $query->orderByDesc('tanggal_opnam')
@@ -81,6 +76,23 @@ class OpnamController extends Controller
         $operators = User::where('role', 'petugas')->orderBy('name')->get();
 
         return view('opnams.index', compact('opnams', 'statuses', 'operators'));
+    }
+
+    /**
+     * AD-05: detail opnam bersifat baca saja. Tidak memuat aksi review/approval
+     * karena itu bagian dari modul Hazel (AD-06 dan seterusnya).
+     */
+    public function show(Opnam $opnam): View
+    {
+        $opnam->load([
+            'ship.owner',
+            'creator',
+            'items.tariff.unit',
+            'items.tariff.materialSpec' => fn ($query) => $query->withTrashed(),
+            'items.attachments',
+        ]);
+
+        return view('opnams.show', compact('opnam'));
     }
 
     public function indexMine(Request $request): View

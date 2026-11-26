@@ -1,9 +1,15 @@
 <?php
 
+use App\Models\MaterialSpec;
 use App\Models\Opnam;
+use App\Models\OpnamItem;
 use App\Models\Owner;
 use App\Models\Ship;
+use App\Models\Tariff;
+use App\Models\Unit;
 use App\Models\User;
+use App\Models\WorkCategory;
+use App\Models\WorkType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -88,17 +94,14 @@ test('filter status hanya menampilkan status terpilih', function () {
         ->assertDontSee('OPN-001');
 });
 
-test('filter tanggal hanya menampilkan opnam dalam rentang', function () {
+test('filter tanggal hanya menampilkan opnam pada tanggal yang dipilih', function () {
     $admin = adminUntukDaftarOpnam();
     $ship = kapalUntukDaftarOpnam('Kapal Satu', 'HULL-001');
     opnamUntukDaftar($admin, $ship, 'OPN-001', Opnam::STATUS_DRAFT, '2026-01-05');
     opnamUntukDaftar($admin, $ship, 'OPN-002', Opnam::STATUS_DRAFT, '2026-02-10');
 
     $this->actingAs($admin)
-        ->get(route('admin.opnams.index', [
-            'tanggal_dari' => '2026-02-01',
-            'tanggal_sampai' => '2026-02-28',
-        ]))
+        ->get(route('admin.opnams.index', ['tanggal' => '2026-02-10']))
         ->assertOk()
         ->assertSee('OPN-002')
         ->assertDontSee('OPN-001');
@@ -150,4 +153,56 @@ test('filter operator hanya menampilkan opnam milik petugas terpilih', function 
         ->assertOk()
         ->assertSee('Petugas Satu')
         ->assertSee('Petugas Dua');
+});
+
+test('admin dapat membuka detail opnam dari tombol mata', function () {
+    $admin = adminUntukDaftarOpnam();
+    $ship = kapalUntukDaftarOpnam('Kapal Detail', 'HULL-DETAIL');
+    $opnam = opnamUntukDaftar($admin, $ship, 'OPN-DETAIL', Opnam::STATUS_DRAFT, '2026-01-05');
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.index'))
+        ->assertOk()
+        ->assertSee(route('admin.opnams.show', $opnam), false);
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.show', $opnam))
+        ->assertOk()
+        ->assertSee('OPN-DETAIL')
+        ->assertSee('Kapal Detail');
+
+    $petugas = User::create([
+        'name' => 'Petugas Detail', 'username' => uniqid('petugas-detail-'),
+        'email' => uniqid('detail-').'@example.com', 'password' => 'password',
+        'role' => 'petugas', 'is_active' => true,
+    ]);
+    $this->actingAs($petugas)
+        ->get(route('admin.opnams.show', $opnam))
+        ->assertForbidden();
+});
+
+test('detail opnam menampilkan lokasi pekerjaan dari item', function () {
+    $admin = adminUntukDaftarOpnam();
+    $ship = kapalUntukDaftarOpnam('Kapal Lokasi', 'HULL-LOK');
+    $opnam = opnamUntukDaftar($admin, $ship, 'OPN-LOK', Opnam::STATUS_DRAFT, '2026-01-05');
+
+    $category = WorkCategory::create(['name' => 'Kategori Lokasi']);
+    $type = WorkType::create(['work_category_id' => $category->id, 'name' => 'Jenis Lokasi']);
+    $material = MaterialSpec::create(['work_type_id' => $type->id, 'name' => 'Material Lokasi']);
+    $unit = Unit::create(['code' => 'LOK-M2', 'name' => 'm²']);
+    $tariff = Tariff::create([
+        'material_spec_id' => $material->id, 'unit_id' => $unit->id, 'created_by' => $admin->id,
+        'price' => 1000, 'effective_from' => '2026-01-01',
+    ]);
+    OpnamItem::create([
+        'opnam_id' => $opnam->id, 'tariff_id' => $tariff->id,
+        'volume' => 1, 'unit_price' => 1000, 'subtotal' => 1000,
+        'description' => 'Pekerjaan di dock', 'sort_order' => 1,
+        'lokasi' => 'Dock 02 — Floating Dock',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.show', $opnam))
+        ->assertOk()
+        ->assertSee('Dock 02 — Floating Dock', false);
 });
