@@ -94,6 +94,7 @@
         'Data Pemilik Kapal' => null,
         'Data Kapal' => null,
         'Master Pekerjaan' => route('admin.work-categories.index'),
+        'Jenis Pekerjaan' => route('admin.work-types.index'),
         'Master Tarif' => null,
         'Data Opname' => route('admin.opnams.index'),
         'Review Opname' => null,
@@ -123,7 +124,7 @@
             <p class="nav-label">Menu {{ $roleLabel }}</p>
             @foreach ($menu as $label => $url)
                 @if ($url)
-                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Master Pekerjaan' => 'admin.work-categories.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
+                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Master Pekerjaan' => 'admin.work-categories.*', 'Jenis Pekerjaan' => 'admin.work-types.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
                 @else
                     <span class="item">{{ $label }}</span>
                 @endif
