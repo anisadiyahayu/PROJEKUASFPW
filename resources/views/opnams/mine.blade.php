@@ -71,7 +71,11 @@
                                class="badge badge-{{ $opnam->status }}" title="Klik untuk filter status">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</a>
                         </td>
                         <td>
-                            <span class="btn btn-light" style="padding:5px 8px; opacity:.5;" title="Detail belum tersedia">👁 Detail</span>
+                            @if ($opnam->status === 'draft')
+                                <a href="{{ route('petugas.opnams.edit', $opnam) }}" class="btn btn-light" style="padding:5px 8px;">✎ Edit Item</a>
+                            @else
+                                <span class="btn btn-light" style="padding:5px 8px; opacity:.5;" title="Detail belum tersedia">👁 Detail</span>
+                            @endif
                         </td>
                     </tr>
                 @empty
