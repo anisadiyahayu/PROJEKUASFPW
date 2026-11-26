@@ -88,20 +88,39 @@ test('filter status hanya menampilkan status terpilih', function () {
         ->assertDontSee('OPN-001');
 });
 
-test('filter tanggal hanya menampilkan opnam dalam rentang', function () {
+test('filter tanggal tunggal hanya menampilkan opnam pada tanggal itu', function () {
     $admin = adminUntukDaftarOpnam();
     $ship = kapalUntukDaftarOpnam('Kapal Satu', 'HULL-001');
     opnamUntukDaftar($admin, $ship, 'OPN-001', Opnam::STATUS_DRAFT, '2026-01-05');
     opnamUntukDaftar($admin, $ship, 'OPN-002', Opnam::STATUS_DRAFT, '2026-02-10');
 
     $this->actingAs($admin)
-        ->get(route('admin.opnams.index', [
-            'tanggal_dari' => '2026-02-01',
-            'tanggal_sampai' => '2026-02-28',
-        ]))
+        ->get(route('admin.opnams.index', ['tanggal' => '2026-02-10']))
         ->assertOk()
         ->assertSee('OPN-002')
         ->assertDontSee('OPN-001');
+});
+
+test('filter operator hanya menampilkan opnam milik operator terpilih', function () {
+    $admin = adminUntukDaftarOpnam();
+    $operatorSatu = User::create([
+        'name' => 'Rizky', 'username' => 'rizky', 'email' => 'rizky@example.com',
+        'password' => 'password', 'role' => 'petugas', 'is_active' => true,
+    ]);
+    $operatorDua = User::create([
+        'name' => 'Dewi', 'username' => 'dewi', 'email' => 'dewi@example.com',
+        'password' => 'password', 'role' => 'petugas', 'is_active' => true,
+    ]);
+    $ship = kapalUntukDaftarOpnam('Kapal Satu', 'HULL-001');
+    opnamUntukDaftar($operatorSatu, $ship, 'OPN-100', Opnam::STATUS_DRAFT, '2026-01-05');
+    opnamUntukDaftar($operatorDua, $ship, 'OPN-200', Opnam::STATUS_DRAFT, '2026-01-06');
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.index', ['operator' => $operatorSatu->id]))
+        ->assertOk()
+        ->assertSee('OPN-100')
+        ->assertDontSee('OPN-200')
+        ->assertSee('Semua Operator');
 });
 
 test('daftar opnam dipaginasi', function () {
@@ -121,4 +140,20 @@ test('daftar opnam dipaginasi', function () {
         ->get(route('admin.opnams.index', ['page' => 2]))
         ->assertOk()
         ->assertSee('OPN-001');
+});
+
+test('admin dapat membuka detail opnam milik petugas', function () {
+    $admin = adminUntukDaftarOpnam();
+    $petugas = User::create([
+        'name' => 'Petugas Satu', 'username' => 'petugas1', 'email' => 'petugas1@example.com',
+        'password' => 'password', 'role' => 'petugas', 'is_active' => true,
+    ]);
+    $ship = kapalUntukDaftarOpnam('Kapal Satu', 'HULL-001');
+    $opnam = opnamUntukDaftar($petugas, $ship, 'OPN-001', Opnam::STATUS_DRAFT, '2026-01-05');
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.show', $opnam))
+        ->assertOk()
+        ->assertSee('OPN-001')
+        ->assertSee('Kembali ke Data Opname');
 });

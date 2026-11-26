@@ -22,8 +22,8 @@ Working copy untuk memantau item yang menjadi tanggung jawab Regina. Sumber kebe
 | PT-04 | Mengunggah Foto/Bukti Pekerjaan | Regina | Selesai | — | Upload **per item** lewat UID (`bukti[uid][]`); `saveDraft` memetakan uid→item_id (tidak lagi semua ke item pertama). JPG/PNG/PDF ≤10 MB; validasi BR-26. Tes 2 item + 2 file lulus. |
 | PT-05 | Melihat Perhitungan Biaya | Regina | Selesai | — | Tarif terbaru per material+satuan; `subtotal = volume × unit_price`; `total_biaya` = jumlah subtotal (disetujui); snapshot beku. |
 | PT-06 | Menyimpan Draft Opnam | Regina | Selesai | — | Tombol Simpan Draft tersedia di Final Review (sesuai screenshot); nomor `OPN-{tahun}-{3 digit}` (disetujui); status persis `draft`. |
-| PT-08 | Melihat Status Pengajuan (Opname Saya) | Regina | Selesai | Tombol Detail masih placeholder (PT-09 parkir) | Halaman `/petugas/opnams`: hanya opnam `created_by = auth()->id()`, pencarian, filter status/tanggal, paginasi (BR-27). 3 tes Pest lulus. |
-| AD-05 | Melihat Daftar Opnam | Regina | Selesai | — | Tampilan Supervisor sesuai screenshot: breadcrumb, badge status, kolom Operator, paginasi. Filter `q`, status, rentang `tanggal_opnam`. 5 tes Pest lulus (BR-27). |
+| PT-08 | Melihat Status Pengajuan (Opname Saya) | Regina | Selesai | Perbaikan (PT-09) masih parkir | `/petugas/opnams`: daftar milik petugas login + filter status/tanggal + paginasi; klik badge = filter. `/petugas/opnams/{id}`: detail **read-only** (info, item, bukti, `STATUS_HISTORIES`), 403 untuk opnam orang lain. 5 tes Pest lulus. |
+| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Tombol riwayat & Buka Review masih placeholder (Hazel / DB-12) | Filter bar: `q`, `status` + `operator` auto-submit, tanggal tunggal, tanpa tombol Filter. Aksi 👁 → `admin.opnams.show` (detail read-only, semua opnam). 7 tes Pest lulus. |
 
 ## Rencana pengerjaan
 

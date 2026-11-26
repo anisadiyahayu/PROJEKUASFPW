@@ -818,7 +818,7 @@ Modul yang bisa dipakai sebagai dasar pembagian: Umum (UC-U), Petugas (PT), Admi
 | PT-05 | Melihat Perhitungan Biaya | Regina | Selesai | Snapshot `unit_price`/`subtotal`; `total_biaya` = jumlah subtotal. |
 | PT-06 | Menyimpan Draft Opnam | Regina | Selesai | Tombol Simpan Draft di Final Review; nomor `OPN-{tahun}-{3 digit}`. |
 | PT-07 | Mengajukan Opnam untuk Review | Di luar tupoksi | Belum | Lihat 10.5 |
-| PT-08 | Melihat Status Pengajuan | Regina | Selesai | Opname Saya: daftar opnam milik petugas login; filter & paginasi; 3 tes lulus. |
+| PT-08 | Melihat Status Pengajuan | Regina | Selesai | Opname Saya: daftar milik petugas login; filter & paginasi; detail read-only (riwayat status); 5 tes lulus. |
 | PT-09 | Memperbaiki Opnam yang Dikembalikan | Di luar tupoksi | Belum | Lihat 10.5 |
 | PT-10 | Melihat Riwayat Aktivitas | Rifqy | Belum | Konfirmasi, cakupan belum jelas |
 | PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat 10.5 |
@@ -826,7 +826,7 @@ Modul yang bisa dipakai sebagai dasar pembagian: Umum (UC-U), Petugas (PT), Admi
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
 | AD-03 | Mengelola Kategori Pekerjaan | Anisa | Belum | |
 | AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, dan Tarif | Anisa | Belum | |
-| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Tampilan Supervisor sesuai screenshot; pencarian, filter status/tanggal, paginasi; 5 tes Pest lulus. |
+| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Filter `q`, status + operator, tanggal tunggal; aksi 👁 → detail read-only Admin; 7 tes lulus. |
 | AD-06 | Memeriksa Opnam | Hazel | Belum | Halaman review opnam |
 | AD-07 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat 10.5 |
 | AD-08 | Menyetujui Hasil Review | Hazel | Belum | |

@@ -99,3 +99,21 @@ test('opname saya dipaginasi', function () {
         ->assertOk()
         ->assertSee('OPN-001');
 });
+
+test('detail opname hanya bisa dibuka oleh pemiliknya', function () {
+    $data = siapkanOpnameSaya();
+    $milikSaya = buatOpnamSaya($data['petugas'], $data['ship'], 'OPN-100', Opnam::STATUS_DRAFT, '2026-06-25');
+    $milikOrangLain = buatOpnamSaya($data['petugasLain'], $data['ship'], 'OPN-999', Opnam::STATUS_DRAFT, '2026-06-26');
+
+    $this->actingAs($data['petugas'])
+        ->get(route('petugas.opnams.show', $milikSaya))
+        ->assertOk()
+        ->assertSee('OPN-100')
+        ->assertSee('Kembali ke Opname Saya')
+        ->assertSee('Ringkasan Estimasi')
+        ->assertDontSee('Riwayat Proses');
+
+    $this->actingAs($data['petugas'])
+        ->get(route('petugas.opnams.show', $milikOrangLain))
+        ->assertForbidden();
+});

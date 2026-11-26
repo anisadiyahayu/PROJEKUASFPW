@@ -25,20 +25,24 @@
                 <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nomor opname atau nama kapal...">
             </div>
             <div style="width: 180px;">
-                <select name="status">
+                <select name="status" onchange="this.form.submit()">
                     <option value="">Semua Status</option>
                     @foreach ($statuses as $status)
                         <option value="{{ $status }}" @selected(request('status') === $status)>{{ $statusLabels[$status] }}</option>
                     @endforeach
                 </select>
             </div>
-            <div style="width: 170px;">
-                <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" aria-label="Tanggal dari">
+            <div style="width: 180px;">
+                <select name="operator" onchange="this.form.submit()">
+                    <option value="">Semua Operator</option>
+                    @foreach ($operators as $operator)
+                        <option value="{{ $operator->id }}" @selected((string) request('operator') === (string) $operator->id)>{{ $operator->name }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div style="width: 170px;">
-                <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}" aria-label="Tanggal sampai">
+            <div style="width: 200px;">
+                <input type="date" name="tanggal" value="{{ request('tanggal') }}" aria-label="Filter tanggal" onchange="this.form.submit()">
             </div>
-            <div style="width: 90px;"><button type="submit" class="btn btn-primary">Filter</button></div>
         </form>
     </div>
 
@@ -65,7 +69,7 @@
                         <td>Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
                         <td><span class="badge badge-{{ $opnam->status }}">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</span></td>
                         <td>
-                            <span class="btn btn-light" style="padding:5px 8px;" title="Detail belum tersedia">👁</span>
+                            <a href="{{ route('admin.opnams.show', $opnam) }}" class="btn btn-light" style="padding:5px 8px;" title="Lihat detail">👁</a>
                             <span class="btn btn-light" style="padding:5px 8px;" title="Riwayat belum tersedia">◷</span>
                             <span class="btn btn-light" style="padding:5px 8px; opacity:.5;">Buka Review</span>
                         </td>

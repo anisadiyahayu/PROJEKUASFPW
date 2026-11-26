@@ -56,6 +56,7 @@ Route::middleware(['auth', 'role:petugas'])
         Route::get('/opnams', [OpnamController::class, 'indexMine'])->name('opnams.index');
         Route::get('/opnams/create', [OpnamController::class, 'create'])->name('opnams.create');
         Route::post('/opnams/create', [OpnamController::class, 'storeStep'])->name('opnams.store-step');
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
     });
 
 Route::middleware(['auth', 'role:admin'])
@@ -64,6 +65,7 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::view('/dashboard', 'dashboard.admin')->name('dashboard');
         Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'showForAdmin'])->name('opnams.show');
     });
 
 Route::middleware(['auth', 'role:direksi'])

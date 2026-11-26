@@ -9,6 +9,7 @@ use App\Models\OpnamItem;
 use App\Models\Ship;
 use App\Models\Tariff;
 use App\Models\Unit;
+use App\Models\User;
 use App\Models\WorkCategory;
 use App\Models\WorkType;
 use Illuminate\Contracts\View\View;
@@ -31,6 +32,8 @@ class OpnamController extends Controller
             Opnam::STATUS_DOKUMEN_TERBIT,
         ];
 
+        $operators = User::where('role', User::ROLE_PETUGAS)->orderBy('name')->get();
+
         $query = Opnam::query()->with(['ship', 'creator']);
 
         $q = trim((string) $request->query('q', ''));
@@ -49,14 +52,14 @@ class OpnamController extends Controller
             $query->where('status', $status);
         }
 
-        $dari = trim((string) $request->query('tanggal_dari', ''));
-        if ($dari !== '') {
-            $query->whereDate('tanggal_opnam', '>=', $dari);
+        $operator = (int) $request->query('operator', 0);
+        if ($operator > 0 && $operators->contains('id', $operator)) {
+            $query->where('created_by', $operator);
         }
 
-        $sampai = trim((string) $request->query('tanggal_sampai', ''));
-        if ($sampai !== '') {
-            $query->whereDate('tanggal_opnam', '<=', $sampai);
+        $tanggal = trim((string) $request->query('tanggal', ''));
+        if ($tanggal !== '') {
+            $query->whereDate('tanggal_opnam', $tanggal);
         }
 
         $opnams = $query->orderByDesc('tanggal_opnam')
@@ -64,7 +67,7 @@ class OpnamController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('opnams.index', compact('opnams', 'statuses'));
+        return view('opnams.index', compact('opnams', 'statuses', 'operators'));
     }
 
     public function indexMine(Request $request): View
@@ -108,6 +111,34 @@ class OpnamController extends Controller
             ->withQueryString();
 
         return view('opnams.mine', compact('opnams', 'statuses'));
+    }
+
+    public function show(int $opnam): View
+    {
+        $record = Opnam::with([
+            'ship.owner',
+            'items' => fn ($query) => $query->orderBy('sort_order'),
+            'items.tariff.materialSpec.workType',
+            'items.tariff.unit',
+            'attachments',
+        ])->findOrFail($opnam);
+
+        abort_unless((int) $record->created_by === auth()->id(), 403);
+
+        return view('opnams.show', compact('record'));
+    }
+
+    public function showForAdmin(int $opnam): View
+    {
+        $record = Opnam::with([
+            'ship.owner',
+            'items' => fn ($query) => $query->orderBy('sort_order'),
+            'items.tariff.materialSpec.workType',
+            'items.tariff.unit',
+            'attachments',
+        ])->findOrFail($opnam);
+
+        return view('opnams.show', compact('record'));
     }
 
     public function create(Request $request): View
