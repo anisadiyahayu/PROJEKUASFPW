@@ -1,47 +1,27 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# SIMSHIP — catatan untuk agent
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+## Baca dulu
+- `SKILL.md` — ERD revisi (17 tabel, 24 relasi): kolom, enum, FK/UK, snapshot, soft delete. Sumber kebenaran skema; ERD mengalahkan dokumen lain.
+- `prd.md` — use case, BR-01..BR-27, checklist kepemilikan Bagian 10. `taskinstruction.md` — pembagian tugas & aturan kerja; Bagian 8 = format pertanyaan konfirmasi.
+- `prompt.md` (log prompt + timestamp WIB) dan `tasklist.md` (progres pribadi). `UI_Project_FPW.pdf` bukan acuan; screenshot Figma di `docs/` dipakai untuk tampilan halaman Regina (keputusan 2026-11-25). Field di luar ERD tetap dilarang, **kecuali** `SHIPS.jenis_kapal`, `OPNAMS.lokasi`, `OPNAMS.adjustment_amount`, dan `OPNAM_ITEMS.faktor` yang ditambahkan atas permintaan 2026-11-25 — penyimpangan ERD yang masih perlu konfirmasi tim.
 
-## Prerequisites
+## Aturan kerja tim
+- Selalu pastikan siapa peminta. Kerjakan hanya item dengan `Pemilik` = peminta di `prd.md` Bagian 10.
+- Pemilik: Halvina = USERS/auth/middleware/policy/dashboard; Anisa = kategori/jenis/material/satuan/tarif; Rifqy = owner/kapal/laporan/riwayat/audit; Regina = opnam/item/lampiran/kalkulasi + daftar opnam; Hazel = review/approval/diskon/invoice/technical report.
+- Item "Di luar tupoksi" (`taskinstruction.md` Bagian 6) dilarang dikerjakan sebelum tim menetapkan pemilik. USERS/login/middleware/policy hanya Halvina.
+- Nilai "Tidak dispesifikasikan" → berhenti dan tanyakan pakai format Bagian 8, jangan menebak. Pakai nilai persis: `petugas`/`admin`/`direksi`, `draft`/`menunggu_review`/`perlu_revisi`/`menunggu_approval_direksi`/`ditolak`/`disetujui`/`dokumen_terbit`, `menunggu_approval`, `diskon`/`markup`.
+- Snapshot (`unit_price`, `subtotal`, `total_biaya`, field kapal/owner/nominal di invoice & technical report) ditulis sekali; jangan hitung ulang dari master. `deleted_at` hanya di OWNERS, SHIPS, WORK_CATEGORIES, WORK_TYPES, MATERIAL_SPECS.
+- Item selesai → update Status/Catatan di `tasklist.md` **dan** `prd.md` Bagian 10 dalam satu perubahan. Tiap prompt baru → tambah entri di `prompt.md`.
 
-Verify that PHP and Composer are available:
+## Perintah & environment
+- `php` di PATH = 8.3.30, tapi vendor butuh PHP ≥ 8.4.1. Pakai `/Applications/MAMP/bin/php/php8.5.2/bin/php` untuk semua perintah artisan/composer, mis. `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan migrate`.
+- Laravel Boost sudah terpasang (`boost.json`, skill di `.agents/skills`) dan `boost:install` sudah dijalankan — abaikan instruksi bootstrap lama di `CLAUDE.md`.
+- DB dev: MySQL `simship` di `.env` (user `root`), sedangkan `.env.example` memakai sqlite. Tes memakai sqlite `:memory:` lewat `phpunit.xml`, terlepas dari `.env`.
+- Migrasi: `... artisan migrate`; verifikasi dengan `... artisan db:table <tabel>`. README menulis `fresh:migrate`; perintah yang benar `migrate:fresh`.
+- Frontend Tailwind v4 + Vite 8: `npm install` lalu `npm run dev`; atau `composer run dev` (serve + queue + Vite).
+- Tes: Pest, `... artisan test`. Baseline saat ini **2 dari 3 gagal**: `/` mengembalikan 302 untuk guest, tapi `ExampleTest` dan `LoginTest` mengharapkan 200. Jangan anggap itu regresi dari perubahanmu. `RefreshDatabase` di `tests/Pest.php` masih dikomentari.
 
-```sh
-php -v
-composer -V
-```
-
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+## Jebakan kode
+- `app/Enums/StatusOpnam.php`, `StatusTagihan.php`, `TipeDisposisi.php` masih stub kosong dengan namespace tidak konsisten (`App`, `App\Enums\Enums`, `App\Enums`). Jangan dipakai sebagai sumber nilai enum — pakai `SKILL.md`.
+- `routes/web.php` hanya menerima `username` saat login; UC-U1 di `prd.md` mensyaratkan username **atau** email — celah implementasi yang belum ditutup.
+- Alias middleware `role` → `CheckRole` terdaftar di `bootstrap/app.php`. Role di DB persis `petugas`/`admin`/`direksi`; "Operator"/"Supervisor" hanya label tampilan di layout Regina, bukan nilai role.

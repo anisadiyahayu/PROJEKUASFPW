@@ -9,6 +9,7 @@ class OpnamAttachment extends Model
 {
     protected $fillable = [
         'opnam_item_id', 'uploaded_by', 'file_path', 'original_name', 'mime_type', 'file_size',
+        'keterangan',
     ];
 
     protected function casts(): array

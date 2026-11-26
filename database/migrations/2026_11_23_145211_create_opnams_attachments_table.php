@@ -15,7 +15,8 @@ return new class extends Migration
             $table->string('file_path');
             $table->string('original_name');
             $table->string('mime_type');
-            $table->unsignedInteger('file_size'); // bytes
+            $table->integer('file_size'); // bytes
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }
