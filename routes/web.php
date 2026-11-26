@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\OpnamController;
+use App\Http\Controllers\WorkCategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +65,9 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::view('/dashboard', 'dashboard.admin')->name('dashboard');
         Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
+        Route::resource('work-categories', WorkCategoryController::class)
+            ->except('show')
+            ->parameters(['work-categories' => 'workCategory']);
     });
 
 Route::middleware(['auth', 'role:direksi'])
