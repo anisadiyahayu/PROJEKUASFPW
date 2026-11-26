@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Invoice extends Model
 {
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_TERBIT = 'terbit';
+
     protected $fillable = [
-        'billing_id', 'issued_by', 'invoice_number', 'issue_date',
+        'billing_id', 'issued_by', 'invoice_number', 'issue_date', 'status',
         'ship_name', 'hull_number', 'owner_name', 'owner_address',
         'subtotal_amount', 'adjustment_amount', 'total_amount', 'revision_count',
     ];
