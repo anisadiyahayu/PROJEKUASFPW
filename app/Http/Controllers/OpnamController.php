@@ -139,7 +139,10 @@ class OpnamController extends Controller
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::orderBy('name')->get(),
-            'units' => Unit::whereIn('name', ['m²', 'm'])->orderBy('id')->get()->unique('name')->values(),
+            // Kirim seluruh satuan; pratinjau JS yang menyaring berdasarkan
+            // material dan tarif berlaku. Jangan di-unique_by_name karena
+            // tarif bisa merujuk ke satuan duplikat (mis. dua baris "m²").
+            'units' => Unit::orderBy('id')->get(),
             'tariffs' => Tariff::orderByDesc('effective_from')->get(),
         ]);
     }

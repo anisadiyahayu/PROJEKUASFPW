@@ -16,6 +16,12 @@
         ];
     @endphp
 
+    <style>
+        .opnam-table th { font-size: 11px; }
+        .opnam-table td { font-size: 12px; line-height: 1.35; }
+        .opnam-table td.angka { white-space: nowrap; }
+    </style>
+
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <div>
             <h1>Opname Saya</h1>
@@ -38,18 +44,18 @@
                 </select>
             </div>
             <div style="width:200px;">
-                <input type="date" name="tanggal" value="{{ request('tanggal') }}" aria-label="Filter tanggal" onchange="this.form.submit()">
+                <input id="filter-tanggal-opname" type="date" name="tanggal" value="{{ request('tanggal') }}" aria-label="Filter tanggal opname" title="Mencari berdasarkan Tanggal Opname yang diisi saat pencatatan, bukan tanggal pembuatan laporan" onchange="this.form.submit()">
             </div>
         </form>
     </div>
 
     <div class="card" style="padding:0; overflow:hidden;">
-        <table>
+        <table class="opnam-table">
             <thead>
                 <tr>
                     <th>NOMOR OPNAME</th>
                     <th>NAMA KAPAL</th>
-                    <th>TANGGAL</th>
+                    <th>TANGGAL OPNAME</th>
                     <th>ESTIMASI BIAYA</th>
                     <th>STATUS</th>
                     <th>AKSI</th>
@@ -58,10 +64,10 @@
             <tbody>
                 @forelse ($opnams as $opnam)
                     <tr>
-                        <td><strong style="color:#1d4ed8;">{{ $opnam->opnam_number }}</strong></td>
+                        <td class="angka"><strong style="color:#1d4ed8;">{{ $opnam->opnam_number }}</strong></td>
                         <td>{{ $opnam->ship?->name }}</td>
-                        <td>{{ $opnam->tanggal_opnam?->format('d M Y') }}</td>
-                        <td>Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
+                        <td class="angka">{{ $opnam->tanggal_opnam?->format('d M Y') }}</td>
+                        <td class="angka">Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
                         <td>
                             @php
                                 $tanpaStatus = request()->except('status');

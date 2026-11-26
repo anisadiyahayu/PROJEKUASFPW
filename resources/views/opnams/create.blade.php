@@ -11,6 +11,15 @@
         $subtotalDraft = collect($draft['items'] ?? [])->sum('subtotal');
     @endphp
 
+    <style>
+        .opnam-table th { font-size: 11px; }
+        .opnam-table td { font-size: 12px; line-height: 1.35; }
+        .opnam-table td.angka { white-space: nowrap; }
+        .opnam-total { font-size: 14px; white-space: nowrap; }
+        .item-row .tarif-dasar-row { font-size: 12px; }
+        .item-row .tarif-harga, .item-row .item-amount { white-space: nowrap; }
+    </style>
+
     <h1>Buat Opname</h1>
     <p class="subtitle">Catat detail inspeksi dan estimasi pekerjaan perbaikan kapal.</p>
 
@@ -79,22 +88,22 @@
                     <div class="card">
                         <h3 style="margin:0 0 4px;">03 &nbsp; Estimasi Biaya</h3>
                         <p style="color:#64748b; font-size:12px; margin:0 0 16px;">Periksa hasil perhitungan berdasarkan tarif yang berlaku.</p>
-                        <table>
+                        <table class="opnam-table">
                             <thead><tr><th>PEKERJAAN</th><th>QTY</th><th>HARGA SATUAN</th><th>FAKTOR KETEBALAN</th><th>FAKTOR KOMPLEKSITAS</th><th>SUBTOTAL</th></tr></thead>
                             <tbody>
                                 @foreach ($draft['items'] ?? [] as $item)
                                     <tr>
                                         <td><strong>{{ $item['work_type_name'] }}</strong><br><small style="color:#94a3b8;">{{ $item['material_name'] }}</small></td>
-                                        <td>{{ $item['volume'] }} {{ $item['unit_name'] }}</td>
-                                        <td>{{ $rupiah($item['unit_price']) }}</td>
-                                        <td>{{ $item['faktor_ketebalan'] ?? 1 }}x</td>
-                                        <td>{{ $item['faktor_kompleksitas'] ?? 1 }}x</td>
-                                        <td>{{ $rupiah($item['subtotal']) }}</td>
+                                        <td class="angka">{{ $item['volume'] }} {{ $item['unit_name'] }}</td>
+                                        <td class="angka">{{ $rupiah($item['unit_price']) }}</td>
+                                        <td class="angka">{{ $item['faktor_ketebalan'] ?? 1 }}x</td>
+                                        <td class="angka">{{ $item['faktor_kompleksitas'] ?? 1 }}x</td>
+                                        <td class="angka">{{ $rupiah($item['subtotal']) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-                        <div style="text-align:right; padding:12px 8px; background:#f8fafc;">Total Estimasi Biaya &nbsp; <strong style="color:#1e3a8a; font-size:18px;">{{ $rupiah($subtotalDraft) }}</strong></div>
+                        <div style="text-align:right; padding:12px 8px; background:#f8fafc;">Total Estimasi Biaya &nbsp; <strong class="opnam-total" style="color:#1e3a8a;">{{ $rupiah($subtotalDraft) }}</strong></div>
                         <div class="info">🔒 Tarif bersumber dari data master dan tidak dapat diubah Operator.</div>
                     </div>
                 @elseif ($step === 4)
