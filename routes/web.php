@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OpnamController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +53,8 @@ Route::middleware(['auth', 'role:petugas'])
     ->name('petugas.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.petugas')->name('dashboard');
+        Route::get('/opnams/create', [OpnamController::class, 'create'])->name('opnams.create');
+        Route::post('/opnams/create', [OpnamController::class, 'storeStep'])->name('opnams.store-step');
     });
 
 Route::middleware(['auth', 'role:admin'])
@@ -59,6 +62,7 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.admin')->name('dashboard');
+        Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
     });
 
 Route::middleware(['auth', 'role:direksi'])

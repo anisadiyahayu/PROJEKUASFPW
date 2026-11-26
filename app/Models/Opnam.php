@@ -14,10 +14,14 @@ class Opnam extends Model
     public const STATUS_DRAFT = 'draft';
     public const STATUS_MENUNGGU_REVIEW = 'menunggu_review';
     public const STATUS_PERLU_REVISI = 'perlu_revisi';
-    public const STATUS_DITERUSKAN_KE_DIREKSI = 'diteruskan_ke_direksi';
+    public const STATUS_MENUNGGU_APPROVAL_DIREKSI = 'menunggu_approval_direksi';
+    public const STATUS_DITOLAK = 'ditolak';
+    public const STATUS_DISETUJUI = 'disetujui';
+    public const STATUS_DOKUMEN_TERBIT = 'dokumen_terbit';
 
     protected $fillable = [
         'opnam_number', 'ship_id', 'created_by', 'status', 'submitted_at', 'forwarded_at',
+        'tanggal_opnam', 'catatan', 'lokasi', 'adjustment_amount', 'total_biaya',
     ];
 
     protected function casts(): array
@@ -25,6 +29,9 @@ class Opnam extends Model
         return [
             'submitted_at' => 'datetime',
             'forwarded_at' => 'datetime',
+            'tanggal_opnam' => 'date',
+            'adjustment_amount' => 'decimal:2',
+            'total_biaya' => 'decimal:2',
         ];
     }
 

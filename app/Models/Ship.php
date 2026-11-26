@@ -11,7 +11,7 @@ class Ship extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['owner_id', 'name', 'hull_number'];
+    protected $fillable = ['owner_id', 'name', 'hull_number', 'jenis_kapal'];
 
     public function owner(): BelongsTo
     {
