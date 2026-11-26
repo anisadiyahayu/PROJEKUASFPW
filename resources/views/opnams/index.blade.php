@@ -16,6 +16,12 @@
         ];
     @endphp
 
+    <style>
+        .opnam-table th { font-size: 11px; }
+        .opnam-table td { font-size: 12px; line-height: 1.35; }
+        .opnam-table td.angka { white-space: nowrap; }
+    </style>
+
     <h1>Data Opname</h1>
     <p class="subtitle">Pantau seluruh transaksi opnam yang diajukan Operator.</p>
 
@@ -51,7 +57,7 @@
     </div>
 
     <div class="card" style="padding: 0; overflow: hidden;">
-        <table>
+        <table class="opnam-table">
             <thead>
                 <tr>
                     <th>NOMOR OPNAME</th>
@@ -66,11 +72,11 @@
             <tbody>
                 @forelse ($opnams as $opnam)
                     <tr>
-                        <td><strong style="color:#1d4ed8;">{{ $opnam->opnam_number }}</strong></td>
+                        <td class="angka"><strong style="color:#1d4ed8;">{{ $opnam->opnam_number }}</strong></td>
                         <td>{{ $opnam->ship?->name }}</td>
                         <td>{{ $opnam->creator?->name }}</td>
-                        <td>{{ $opnam->tanggal_opnam?->format('d M Y') }}</td>
-                        <td>Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
+                        <td class="angka">{{ $opnam->tanggal_opnam?->format('d M Y') }}</td>
+                        <td class="angka">Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
                         <td><span class="badge badge-{{ $opnam->status }}">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</span></td>
                         <td>
                             <span class="btn btn-light" style="padding:5px 8px;" title="Detail belum tersedia">👁</span>

@@ -855,3 +855,53 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `artisan test`
 **Manual modifications:** -
 **Notes / follow-up:** Item/Modul: PT-03, PT-05. Tidak ada file master Anisa/Rifqy yang diubah; `UNITS` hanya dibaca. Faktor ketebalan masih 1x sampai Regina memberi aturan rentang/nilai.
+
+## 2026-11-27 01:00 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Memperbaiki opsi satuan yang tampil tanpa tulisan setelah pull dari `main`. Penyebab: `create()` melakukan `unique('name')` sehingga satuan duplikat/id yang dipakai tarif tidak ikut dikirim ke JS. Controller sekarang mengirim seluruh `UNITS`; JS tetap menyaring berdasarkan material dan tarif berlaku. Ditambah test regresi untuk satuan duplikat. Suite lengkap 73/73 lolos (350 assertions).
+**Files:** `app/Http/Controllers/OpnamController.php`, `tests/Feature/OpnamDraftTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-03. Master `UNITS` milik Anisa tidak diubah; hanya dibaca. Perbaikan ini juga menyiapkan dukungan untuk satuan baru (`m³`, `titik`, `ls`) tanpa mengubah kode.
+
+## 2026-11-27 01:23 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Mengecilkan font dan menambah `white-space:nowrap` pada sel mata uang di tabel Estimasi Biaya (langkah 3), daftar opnam Admin, dan Opname Saya, agar nominal tidak turun baris. Total Estimasi juga dikecilkan dari 18px ke 16px. Suite lengkap 73/73 lolos (350 assertions).
+**Files:** `resources/views/opnams/create.blade.php`, `resources/views/opnams/index.blade.php`, `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-05, AD-05, PT-08. Hanya style inline di view modul Regina; layout global dan tabel modul lain tidak diubah.
+
+## 2026-11-27 01:42 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menyeragamkan ukuran font tabel di modul opnam: class `.opnam-table` dengan `th` 11px dan `td` 12px/line-height 1.35, class `.angka` dengan `white-space:nowrap` untuk kolom nominal/nomor/tanggal, serta `.opnam-total` 14px. Inline style lama dihapus. Suite lengkap 73/73 lolos (350 assertions).
+**Files:** `resources/views/opnams/create.blade.php`, `resources/views/opnams/index.blade.php`, `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-05, AD-05, PT-08. Style scoped pada class khusus, tidak mengubah `layouts/simship.blade.php` atau tabel modul lain.
+
+## 2026-11-27 03:00 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan A`"
+**Output summary:** Memperjelas label filter tanggal di halaman "Opname Saya" tanpa mengubah perilaku: label tampilan "Tanggal Opname", `aria-label`/`title` menjelaskan bahwa filter memakai tanggal yang diisi saat pencatatan (bukan `created_at`), dan header tabel diubah menjadi "TANGGAL OPNAME". Suite lengkap 73/73 lolos (350 assertions).
+**Files:** `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-08 (halaman sudah ada, status kepemilikan masih parkir di tasklist). Filter tetap `whereDate('tanggal_opnam', ...)`; tidak menambah filter `created_at`.
+
+## 2026-11-27 03:07 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`hapus nama tanggal opname di atas`"
+**Output summary:** Menghapus label tampilan "Tanggal Opname" di atas input tanggal pada halaman Opname Saya. `aria-label`, `title`, dan header tabel "TANGGAL OPNAME" tetap dipertahankan; perilaku filter tidak berubah. Suite lengkap 73/73 lolos (350 assertions).
+**Files:** `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-08. Tampilan filter kembali seperti semula (tanpa label di atas input), keterangan tetap tersedia melalui tooltip.

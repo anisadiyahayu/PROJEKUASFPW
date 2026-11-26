@@ -407,3 +407,20 @@ test('generator nomor opnam memakai config dan menghasilkan nomor unik', functio
         ->and($kedua->opnam_number)->toMatch('/^OPN-\d{4}-0002$/')
         ->and($pertama->opnam_number)->not->toBe($kedua->opnam_number);
 });
+
+test('satuan duplikat tetap dikirim supaya label opsi tidak kosong', function () {
+    $data = siapkanDataOpnam();
+    $unitDuplikat = Unit::create(['code' => 'M2-DUPLIKAT', 'name' => 'm²']);
+    Tariff::create([
+        'material_spec_id' => $data['material']->id,
+        'unit_id' => $unitDuplikat->id,
+        'created_by' => $data['petugas']->id,
+        'price' => 2000,
+        'effective_from' => '2026-01-01',
+    ]);
+
+    $this->actingAs($data['petugas'])
+        ->get(route('petugas.opnams.create', ['step' => 2]))
+        ->assertOk()
+        ->assertSee('"id":'.$unitDuplikat->id.',"name":"m\\u00b2"', false);
+});
