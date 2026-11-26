@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\OpnamController;
 use App\Http\Controllers\WorkCategoryController;
+use App\Http\Controllers\WorkTypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +50,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('work-categories', WorkCategoryController::class)
             ->except('show')
             ->parameters(['work-categories' => 'workCategory']);
+        Route::resource('work-types', WorkTypeController::class)
+            ->except('show')
+            ->parameters(['work-types' => 'workType']);
     });
 
 Route::middleware(['auth', 'role:direksi'])
