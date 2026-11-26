@@ -12,7 +12,7 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 
 | ID | Item | Pemilik | Status | Catatan |
 |---|---|---|---|---|
-| DB-01 | USERS | Halvina | Belum | |
+| DB-01 | USERS | Halvina | Dikerjakan | |
 | DB-02 | OWNERS | Rifqy | Belum | |
 | DB-03 | SHIPS | Rifqy | Belum | |
 | DB-04 | UNITS | Anisa | Belum | |
@@ -34,8 +34,8 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 
 | ID | Use case | Pemilik | Status | Catatan |
 |---|---|---|---|---|
-| UC-U1 | Login | Halvina | Belum | |
-| UC-U2 | Logout | Halvina | Belum | |
+| UC-U1 | Login | Halvina | Dikerjakan | |
+| UC-U2 | Logout | Halvina | Dikerjakan | |
 | UC-U3 | Mengubah Password | Halvina | Belum | |
 | UC-U4 | Melihat Dashboard | Halvina | Belum | |
 | UC-U5 | Melihat dan Mengubah Profil | Halvina | Belum | Profil untuk ketiga role |
