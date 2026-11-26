@@ -48,6 +48,7 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::view('/dashboard', 'dashboard.admin')->name('dashboard');
         Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
         Route::resource('work-categories', WorkCategoryController::class)
             ->except('show')
             ->parameters(['work-categories' => 'workCategory']);

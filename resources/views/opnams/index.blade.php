@@ -46,11 +46,8 @@
                     @endforeach
                 </select>
             </div>
-            <div style="width: 170px;">
-                <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" aria-label="Tanggal dari">
-            </div>
-            <div style="width: 170px;">
-                <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}" aria-label="Tanggal sampai">
+            <div style="width: 180px;">
+                <input type="date" name="tanggal" value="{{ request('tanggal') }}" aria-label="Filter tanggal opname" title="Mencari berdasarkan Tanggal Opname yang diisi saat pencatatan">
             </div>
             <div style="width: 90px;"><button type="submit" class="btn btn-primary">Filter</button></div>
         </form>
@@ -79,7 +76,7 @@
                         <td class="angka">Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
                         <td><span class="badge badge-{{ $opnam->status }}">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</span></td>
                         <td>
-                            <span class="btn btn-light" style="padding:5px 8px;" title="Detail belum tersedia">👁</span>
+                            <a href="{{ route('admin.opnams.show', $opnam) }}" class="btn btn-light" style="padding:5px 8px;" title="Detail opnam">👁</a>
                             <span class="btn btn-light" style="padding:5px 8px;" title="Riwayat belum tersedia">◷</span>
                             <span class="btn btn-light" style="padding:5px 8px; opacity:.5;">Buka Review</span>
                         </td>

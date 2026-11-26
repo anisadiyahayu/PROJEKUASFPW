@@ -905,3 +905,33 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `artisan test`
 **Manual modifications:** -
 **Notes / follow-up:** Item/Modul: PT-08. Tampilan filter kembali seperti semula (tanpa label di atas input), keterangan tetap tersedia melalui tooltip.
+
+## 2026-11-27 03:20 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan b`"
+**Output summary:** Menyamakan filter tanggal di halaman Data Opname (AD-05) dengan Opname Saya: dua input `tanggal_dari`/`tanggal_sampai` diganti satu input `tanggal` dengan `whereDate('tanggal_opnam', ...)`. Test filter diperbarui untuk tanggal persis. Suite lengkap 73/73 lolos (350 assertions).
+**Files:** `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/index.blade.php`, `tests/Feature/OpnamListTest.php`, `tasklist.md`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: AD-05. Filter tetap memakai `tanggal_opnam` (bukan `created_at`); perilaku ini sekarang konsisten dengan PT-08.
+
+## 2026-11-27 03:32 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`buatkan untuk detail atau emoji mata saja`"
+**Output summary:** Mengaktifkan tombol 👁 pada kolom Aksi Data Opname: rute `admin.opnams.show`, method `OpnamController::show()`, dan view detail baca-saja `opnams.show`. Detail menampilkan informasi kapal/opnam, tabel item dengan snapshot harga dan faktor, serta daftar nama lampiran. Tidak memuat aksi review/approval (milik Hazel). Suite lengkap 74/74 lolos (356 assertions).
+**Files:** `routes/web.php`, `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/show.blade.php` (baru), `resources/views/opnams/index.blade.php`, `tests/Feature/OpnamListTest.php`, `tasklist.md`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: AD-05. Relasi material historis dibaca dengan `withTrashed()` hanya untuk keperluan tampilan detail; tidak mengubah model MaterialSpec/Tariff milik Anisa. Tombol ◷ Riwayat dan Buka Review tetap disabled karena pemiliknya belum tersedia.
+
+## 2026-11-27 03:57 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Memperbaiki halaman detail opnam agar Lokasi Pekerjaan tampil dari `OPNAM_ITEMS.lokasi` (sebelumnya membaca `OPNAMS.lokasi` yang tidak pernah ditulis, sehingga selalu `-`). Ditambah kolom LOKASI pada tabel item detail. Suite lengkap 75/75 lolos (358 assertions).
+**Files:** `resources/views/opnams/show.blade.php`, `tests/Feature/OpnamListTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: AD-05. Cakupan sengaja minimal: hanya view detail, test, dan log prompt. Tidak ada migrasi, model, atau file `.md` progres lain yang diubah; `tasklist.md` tidak disentuh karena status AD-05 sudah `Selesai`.

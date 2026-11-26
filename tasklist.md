@@ -54,7 +54,7 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
 | AD-03 | Mengelola Kategori Pekerjaan | Anisa | Belum | |
 | AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Belum | |
-| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status, operator (dari `USERS.role=petugas`), tanggal, dan paginasi berjalan (BR-27). |
+| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status, operator (dari `USERS.role=petugas`), tanggal satu input (Tanggal Opname), dan paginasi berjalan (BR-27). Tombol mata membuka halaman detail baca-saja (bukan review/approval). |
 | AD-06 | Memeriksa Opnam | Hazel | Belum | Halaman review opnam |
 | AD-07 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
 | AD-08 | Menyetujui Hasil Review | Hazel | Belum | |
