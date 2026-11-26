@@ -56,6 +56,10 @@ Route::middleware(['auth', 'role:petugas'])
         Route::get('/opnams', [OpnamController::class, 'indexMine'])->name('opnams.index');
         Route::get('/opnams/create', [OpnamController::class, 'create'])->name('opnams.create');
         Route::post('/opnams/create', [OpnamController::class, 'storeStep'])->name('opnams.store-step');
+        Route::get('/opnams/{opnam}/edit', [OpnamController::class, 'edit'])->name('opnams.edit');
+        Route::post('/opnams/{opnam}/items', [OpnamController::class, 'storeItem'])->name('opnams.items.store');
+        Route::put('/opnams/{opnam}/items/{item}', [OpnamController::class, 'updateItem'])->name('opnams.items.update');
+        Route::delete('/opnams/{opnam}/items/{item}', [OpnamController::class, 'destroyItem'])->name('opnams.items.destroy');
     });
 
 Route::middleware(['auth', 'role:admin'])

@@ -595,3 +595,83 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `Get-Date`, skrip PowerShell migrasi (57 blok), `git status`
 **Manual modifications:** -
 **Notes / follow-up:** Urutan kronologis dipertahankan dengan menyisipkan blok lama sebelum entri 15:41. `tasklist.md`, `prd.md`, dan kode aplikasi tidak diubah.
+
+## 2026-11-26 20:56 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`baca dah pahami file @tupoksi.md , @taskinstruction.md @prd.md`"
+**Output summary:** Ketiga dokumen dibaca dan diringkas (pembagian tugas, guardrails, kontrak data, use case, dan pertanyaan terbuka).
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: dokumen acuan; masih dalam mode rencana.
+
+## 2026-11-26 20:56 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`saya regina`"
+**Output summary:** Peminta ditetapkan sebagai Regina; cakupan dibatasi pada PT-01–PT-06, AD-05, dan tabel OPNAMS/OPNAM_ITEMS/OPNAM_ATTACHMENTS.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: identitas peminta, `taskinstruction.md` Bagian 5.4.
+
+## 2026-11-26 20:56 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`coba buatkan rencana apa yang sebaiknya dikerjakan dahulu?`"
+**Output summary:** Rencana 5 tahap disusun berdasarkan kondisi repo: konfirmasi skema 6.7, perbaikan snapshot faktor, PT-03 edit/hapus item draft, finalisasi item terbuka, dan penutupan progres.
+**Files:** -
+**Commands:** `glob`/`read` pada migrasi, model, service, controller, view, dan test
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-03, PT-05, DB-09/10; dua konfirmasi (bentuk kolom faktor dan `jenis_kapal`) diajukan memakai format Bagian 8.
+
+## 2026-11-26 20:56 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`kerjakan sesuai rekomendasi mu`"
+**Output summary:** Mengerjakan bagian yang tidak tertahan konfirmasi: menyimpan `faktor`/`ketebalan`/`kompleksitas`/`catatan_tambahan` sebagai snapshot saat draft dibuat, serta menambah tambah/ubah/hapus item pada draft milik sendiri (PT-03) dengan hitung ulang `total_biaya` dan pengecekan BR-35. Test opnam 28/28 lolos; suite penuh 29/31 (2 kegagalan baseline ExampleTest/LoginTest).
+**Files:** `app/Models/OpnamItem.php`, `app/Http/Controllers/OpnamController.php`, `routes/web.php`, `resources/views/opnams/edit.blade.php` (baru), `resources/views/opnams/mine.blade.php`, `tests/Feature/OpnamDraftTest.php`, `tests/Feature/OpnamItemEditTest.php` (baru), `tasklist.md`, `PROMPT_LOG.md` (dipulihkan dari HEAD), `prompt_history.md`
+**Commands:** `artisan test --filter=Opnam`, `artisan test`, `artisan route:list --path=opnams`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-03 (Selesai), DB-10, PT-05. `prd.md` Revisi 2 Bagian 10 berisi tabel keputusan tanpa kolom Status/Catatan (checklist sudah dipindah ke `tasklist.md` sesuai Bagian 0), sehingga pembaruan status hanya dilakukan di `tasklist.md`. Dua konfirmasi (kolom faktor terpisah dan `OPNAMS.jenis_kapal`) belum dijawab dan sengaja tidak diimplementasikan.
+
+## 2026-11-26 21:06 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`lakukan saja sesuai rekomendasi mu`"
+**Output summary:** Memakai rekomendasi default Opsi A untuk dua konfirmasi: migrasi aditif menambah `OPNAM_ITEMS.faktor_ketebalan` dan `faktor_kompleksitas` (decimal(5,2) default 1, kolom `faktor` lama tetap) serta `OPNAMS.jenis_kapal` (nullable, salinan dari `SHIPS.jenis_kapal`). Model, wizard, dan halaman edit draft menulis kedua nilai itu. Migrasi juga melakukan backfill bersyarat untuk kolom lama yang ternyata hilang di DB dev (`faktor`, `ketebalan`, `kompleksitas`, `catatan_tambahan`). Test opnam 30/30 lolos; suite penuh 31/33 (2 kegagalan baseline ExampleTest/LoginTest).
+**Files:** `database/migrations/2026_11_26_210000_add_snapshot_fields_to_opnam_tables.php` (baru), `app/Models/Opnam.php`, `app/Models/OpnamItem.php`, `app/Http/Controllers/OpnamController.php`, `tests/Feature/OpnamDraftTest.php`, `tests/Feature/OpnamItemEditTest.php`, `tasklist.md`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test --filter=Opnam`, `artisan test`, `artisan migrate:status`, `artisan migrate`, `artisan db:table opnam_items`, `artisan db:table opnams`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: DB-09, DB-10, PT-01, PT-05. Keputusan bersifat default sementara yang mudah diubah; nilai pemetaan faktor dan daftar jenis kapal masih terbuka (PRD 9 no. 18–21, 23). Tidak ada tabel atau migrasi modul lain yang diubah.
+
+## 2026-11-26 21:13 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`kerjakan sesuai rekomendasi kamu`"
+**Output summary:** Menyusun `PERTANYAAN_TERBUKA.md` berisi 9 blok pertanyaan format `taskinstruction.md` Bagian 8, dikelompokkan ke client/master tarif, tim internal, dan item parkir. Tidak ada kode yang diubah karena seluruh item tersisa bertanda `[TERBUKA]`.
+**Files:** `PERTANYAAN_TERBUKA.md` (baru), `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-01, PT-04, PT-05, PT-06, dan item parkir lintas tim. File ini siap diteruskan ke client/tim; jawaban harus dicatat di sini dan di `tasklist.md` sebelum implementasi.
+
+## 2026-11-26 21:39 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`setuju`"
+**Output summary:** Menjalankan rencana A→D tanpa melibatkan modul lain: (A) `OpnamNumberGenerator` dengan transaksi + `lockForUpdate` menggantikan `count()+1`; (B) validasi format/ukuran dan disk/path unggahan dipindah ke `config/opnam.php`; (C) input `catatan` opsional ditambahkan ke langkah 1 dan ditampilkan di tinjauan akhir; (D) test dan dokumen progres diperbarui. Test opnam 32/32 lolos; suite penuh 33/35 (2 kegagalan baseline ExampleTest/LoginTest tidak berubah).
+**Files:** `app/Services/OpnamNumberGenerator.php` (baru), `config/opnam.php`, `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/create.blade.php`, `tests/Feature/OpnamDraftTest.php`, `tasklist.md`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `artisan test --filter=Opnam`, `artisan test`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-01, PT-04, PT-06 (status tetap Dikerjakan/Perlu konfirmasi sampai nilai final dijawab). Tidak ada tabel, migrasi, policy, atau file modul lain yang diubah. Label "Bukti Pekerjaan" dan "Final Review" keduanya sudah ada sebagai langkah 4 dan 5, sehingga konflik PRD 9 no. 16 tidak menimbulkan perubahan kode.
+
+## 2026-11-26 21:58 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`ya setuju`"
+**Output summary:** UAT alur opnam di DB dev (MySQL) lewat server artisan + HTTP. Data master sementara dibuat via Tinker. Login, wizard 5 langkah, unggahan bukti, daftar opnam, halaman edit, ubah volume, ganti material/satuan, dan hapus item semuanya lolos. Nomor opnam berurutan unik di MySQL (OPN-2026-002/003/004); `unit_price` tetap saat hanya volume diubah dan berubah saat material/satuan diubah (BR-35 terbukti); lampiran ikut terhapus dari disk. Tidak ada kode aplikasi yang diubah.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md`; file sementara di direktori temp di luar repo (Tinker seed, skrip curl, pemeriksa DB)
+**Commands:** `artisan tinker --execute` (seed + cek DB), `artisan serve --host=127.0.0.1 --port=8001`, `curl` dengan cookie/CSRF untuk seluruh alur, `kill` server
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: PT-01, PT-03, PT-04, PT-05, PT-06, AD-05. Temuan lingkungan: DB dev tidak memiliki kolom `ships.jenis_kapal`, `opnams.lokasi`, dan `opnams.adjustment_amount` meski migrasi lama tercatat Ran — sengaja tidak diubah karena menyentuh modul/field yang masih menunggu konfirmasi; akibatnya snapshot `jenis_kapal` bernilai null di UAT MySQL (sudah diuji di SQLite). Percobaan unggah pertama gagal karena file PNG tiruan, bukan bug kode; setelah memakai PNG valid, unggah lolos.

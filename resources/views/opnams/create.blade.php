@@ -8,9 +8,7 @@
         $steps = [1 => 'Informasi Kapal', 2 => 'Detail Pekerjaan', 3 => 'Estimasi Biaya', 4 => 'Bukti Pekerjaan', 5 => 'Final Review'];
         $shipSatu = $ships->firstWhere('id', $draft['ship_id'] ?? null);
         $rupiah = fn ($n) => 'Rp '.number_format((float) $n, 0, ',', '.');
-        $baseDraft = collect($draft['items'] ?? [])->sum('subtotal');
-        $adjustmentDraft = collect($draft['items'] ?? [])->sum('adjustment');
-        $subtotalDraft = $baseDraft + $adjustmentDraft;
+        $subtotalDraft = collect($draft['items'] ?? [])->sum('subtotal');
     @endphp
 
     <h1>Buat Opname</h1>
@@ -67,6 +65,7 @@
                             </div>
                             <div><label>Tanggal Opname *</label><input type="date" name="tanggal_opnam" required value="{{ old('tanggal_opnam', $draft['tanggal_opnam'] ?? '') }}"></div>
                         </div>
+                        <div style="margin-top:12px;"><label>Catatan (opsional)</label><textarea name="catatan" rows="2" placeholder="Tambahkan catatan umum untuk opnam ini...">{{ old('catatan', $draft['catatan'] ?? '') }}</textarea></div>
                         <div class="info">🔒 Informasi kapal diisi otomatis dari data master dan tidak dapat diubah.</div>
                     </div>
                 @elseif ($step === 2)
@@ -81,15 +80,16 @@
                         <h3 style="margin:0 0 4px;">03 &nbsp; Estimasi Biaya</h3>
                         <p style="color:#64748b; font-size:12px; margin:0 0 16px;">Periksa hasil perhitungan berdasarkan tarif yang berlaku.</p>
                         <table>
-                            <thead><tr><th>PEKERJAAN</th><th>QTY</th><th>HARGA SATUAN</th><th>FAKTOR</th><th>SUBTOTAL</th></tr></thead>
+                            <thead><tr><th>PEKERJAAN</th><th>QTY</th><th>HARGA SATUAN</th><th>FAKTOR KETEBALAN</th><th>FAKTOR KOMPLEKSITAS</th><th>SUBTOTAL</th></tr></thead>
                             <tbody>
                                 @foreach ($draft['items'] ?? [] as $item)
                                     <tr>
                                         <td><strong>{{ $item['work_type_name'] }}</strong><br><small style="color:#94a3b8;">{{ $item['material_name'] }}</small></td>
                                         <td>{{ $item['volume'] }} {{ $item['unit_name'] }}</td>
                                         <td>{{ $rupiah($item['unit_price']) }}</td>
-                                        <td>{{ $item['faktor'] }}x</td>
-                                        <td>{{ $rupiah($item['subtotal'] + $item['adjustment']) }}</td>
+                                        <td>{{ $item['faktor_ketebalan'] ?? 1 }}x</td>
+                                        <td>{{ $item['faktor_kompleksitas'] ?? 1 }}x</td>
+                                        <td>{{ $rupiah($item['subtotal']) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -140,6 +140,7 @@
                                 <div><small style="color:#64748b;">Jenis Kapal</small><br><strong>{{ $shipSatu?->jenis_kapal ?? '-' }}</strong></div>
                                 <div><small style="color:#64748b;">Lokasi Pekerjaan</small><br><strong>{{ $draft['lokasi'] ?? '-' }}</strong></div>
                                 <div><small style="color:#64748b;">Tanggal Opname</small><br><strong>{{ $draft['tanggal_opnam'] ?? '-' }}</strong></div>
+                                <div><small style="color:#64748b;">Catatan</small><br><strong>{{ $draft['catatan'] ?? '-' }}</strong></div>
                             </div>
                         </div>
 
@@ -147,8 +148,8 @@
                             <div style="display:flex; justify-content:space-between;"><strong>Detail Pekerjaan</strong><a href="{{ route('petugas.opnams.create', ['step' => 2]) }}">Ubah</a></div>
                             @foreach ($draft['items'] ?? [] as $i => $item)
                                 <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                                    <div><strong>{{ $i + 1 }}. {{ $item['work_type_name'] }}</strong><br><small style="color:#94a3b8;">{{ $item['volume'] }} {{ $item['unit_name'] }} • {{ $item['material_name'] }} • Faktor {{ $item['faktor'] }}x</small></div>
-                                    <strong>{{ $rupiah($item['subtotal'] + $item['adjustment']) }}</strong>
+                                    <div><strong>{{ $i + 1 }}. {{ $item['work_type_name'] }}</strong><br><small style="color:#94a3b8;">{{ $item['volume'] }} {{ $item['unit_name'] }} • {{ $item['material_name'] }} • Faktor ketebalan {{ $item['faktor_ketebalan'] ?? 1 }}x • Faktor kompleksitas {{ $item['faktor_kompleksitas'] ?? 1 }}x</small></div>
+                                    <strong>{{ $rupiah($item['subtotal']) }}</strong>
                                 </div>
                             @endforeach
                         </div>
@@ -190,7 +191,9 @@
         $typeJson = $workTypes->map(fn ($t) => ['id' => $t->id, 'category' => $t->work_category_id, 'name' => $t->name])->values();
         $materialJson = $materialSpecs->map(fn ($m) => ['id' => $m->id, 'type' => $m->work_type_id, 'name' => $m->name])->values();
         $unitJson = $units->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->values();
-        $tariffJson = $tariffs->map(fn ($t) => ['material' => $t->material_spec_id, 'unit' => $t->unit_id, 'price' => (float) $t->price])->values();
+        $tariffJson = $tariffs->map(fn ($t) => ['material' => $t->material_spec_id, 'unit' => $t->unit_id, 'price' => (float) $t->price, 'effective_from' => (string) $t->effective_from])->values();
+        $faktorKetebalanJson = config('opnam.faktor_ketebalan');
+        $faktorKompleksitasJson = config('opnam.faktor_kompleksitas');
     @endphp
     <script>
         const ships = @json($shipJson);
@@ -199,7 +202,14 @@
         const materials = @json($materialJson);
         const units = @json($unitJson);
         const tariffs = @json($tariffJson);
+        const faktorKetebalan = @json($faktorKetebalanJson);
+        const faktorKompleksitas = @json($faktorKompleksitasJson);
         const draftItems = @json($draft['items'] ?? []);
+        const tanggalOpnamInput = document.querySelector('input[name="tanggal_opnam"]');
+        const tarifBerlaku = () => {
+            const tanggal = tanggalOpnamInput?.value || '';
+            return tariffs.filter((t) => !tanggal || t.effective_from <= tanggal);
+        };
 
         const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
@@ -226,37 +236,38 @@
                 const unit = row.querySelector('.unit').value;
                 const volume = Number(row.querySelector('.volume').value || 0);
                 const kompleksitas = row.querySelector('.kompleksitas:checked')?.value || 'low';
-                const faktor = ({low: 1, medium: 1.10, high: 1.25})[kompleksitas] ?? 1;
-                const tariff = tariffs.find((t) => String(t.material) === material && String(t.unit) === unit);
+                const ketebalan = row.querySelector('.ketebalan').value;
+                const faktorTebal = faktorKetebalan[ketebalan] ?? 1;
+                const faktorKompleks = faktorKompleksitas[kompleksitas] ?? 1;
+                const tariff = tarifBerlaku().find((t) => String(t.material) === material && String(t.unit) === unit);
                 const unitPrice = tariff ? tariff.price : 0;
-                const base = unitPrice * volume;
+                const subtotal = unitPrice * volume * faktorTebal * faktorKompleks;
                 const target = row.querySelector('.tarif-dasar-row');
                 if (!target) return;
                 target.querySelector('.tarif-harga').textContent = rupiah(unitPrice);
                 target.querySelector('.tarif-satuan').textContent = units.find((u) => String(u.id) === unit)?.name || '';
-                target.querySelector('.faktor-badge').textContent = `Faktor ${kompleksitas}: ${faktor}x`;
-                target.querySelector('.item-amount').textContent = rupiah(base + base * (faktor - 1));
+                target.querySelector('.faktor-badge').textContent = `Faktor tebal ${faktorTebal}x / kompleksitas ${faktorKompleks}x`;
+                target.querySelector('.item-amount').textContent = rupiah(subtotal);
             }
 
             function updateSummary() {
-                let base = 0;
-                let adjustment = 0;
+                let total = 0;
                 container.querySelectorAll('.item-row').forEach((row) => {
                     updateItemTariffRow(row);
                     const material = row.querySelector('.material').value;
                     const unit = row.querySelector('.unit').value;
                     const volume = Number(row.querySelector('.volume').value || 0);
                     const kompleksitas = row.querySelector('.kompleksitas:checked')?.value || 'low';
-                    const faktor = ({low: 1, medium: 1.10, high: 1.25})[kompleksitas] ?? 1;
-                    const tariff = tariffs.find((t) => String(t.material) === material && String(t.unit) === unit);
-                    const amount = tariff ? tariff.price * volume : 0;
-                    base += amount;
-                    adjustment += amount * (faktor - 1);
+                    const ketebalan = row.querySelector('.ketebalan').value;
+                    const faktorTebal = faktorKetebalan[ketebalan] ?? 1;
+                    const faktorKompleks = faktorKompleksitas[kompleksitas] ?? 1;
+                    const tariff = tarifBerlaku().find((t) => String(t.material) === material && String(t.unit) === unit);
+                    total += (tariff ? tariff.price * volume : 0) * faktorTebal * faktorKompleks;
                 });
                 document.getElementById('item-count').textContent = container.querySelectorAll('.item-row').length + ' item';
-                document.getElementById('subtotal').textContent = rupiah(base);
-                document.getElementById('faktor-tambahan').textContent = rupiah(adjustment);
-                document.getElementById('total').textContent = rupiah(base + adjustment);
+                document.getElementById('subtotal').textContent = rupiah(total);
+                document.getElementById('faktor-tambahan').textContent = rupiah(0);
+                document.getElementById('total').textContent = rupiah(total);
             }
 
             function updateKompleksitasStyle(row) {
@@ -377,6 +388,9 @@
             });
 
             container.addEventListener('input', updateSummary);
+            if (tanggalOpnamInput) {
+                tanggalOpnamInput.addEventListener('change', updateSummary);
+            }
 
             if (draftItems.length) {
                 draftItems.forEach((item) => addItem(item));

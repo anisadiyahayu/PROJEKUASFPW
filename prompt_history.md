@@ -1,0 +1,157 @@
+# Prompt History — Regina
+
+File ini mencatat setiap prompt yang diberikan Regina beserta timestamp.
+Pencatatan dimulai 2026-11-26 (permintaan: "simpan semua percakapan mulai saat ini").
+
+Format entri: `## <timestamp>` diikuti isi prompt persis seperti yang diberikan.
+
+---
+
+## 2026-11-26 17:57 WIB
+
+**Regina:** simpan semua percakapan mulai saat ini di file @prompt_history.md
+
+---
+
+## 2026-11-26 17:57 WIB
+
+**Regina:** @prompt_history.md File yang mencatat setiap prompt yang diberikan Regina beserta timestamp
+
+---
+
+## 2026-11-26 18:27 WIB (retroactive)
+
+**Regina:** baca dan pahami @prd.md @SKILL.md @tasklist.md @taskinstruction.md @tupoksi.md
+
+---
+
+## 2026-11-26 18:27 WIB (retroactive)
+
+**Regina:** menurutmu untuk migrasi sebaiknya apakah dilakukan semuanya?
+
+---
+
+## 2026-11-26 18:27 WIB (retroactive)
+
+**Regina:** apa yang akan di kerjakan terlebih dahulu?
+
+---
+
+## 2026-11-26 18:27 WIB
+
+**Regina:** kerjakan
+
+---
+
+## 2026-11-26 18:45 WIB
+
+**Regina:** jangan pakai dari kodingan yang di repo fokus ke file yang saya suruh baca aja
+
+---
+
+## 2026-11-26 18:45 WIB
+
+**Regina:** kerjakan ulang
+
+---
+
+## 2026-11-26 18:52 WIB
+
+**Regina:** untuk berhubung dengan anggota lain pakai tinker untuk data sementaranya
+
+---
+
+## 2026-11-26 18:52 WIB (retroactive)
+
+**Regina:** 1. di .env udah di ganti
+yang nomor 2 ada di anggota mana?
+
+---
+
+## 2026-11-26 18:52 WIB
+
+**Regina:** jalankan
+
+---
+
+## 2026-11-26 19:02 WIB
+
+**Regina:** buatkan yang bisa di jalankan terlebih dahulu
+
+---
+
+## 2026-11-26 19:10 WIB
+
+**Regina:** kan bagian saya sudah di kerjakan ya, saya mau liat hasilnya dan lakukan uji coba ke bagian saya
+
+---
+
+## 2026-11-26 19:10 WIB
+
+**Regina:** ini yang saya tes kodingan baru atau dari git?
+
+---
+
+## 2026-11-26 19:10 WIB
+
+**Regina:** kerjakan
+
+---
+
+## 2026-11-26 19:25 WIB
+
+**Regina:** coba fokus ke file yang tadi di baca yang kode lama ga usah
+
+---
+
+## 2026-11-26 19:25 WIB
+
+**Regina:** kerjakan
+
+---
+
+## 2026-11-26 20:56 WIB (retroactive)
+
+**Regina:** baca dah pahami file @tupoksi.md , @taskinstruction.md @prd.md
+
+---
+
+## 2026-11-26 20:56 WIB (retroactive)
+
+**Regina:** saya regina
+
+---
+
+## 2026-11-26 20:56 WIB (retroactive)
+
+**Regina:** coba buatkan rencana apa yang sebaiknya dikerjakan dahulu?
+
+---
+
+## 2026-11-26 20:56 WIB
+
+**Regina:** kerjakan sesuai rekomendasi mu
+
+---
+
+## 2026-11-26 21:06 WIB
+
+**Regina:** lakukan saja sesuai rekomendasi mu
+
+---
+
+## 2026-11-26 21:13 WIB
+
+**Regina:** kerjakan sesuai rekomendasi kamu
+
+---
+
+## 2026-11-26 21:39 WIB
+
+**Regina:** setuju
+
+---
+
+## 2026-11-26 21:58 WIB
+
+**Regina:** ya setuju

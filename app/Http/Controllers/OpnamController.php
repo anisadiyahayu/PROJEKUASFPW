@@ -11,13 +11,21 @@ use App\Models\Tariff;
 use App\Models\Unit;
 use App\Models\WorkCategory;
 use App\Models\WorkType;
+use App\Services\OpnamCostCalculator;
+use App\Services\OpnamNumberGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class OpnamController extends Controller
 {
     private const SESSION_KEY = 'opnam_draft';
+
+    public function __construct(
+        private readonly OpnamCostCalculator $calculator,
+        private readonly OpnamNumberGenerator $numberGenerator,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -137,11 +145,12 @@ class OpnamController extends Controller
                     'ship_id' => ['required', 'exists:ships,id'],
                     'tanggal_opnam' => ['required', 'date'],
                     'lokasi' => ['required', 'in:Dock 01 — Graving Dock,Dock 02 — Floating Dock'],
+                    'catatan' => ['nullable', 'string'],
                 ]);
                 $draft['ship_id'] = $data['ship_id'];
                 $draft['tanggal_opnam'] = $data['tanggal_opnam'];
                 $draft['lokasi'] = $data['lokasi'];
-                $draft['catatan'] = null;
+                $draft['catatan'] = $data['catatan'] ?? null;
                 break;
 
             case 2:
@@ -172,19 +181,25 @@ class OpnamController extends Controller
 
                     $tariff = Tariff::where('material_spec_id', $material->id)
                         ->where('unit_id', $unit->id)
+                        ->where('effective_from', '<=', $draft['tanggal_opnam'] ?? now()->toDateString())
                         ->orderByDesc('effective_from')
                         ->first();
 
                     if (! $tariff) {
-                        return back()->withErrors(['items' => 'Tarif untuk kombinasi material dan satuan ini tidak ditemukan.'])->withInput();
+                        return back()->withErrors(['items' => 'Tarif berlaku untuk kombinasi material dan satuan ini pada tanggal opnam tidak ditemukan.'])->withInput();
                     }
 
                     $unitPrice = (float) $tariff->price;
                     $volume = (float) $item['volume'];
-                    $kompleksitas = $item['kompleksitas'];
-                    $faktor = ['low' => 1, 'medium' => 1.10, 'high' => 1.25][$kompleksitas] ?? 1;
-                    $base = round($unitPrice * $volume, 2);
-                    $adjustment = round($base * ($faktor - 1), 2);
+                    $kompleksitas = $item['kompleksitas'] ?? null;
+                    $faktorKetebalan = $this->calculator->faktorKetebalan($item['ketebalan'] ?? null);
+                    $faktorKompleksitas = $this->calculator->faktorKompleksitas($kompleksitas);
+                    $subtotal = $this->calculator->subtotalItem(
+                        $volume,
+                        $unitPrice,
+                        $faktorKetebalan,
+                        $faktorKompleksitas,
+                    );
                     $items[] = [
                         'uid' => $item['uid'] ?? uniqid('item-'),
                         'work_category_id' => (int) $item['work_category_id'],
@@ -194,12 +209,14 @@ class OpnamController extends Controller
                         'tariff_id' => $tariff->id,
                         'volume' => $volume,
                         'unit_price' => $unitPrice,
-                        'faktor' => $faktor,
+                        'faktor' => round($faktorKetebalan * $faktorKompleksitas, 2),
+                        'faktor_ketebalan' => $faktorKetebalan,
+                        'faktor_kompleksitas' => $faktorKompleksitas,
                         'ketebalan' => $item['ketebalan'] ?? null,
                         'kompleksitas' => $kompleksitas,
                         'catatan_tambahan' => $item['catatan_tambahan'] ?? null,
-                        'subtotal' => $base,
-                        'adjustment' => $adjustment,
+                        'subtotal' => $subtotal,
+                        'adjustment' => 0,
                         'lokasi' => $item['lokasi'] ?? null,
                         'description' => $item['description'],
                         'work_type_name' => $workType->name,
@@ -217,10 +234,11 @@ class OpnamController extends Controller
                 break;
 
             case 4:
+                $unggahan = config('opnam.unggahan');
                 $request->validate([
                     'bukti' => ['nullable', 'array'],
                     'bukti.*' => ['array'],
-                    'bukti.*.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+                    'bukti.*.*' => ['file', 'mimes:'.$unggahan['mimes'], 'max:'.$unggahan['max_kb']],
                 ]);
 
                 $validUids = collect($draft['items'] ?? [])->pluck('uid')->filter()->all();
@@ -231,7 +249,7 @@ class OpnamController extends Controller
                     }
                     foreach ($files as $file) {
                         $uploads[$uid][] = [
-                            'file_path' => $file->store('opnam-attachments', 'public'),
+                            'file_path' => $file->store($unggahan['path'], $unggahan['disk']),
                             'original_name' => $file->getClientOriginalName(),
                             'mime_type' => $file->getClientMimeType(),
                             'file_size' => $file->getSize(),
@@ -250,6 +268,177 @@ class OpnamController extends Controller
         return redirect()->route('petugas.opnams.create', ['step' => min(5, $step + 1)]);
     }
 
+    /**
+     * PT-03: ubah dan hapus item pada draft tersimpan (PRD 4.6).
+     * Status perlu_revisi sengaja tidak disentuh karena PT-09 masih parkir.
+     */
+    public function edit(Opnam $opnam): View
+    {
+        $this->pastikanDraftMilikSendiri($opnam);
+
+        return view('opnams.edit', [
+            'opnam' => $opnam->load('items'),
+            'categories' => WorkCategory::orderBy('name')->get(),
+            'workTypes' => WorkType::orderBy('name')->get(),
+            'materialSpecs' => MaterialSpec::orderBy('name')->get(),
+            'units' => Unit::orderBy('name')->get(),
+        ]);
+    }
+
+    public function storeItem(Request $request, Opnam $opnam): RedirectResponse
+    {
+        $this->pastikanDraftMilikSendiri($opnam);
+
+        $data = $this->validasiItem($request);
+        if (! $this->kombinasiValid($data)) {
+            return back()->withErrors(['items' => 'Kombinasi kategori, jenis, dan material tidak valid.'])->withInput();
+        }
+
+        $tariff = $this->cariTarif((int) $data['material_spec_id'], (int) $data['unit_id'], $opnam->tanggal_opnam);
+        if (! $tariff) {
+            return back()->withErrors(['items' => 'Tarif berlaku untuk kombinasi material dan satuan ini pada tanggal opnam tidak ditemukan.'])->withInput();
+        }
+
+        $unitPrice = (float) $tariff->price;
+        $faktorKetebalan = $this->calculator->faktorKetebalan($data['ketebalan'] ?? null);
+        $faktorKompleksitas = $this->calculator->faktorKompleksitas($data['kompleksitas'] ?? null);
+
+        OpnamItem::create([
+            'opnam_id' => $opnam->id,
+            'tariff_id' => $tariff->id,
+            'volume' => $data['volume'],
+            'unit_price' => $unitPrice,
+            'subtotal' => $this->calculator->subtotalItem($data['volume'], $unitPrice, $faktorKetebalan, $faktorKompleksitas),
+            'faktor' => round($faktorKetebalan * $faktorKompleksitas, 2),
+            'faktor_ketebalan' => $faktorKetebalan,
+            'faktor_kompleksitas' => $faktorKompleksitas,
+            'ketebalan' => $data['ketebalan'] ?? null,
+            'kompleksitas' => $data['kompleksitas'] ?? 'low',
+            'catatan_tambahan' => $data['catatan_tambahan'] ?? null,
+            'description' => $data['description'],
+            'sort_order' => ((int) $opnam->items()->max('sort_order')) + 1,
+        ]);
+
+        $this->hitungUlangTotal($opnam);
+
+        return redirect()->route('petugas.opnams.edit', $opnam)->with('status', 'Item pekerjaan ditambahkan.');
+    }
+
+    public function updateItem(Request $request, Opnam $opnam, OpnamItem $item): RedirectResponse
+    {
+        $this->pastikanDraftMilikSendiri($opnam);
+        abort_unless($item->opnam_id === $opnam->id, 404);
+
+        $data = $this->validasiItem($request);
+        if (! $this->kombinasiValid($data)) {
+            return back()->withErrors(['items' => 'Kombinasi kategori, jenis, dan material tidak valid.'])->withInput();
+        }
+
+        // BR-35: hanya material atau satuan yang diubah yang mencari tarif ulang.
+        $tarifSekarang = $item->tariff;
+        $gantiTarif = ! $tarifSekarang
+            || (int) $data['material_spec_id'] !== (int) $tarifSekarang->material_spec_id
+            || (int) $data['unit_id'] !== (int) $tarifSekarang->unit_id;
+
+        if ($gantiTarif) {
+            $tariff = $this->cariTarif((int) $data['material_spec_id'], (int) $data['unit_id'], $opnam->tanggal_opnam);
+            if (! $tariff) {
+                return back()->withErrors(['items' => 'Tarif berlaku untuk kombinasi material dan satuan ini pada tanggal opnam tidak ditemukan.'])->withInput();
+            }
+            $tariffId = $tariff->id;
+            $unitPrice = (float) $tariff->price;
+        } else {
+            $tariffId = $item->tariff_id;
+            $unitPrice = (float) $item->unit_price;
+        }
+
+        $faktorKetebalan = $this->calculator->faktorKetebalan($data['ketebalan'] ?? null);
+        $faktorKompleksitas = $this->calculator->faktorKompleksitas($data['kompleksitas'] ?? null);
+
+        $item->update([
+            'tariff_id' => $tariffId,
+            'unit_price' => $unitPrice,
+            'volume' => $data['volume'],
+            'subtotal' => $this->calculator->subtotalItem($data['volume'], $unitPrice, $faktorKetebalan, $faktorKompleksitas),
+            'faktor' => round($faktorKetebalan * $faktorKompleksitas, 2),
+            'faktor_ketebalan' => $faktorKetebalan,
+            'faktor_kompleksitas' => $faktorKompleksitas,
+            'ketebalan' => $data['ketebalan'] ?? null,
+            'kompleksitas' => $data['kompleksitas'] ?? 'low',
+            'catatan_tambahan' => $data['catatan_tambahan'] ?? null,
+            'description' => $data['description'],
+        ]);
+
+        $this->hitungUlangTotal($opnam);
+
+        return redirect()->route('petugas.opnams.edit', $opnam)->with('status', 'Item pekerjaan diperbarui.');
+    }
+
+    public function destroyItem(Opnam $opnam, OpnamItem $item): RedirectResponse
+    {
+        $this->pastikanDraftMilikSendiri($opnam);
+        abort_unless($item->opnam_id === $opnam->id, 404);
+
+        foreach ($item->attachments as $attachment) {
+            Storage::disk(config('opnam.unggahan.disk', 'public'))->delete($attachment->file_path);
+            $attachment->delete();
+        }
+        $item->delete();
+
+        $this->hitungUlangTotal($opnam);
+
+        return redirect()->route('petugas.opnams.edit', $opnam)->with('status', 'Item pekerjaan dihapus.');
+    }
+
+    private function validasiItem(Request $request): array
+    {
+        return $request->validate([
+            'work_category_id' => ['required', 'exists:work_categories,id'],
+            'work_type_id' => ['required', 'exists:work_types,id'],
+            'material_spec_id' => ['required', 'exists:material_specs,id'],
+            'unit_id' => ['required', 'exists:units,id'],
+            'volume' => ['required', 'numeric', 'min:0'],
+            'ketebalan' => ['nullable', 'integer', 'min:0'],
+            'kompleksitas' => ['required', 'in:low,medium,high'],
+            'catatan_tambahan' => ['nullable', 'string'],
+            'description' => ['required', 'string'],
+        ]);
+    }
+
+    private function kombinasiValid(array $data): bool
+    {
+        $workType = WorkType::find($data['work_type_id']);
+        $material = MaterialSpec::find($data['material_spec_id']);
+
+        return $workType && $material
+            && (int) $workType->work_category_id === (int) $data['work_category_id']
+            && (int) $material->work_type_id === (int) $data['work_type_id'];
+    }
+
+    private function cariTarif(int $materialId, int $unitId, mixed $tanggalOpnam): ?Tariff
+    {
+        return Tariff::where('material_spec_id', $materialId)
+            ->where('unit_id', $unitId)
+            ->where('effective_from', '<=', $tanggalOpnam ?? now()->toDateString())
+            ->orderByDesc('effective_from')
+            ->first();
+    }
+
+    private function hitungUlangTotal(Opnam $opnam): void
+    {
+        $opnam->update([
+            'total_biaya' => $this->calculator->totalBiaya($opnam->items()->get()->pluck('subtotal')),
+        ]);
+    }
+
+    private function pastikanDraftMilikSendiri(Opnam $opnam): void
+    {
+        abort_unless(
+            $opnam->status === Opnam::STATUS_DRAFT && (int) $opnam->created_by === (int) auth()->id(),
+            403,
+        );
+    }
+
     private function emptyDraft(): array
     {
         return ['ship_id' => null, 'tanggal_opnam' => null, 'lokasi' => null, 'catatan' => null, 'items' => [], 'uploads' => []];
@@ -262,22 +451,17 @@ class OpnamController extends Controller
                 ->with('status', 'Draft belum lengkap. Silakan ulangi dari awal.');
         }
 
-        $year = now()->year;
-        $sequence = Opnam::where('opnam_number', 'like', "OPN-{$year}-%")->count() + 1;
-        $number = sprintf('OPN-%d-%03d', $year, $sequence);
-        $adjustment = round(collect($draft['items'])->sum('adjustment'), 2);
-        $total = round(collect($draft['items'])->sum(fn ($item) => $item['subtotal'] + $item['adjustment']), 2);
+        $total = $this->calculator->totalBiaya($draft['items']);
 
-        $opnam = Opnam::create([
-            'opnam_number' => $number,
+        $opnam = $this->numberGenerator->create([
             'ship_id' => $draft['ship_id'],
             'created_by' => auth()->id(),
             'status' => Opnam::STATUS_DRAFT,
             'tanggal_opnam' => $draft['tanggal_opnam'],
-            'lokasi' => $draft['lokasi'] ?? null,
-            'adjustment_amount' => $adjustment,
             'catatan' => $draft['catatan'] ?? null,
             'total_biaya' => $total,
+            // PRD 3.10.2: salinan dari master kapal, bukan FK.
+            'jenis_kapal' => Ship::find($draft['ship_id'])?->jenis_kapal,
         ]);
 
         $itemIds = [];
@@ -289,7 +473,9 @@ class OpnamController extends Controller
                 'volume' => $item['volume'],
                 'unit_price' => $item['unit_price'],
                 'subtotal' => $item['subtotal'],
-                'faktor' => $item['faktor'],
+                'faktor' => $item['faktor'] ?? 1,
+                'faktor_ketebalan' => $item['faktor_ketebalan'] ?? 1,
+                'faktor_kompleksitas' => $item['faktor_kompleksitas'] ?? 1,
                 'ketebalan' => $item['ketebalan'] ?? null,
                 'kompleksitas' => $item['kompleksitas'] ?? 'low',
                 'catatan_tambahan' => $item['catatan_tambahan'] ?? null,
@@ -321,6 +507,6 @@ class OpnamController extends Controller
         session()->forget(self::SESSION_KEY);
 
         return redirect()->route('petugas.opnams.create')
-            ->with('status', "Draft {$number} berhasil disimpan.");
+            ->with('status', "Draft {$opnam->opnam_number} berhasil disimpan.");
     }
 }
