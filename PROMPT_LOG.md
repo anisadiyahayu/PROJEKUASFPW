@@ -965,3 +965,323 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `Get-Date` (2026-11-27 10:20 SE Asia Standard Time), `git status --short`, `git diff --stat`, `composer dump-autoload --no-interaction`, `C:\php\php.exe -l` pada controller, rute, dan test, `C:\php\php.exe artisan route:list --except-vendor`, `C:\php\php.exe -d extension=pdo_sqlite vendor\bin\pest` (99/99 lolos), `C:\php\php.exe -d extension=pdo_sqlite artisan test` (driver sqlite tidak terbawa ke subprocess, diganti pest langsung)
 **Manual modifications:** -
 **Notes / follow-up:** `prompt_history.md` sengaja dipertahankan sesuai instruksi Pemilik, sehingga menjadi pengecualian dari aturan `AGENTS.md`. Blok 18:33 dan 18:45 WIB dipulihkan sebagai `retroactive`. Narasi desain mengikuti `layouts/simship.blade.php` dengan dial ENERGY 1 / RHYTHM 1 / MOTION 1, bukan desain baru. `pdo_sqlite` tersedia sebagai DLL tetapi tidak aktif di `C:\php\php.ini`, sehingga test dijalankan dengan `-d extension=pdo_sqlite`.
+
+## 2026-11-27 17:25 WIB
+**Pemilik:** Regina (menyebut Anisa sebagai pihak terkait)
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`saya regina dan teman saya anisa butuh konfimasi seperti di bawah ini`"
+**Output summary:** Isi yang dimaksud dengan "di bawah ini" tidak terbaca (tidak ada teks/lampiran yang menyusul). Agent berhenti dan mengirim pertanyaan konfirmasi memakai format `taskinstruction.md` Bagian 8; belum ada perubahan kode atau keputusan nilai.
+**Files:** `PROMPT_LOG.md`
+**Commands:** `date` (2026-11-27 17:25 WIB), `git status --short`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: belum ditentukan. Menunggu Regina/Anisa mengirim butir konfirmasi atau ID item sebelum implementasi.
+
+## 2026-11-27 17:32 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`Regina, aku baru selesai audit DB-07 terkait Material Specs dan menemukan satu temuan pada integrasi Opnam.\n\nSaat ini dropdown Opnam sudah mengecualikan material yang soft-deleted, tetapi validasi backend masih menggunakan exists:material_specs,id. Akibatnya, ID material yang sudah di-soft-delete masih lolos validasi awal dan baru gagal pada proses berikutnya.\n\nSelain itu, ada potensi masalah ketika mengedit draft lama yang menggunakan material yang sekarang sudah di-soft-delete.\n\nUsulan aturan:\n1. Material soft-deleted tidak boleh digunakan untuk transaksi baru.\n2. Pada draft lama, material yang sudah terhapus tetap boleh dipertahankan selama ID material tidak diganti.\n3. Jika pengguna mengganti material, hanya material aktif yang boleh dipilih.\n4. Snapshot tariff_id, unit_price, subtotal, dan total historis harus tetap dipertahankan.\n\nApakah kamu setuju dengan aturan tersebut? Kalau iya, kita bisa koordinasikan perubahan validasi dan test pada modul Opnam supaya tidak mengganggu implementasi yang sudah ada \nsaya regina dan anisa butuh konfirmasi dari saya, jawaban yang pas apa?`"
+**Output summary:** Membaca `SKILL.md`, `taskinstruction.md`, `prd.md`, `OpnamController`, `RevisiOpnamService`, model `MaterialSpec`, dan view edit; temuan Anisa dinyatakan valid. Menyusun balasan "setuju" dengan tiga penajaman: pengecualian draft lama hanya bila `material_spec_id` sama dengan `tariff.material_spec_id`; `tariff_id`/`unit_price` dibekukan sedangkan `subtotal`/`total_biaya` draft boleh dihitung ulang dari `unit_price` (BR-35); pengecualian juga untuk `WORK_TYPES`/`WORK_CATEGORIES`. Mengidentifikasi tiga titik validasi `exists:material_specs,id` dan kebutuhan `withTrashed()` di `kombinasiValid()` serta view edit, dan menandai jalur AD-07/DR-03 sebagai di luar tupoksi. Belum ada perubahan kode.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: DB-07 ↔ Opnam, koordinasi dengan Anisa. Mode: Plan. Timestamp asli diambil dari data sesi OpenCode. Isi prompt persis ada di `prompt_history.md`. Menunggu konfirmasi Anisa sebelum implementasi.
+
+## 2026-11-27 17:36 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`sebenarnya percakapan saya di simpan kemana si?`"
+**Output summary:** Menjelaskan bahwa transkrip sesi tersimpan otomatis di `~/.local/share/opencode/opencode.db` (tabel `session_v2`, `session_message`, `session_part`) untuk sesi `ses_de36fd51affeIYZzeD2e2La4Ej`, dapat dibaca lewat endpoint `/api/session`, `/api/session/{id}/message`, dan ekspor `/api/experimental/session/{id}/export`, dengan log di `~/.local/share/opencode/log/opencode.log`. Membedakan transkrip otomatis dari `PROMPT_LOG.md` yang ditulis manual. Karena masih Plan mode, prompt belum dicatat.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** `ls ~/.local/share/opencode`, `sqlite3 ~/.local/share/opencode/opencode.db '.tables'`, `sqlite3 ... "select name from sqlite_master ..."`, `sqlite3 ... "select count(*) ..."`, `webfetch` dokumentasi `llms.txt`, `api`, `troubleshooting`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli diambil dari data sesi OpenCode.
+
+## 2026-11-27 17:38 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`setiap saya ketika baik itu mode plan atau mode build di catet di file prompo-log.md dan prompt_history.md`"
+**Output summary:** Menerima aturan pencatatan ganda untuk setiap prompt Regina, di mode Plan maupun Build: blok lengkap di `PROMPT_LOG.md` dan entri timestamp + isi persis di `prompt_history.md`; prompt owner lain tetap hanya di `PROMPT_LOG.md`. Menjelaskan kendala Plan mode yang melarang penulisan file, mengusulkan penanda `Mode: Plan/Build` di kolom Notes/follow-up, dan bertanya soal penyesuaian `AGENTS.md`.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** `wc -l PROMPT_LOG.md prompt.md prompt_history.md`, `tail -n 40 PROMPT_LOG.md`, `tail -n 70 prompt_history.md`, `TZ=Asia/Jakarta date`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. `prompt.md` tidak ditemukan (hasil migrasi ke `PROMPT_LOG.md`). Timestamp asli diambil dari data sesi OpenCode.
+
+## 2026-11-27 17:42 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`agent.md ga usah di pegang fokus ke promt_history.md dan prompt_log.md aja`"
+**Output summary:** Mengonfirmasi `AGENTS.md` tidak diubah; hanya `PROMPT_LOG.md` dan `prompt_history.md` yang disentuh. Menegaskan kelima prompt sesi ini akan dicatat ke dua file tersebut setelah keluar dari Plan mode.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. `AGENTS.md` sengaja tidak disentuh sesuai instruksi Pemilik. Timestamp asli diambil dari data sesi OpenCode.
+
+## 2026-11-27 17:44 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Mengambil waktu asli kelima prompt dari kolom `session_message.time_created` (WIB), lalu menambahkan lima blok ke `PROMPT_LOG.md` dan `prompt_history.md` sesuai format masing-masing. Tidak ada file lain yang diubah.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `sqlite3 -readonly ~/.local/share/opencode/opencode.db` (skema `session_message` serta query waktu dan teks prompt), `date '+%Z %Y-%m-%d %H:%M'`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu pengiriman asli dari data sesi, bukan `retroactive`. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 17:55 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`kenapa semua bagian yang ada jenis kapal belum masuk?`"
+**Output summary:** Menelusuri kemunculan `jenis_kapal` di migrasi, model, validasi, view, dan test. Field sudah ada di `SHIPS`, `OPNAMS`, wizard create, detail opnam, master kapal, review Hazel, dan repair-history; belum ada di daftar opnam (`mine`, `index`), header edit opnam, PDF invoice/technical report, dan rekap. Penyebabnya: `SHIPS.jenis_kapal` masih butuh konfirmasi Rifqy (DB-03 `Belum`), daftar nilai terbuka (PRD 9 no. 18), batas tupoksi, dan cakupan AD-05 yang sengaja minimal. Mengajukan empat opsi cakupan untuk diputuskan.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** `grep` untuk `jenis_kapal`/`jenis kapal`, `git log --oneline -12`, `git status --short`, `read` view dan dokumen terkait.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode.
+
+## 2026-11-27 18:01 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`semua bagian di tugas saya`"
+**Output summary:** Ruang lingkup ditetapkan ke item Regina (DB-09/10/11, PT-01–PT-06, PT-08, AD-05). Rencana: tambah kolom JENIS KAPAL di `opnams/mine.blade.php` dan `opnams/index.blade.php`, ringkasan di `opnams/edit.blade.php`, serta test terkait; memakai snapshot `OPNAMS.jenis_kapal`, tanpa filter/pencarian baru, tanpa menyentuh modul lain. Masih bertanya teks bebas atau pilihan tetap.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** `read tasklist.md`, `read prd.md` Bagian 10, `glob resources/views/opnams/*.blade.php`, `read opnams/mine.blade.php`, `read opnams/_summary.blade.php`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode.
+
+## 2026-11-27 18:04 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`yang b`"
+**Output summary:** Memilih pilihan tetap. Menguraikan konsekuensinya: daftar nilai harus jadi sumber kebenaran, validasi `ShipRequest` dan input master kapal berubah jadi dropdown, dan ada empat keputusan yang belum boleh ditebak — daftar nilai persis, lokasi definisi, izin Rifqy mengubah file master, dan perlakuan nilai lama.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** `read app/Http/Requests/Admin/ShipRequest.php`, `read config/opnam.php`, `glob app/Enums/*.php`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Stub `app/Enums/` sengaja tidak dipakai.
+
+## 2026-11-27 18:06 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`perlu saya tanyakn ke ripqy?`"
+**Output summary:** Menjawab ya, karena `ShipRequest.php`, `admin/ships/_form.blade.php`, `ShipManagementTest.php`, dan DB-03/AD-02 adalah milik Rifqy, sementara DB-03 masih `Belum` dengan catatan ⚠ perlu konfirmasi kolom di luar ERD. Disiapkan balasan siap kirim berisi tiga konfirmasi: penggunaan kolom `jenis_kapal`, izin mengubah file master, dan daftar nilai + perlakuan nilai lama. Alternatif tanpa Rifqy: tetap A, hanya menambah kolom tampilan dari snapshot.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode.
+
+## 2026-11-27 18:34 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`gapapa kata rifqy`"
+**Output summary:** Persetujuan Rifqy dicatat sebagai selesainya blocker tupoksi. Daftar nilai persis tetap diminta karena PRD 9 no. 18 tidak boleh ditebak; ditawarkan opsi A (Tugboat, Barge, Ferry, Kapal Kargo; nilai lama tetap dari snapshot), B (daftar lain), dan C (daftar lain + normalisasi). Lokasi definisi diputuskan sebagai key baru di `config/opnam.php`, bukan tabel/enum baru, supaya ERD tetap 17 tabel.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Keputusan Rifqy disampaikan Regina.
+
+## 2026-11-27 18:36 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`A langsung jalankan`"
+**Output summary:** Implementasi pilihan A. Menambah key `jenis_kapal` di `config/opnam.php` (Tugboat, Barge, Ferry, Kapal Kargo); `ShipRequest` memakai `Rule::in` dengan pengecualian untuk nilai lama yang tidak diganti dan pesan error khusus; form master kapal menjadi `<select>`; `opnams/mine.blade.php`, `opnams/index.blade.php`, dan `opnams/edit.blade.php` menampilkan snapshot `OPNAMS.jenis_kapal` (colspan disesuaikan); enam test baru di empat file test. Hasil: 38/38 lolos pada empat file target dan 170/170 untuk suite lengkap (811 assertions). Tidak ada migrasi, model, ERD, `AGENTS.md`, `tasklist.md`, atau `prd.md` yang diubah.
+**Files:** `config/opnam.php`, `app/Http/Requests/Admin/ShipRequest.php`, `resources/views/admin/ships/_form.blade.php`, `resources/views/opnams/mine.blade.php`, `resources/views/opnams/index.blade.php`, `resources/views/opnams/edit.blade.php`, `tests/Feature/ShipManagementTest.php`, `tests/Feature/OpnamMineTest.php`, `tests/Feature/OpnamListTest.php`, `tests/Feature/OpnamItemEditTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/ShipManagementTest.php tests/Feature/OpnamMineTest.php tests/Feature/OpnamListTest.php tests/Feature/OpnamItemEditTest.php` (38/38), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (170/170), `git status --short`, `git diff --stat`, `TZ=Asia/Jakarta date`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Nilai lama di luar daftar tidak dinormalisasi dan tetap tampil dari snapshot; validasi hanya untuk input baru atau nilai yang diganti. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 19:03 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`ini kan temen aku anisa pake jenis satuannya ada 5 ya itu tetep bisa ke hitung kan?`"
+**Output summary:** Menjawab bahwa perhitungan tetap bisa untuk lima satuan, karena `OpnamCostCalculator` tidak bergantung nama satuan dan `unit_price` diambil dari tarif `material_spec_id + unit_id + effective_from ≤ tanggal_opnam`; validasi backend hanya `exists:units,id`. Ditemukan celah: `OpnamController::edit()` baris 309 membatasi satuan hanya `m²`/`m`, sehingga satuan lain tidak bisa dipilih di edit dan item lama berisiko mengganti `unit_id` beserta tarifnya saat disimpan.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 19:15 WIB)
+**Commands:** `grep` untuk `Unit::`/`unit_id` di `app`, `read app/Services/OpnamCostCalculator.php`, `artisan tinker --execute` untuk daftar satuan dan tarif di DB dev.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. DB dev saat ini 4 satuan: `m²`, `unit`, `m²` (duplikat), `m`.
+
+## 2026-11-27 19:06 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`coba baca kode tugas temen saya nisa dia pakai satuan apa ajan dan perhitungannya gimana`"
+**Output summary:** Membaca model `Unit`/`Tariff`, `UnitController`, migrasi `units`/`tariffs`, `UnitTest`, `DatabaseSeeder`, `routes/web.php`, dan aturan tarif di `prd.md`. Temuan: `Unit` hanya `code` (unik) + `name` (boleh duplikat), tanpa enum/seed; tarif = `material_spec_id + unit_id + price decimal(15,2) + effective_from`, tanpa tanggal berakhir, tanpa `updated_at`, dan belum ada `TariffController`/UI CRUD; aturan BR-02/06/10/31/33; subtotal dihitung di modul Regina (`OpnamCostCalculator`), bukan di modul Anisa. Menguatkan celah edit dan duplikat nama pada JS wizard.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 19:15 WIB)
+**Commands:** `glob` dan `grep` untuk controller/model/migrasi, `read` model + controller + migrasi + test + seeder, `grep prd.md` untuk BR-02/06/10/14/31/33, `artisan tinker --execute` untuk tarif per satuan.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Modul Anisa tidak mengubah tabel milik Regina.
+
+## 2026-11-27 19:13 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan yang akan menyamakan bagian anisa di tempat saya`"
+**Output summary:** Menyelaraskan daftar satuan di modul Opnam dengan master Anisa. `OpnamController::edit()` diubah dari `Unit::whereIn('name', ['m²', 'm'])` menjadi `Unit::orderBy('id')->get()`, sehingga seluruh satuan Anisa tersedia di halaman edit draft. Komentar filter satuan di `create.blade.php` diperbarui. Dua test ditambahkan: satuan `unit` tetap tersedia di edit tanpa mengubah `tariff_id`/`unit_price`, dan wizard create menghitung `2 × 1750 = 3500` dari tarif satuan `unit`. Hasil: 22/22 pada dua file target dan 172/172 untuk suite lengkap (835 assertions). Tidak ada perubahan pada master Anisa, migrasi, atau model.
+**Files:** `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/create.blade.php`, `tests/Feature/OpnamItemEditTest.php`, `tests/Feature/OpnamDraftTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/OpnamItemEditTest.php tests/Feature/OpnamDraftTest.php` (22/22), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Masih ada catatan: JS wizard mereduksi opsi satuan yang namanya sama menjadi satu (Anisa mengizinkan nama duplikat dengan `code` berbeda), belum diubah karena di luar kesepakatan. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:09 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`setiap saya promt langsung catat ke prompt_log.md dan promt_history.md jangan minta persetujuan mulu`"
+**Output summary:** Menerima aturan pencatatan ganda untuk setiap prompt Regina di mode Plan maupun Build tanpa meminta persetujuan: blok lengkap di `PROMPT_LOG.md` dan entri timestamp + isi persis di `prompt_history.md`. Menyampaikan satu kalimat kendala Plan mode.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan pada prompt `jalankan`)
+**Commands:** `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk mengambil waktu kirim asli tiap prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode. Aturan ini mengulang instruksi 17:38/17:42 WIB. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:13 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`Satu kendala teknis: saya saat ini masih di Plan mode, dan mode ini melarang penulisan file — jadi prompt ini belum bisa saya tulis sekarang. Silakan pindah ke Build mode (switch agent). Begitu pindah, saya akan langsung menulis entri prompt ini (memakai waktu kirim asli dari data sesi) dan setiap prompt berikutnya otomatis, tanpa konfirmasi. \nseperti ini ga perlu lagi`"
+**Output summary:** Memahami bahwa penjelasan panjang tentang kendala Plan mode tidak perlu diulang; menyatakan tidak akan mengulanginya lagi.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan pada prompt `jalankan`)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Isi prompt berupa kutipan balasan agent sebelumnya yang ditolak Regina.
+
+## 2026-11-27 20:17 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`hazel sudah bikin review opnama kenapa saat saya klik buka review di data opname malah error?`"
+**Output summary:** Menyelidik tanpa mengubah file: rute `admin.review-opnams.show` dan `route()` di `opnams/index.blade.php:82` sudah benar. Penyebab error adalah `authorizeReview()` pada `ReviewOpnamController::show()` yang menolak 422 untuk status selain `menunggu_review`, sementara halaman Data Opname menampilkan semua status (sebagian besar `draft` karena PT-07 masih parkir). Mengajukan opsi menyembunyikan tombol atau mengaktifkan PT-07.
+**Files:** - (baca saja)
+**Commands:** `grep` pada views/routes/tests, `read` controller, model `Opnam`, dan view terkait.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Belum ada perubahan kode saat itu.
+
+## 2026-11-27 20:30 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`Tombol Buka Review mengarah ke review keseluruhan opname, mulai dari status kondisi sampai bagian waktu, bukan ke satu bagian tertentu saja.`"
+**Output summary:** Memperbaiki pemahaman: tombol memang ditujukan ke review keseluruhan opnam, bukan satu bagian tertentu. Opsi menyembunyikan tombol dibatalkan. Rencana revisi: `show()` boleh dibuka untuk semua status, sedangkan `approve()`, `returnForRevision()`, dan `revisi()` tetap dibatasi `menunggu_review`. Regina tidak menjawab pertanyaan tentang "bagian waktu", jadi tidak ditebak dan tidak ditambahkan.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `kondisi`/`waktu` di views dan `Review` di `tasklist.md`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada seksi baru yang ditambahkan.
+
+## 2026-11-27 20:33 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jangan ubah apapun selain yang saya minta`"
+**Output summary:** Membatasi cakupan secara ketat: hanya perbaikan agar tombol "Buka Review" membuka review keseluruhan opnam tanpa error. Membatalkan rencana menambah seksi, menyembunyikan tombol aksi, dan menyentuh file lain. Belum ada file yang diubah saat itu.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:39 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Memperbaiki error tombol "Buka Review": `ReviewOpnamController::show()` sekarang hanya memeriksa role admin (403) dan tidak lagi menolak status di luar `menunggu_review`, sehingga halaman review keseluruhan opnam bisa dibuka dari Data Opname. Method `approve()`, `returnForRevision()`, `revisi()`, dan method revisi item tetap memakai `authorizeReview()` (422 untuk status lain). Test `HazelReviewOpnamTest` disesuaikan: opnam berstatus `disetujui` kini mengembalikan 200 dan menampilkan "Rincian Pekerjaan". Suite lengkap 172/172 lolos (836 assertions). Tidak ada view, tombol, seksi baru, migrasi, atau modul lain yang diubah; badge status yang hard-coded di view sengaja dibiarkan sesuai instruksi "jangan ubah apa pun selain yang saya minta".
+**Files:** `app/Http/Controllers/Admin/ReviewOpnamController.php`, `tests/Feature/HazelReviewOpnamTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/HazelReviewOpnamTest.php tests/Feature/HazelRevisiOpnamTest.php` (10/10), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:51 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`di bagian saya format tanggalnya di samakan dengan yang lain`"
+**Output summary:** Mencari seluruh pemakaian format tanggal di views. Menemukan halaman modul Regina (`mine`, `index`, `show`, `edit`) memakai `d M Y`, sama seperti modul lain; satu-satunya yang berbeda adalah `create.blade.php:151` yang menampilkan `Y-m-d` mentah. Mengira maksudnya adalah menyamakan baris tersebut.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `format(` dan `tanggal` pada `resources/views`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file.
+
+## 2026-11-27 20:54 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`bukan itu maksud saya, itu format tanggal di tugas saya sama kan dengan format tanggal yang digunakan oleh anggota lain`"
+**Output summary:** Menjawab bahwa format tampilan tanggal di modul Regina sudah sama dengan anggota lain (`d M Y`); PDF/ekspor memakai `d/m/Y` secara konsisten di semua modul dan input `type="date"` memakai `Y-m-d` di semua modul.
+**Files:** -
+**Commands:** `grep` pada views (baca saja).
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Pertanyaan, bukan permintaan perubahan.
+
+## 2026-11-27 20:54 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`masuk saya jadi 2 format tanggal seperti tanggal dari dan tanggal sampai`"
+**Output summary:** Memperbaiki pemahaman: yang dimaksud adalah **filter tanggal**, bukan format tampilan. Halaman Regina memakai satu input `tanggal`, sementara Hazel/Direksi memakai `tanggal_dari` + `tanggal_sampai` dan Rifqy memakai `dari` + `sampai`. Menyusun rencana: dua input label pada `mine.blade.php` dan `index.blade.php`, filter rentang `whereDate >= / <=` di `indexMine()`/`index()`, serta penyesuaian `OpnamMineTest` dan `OpnamListTest`. Menandai bahwa ini membalik keputusan 03:20 WIB ("tanggal satu input").
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `tanggal_dari|tanggal_sampai|dari|sampai|tanggal` pada views, `read` controller dan test.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Belum ada perubahan file.
+
+## 2026-11-27 21:02 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menyamakan filter tanggal modul Regina dengan pola anggota lain: `opnams/mine.blade.php` dan `opnams/index.blade.php` kini memakai dua input berlabel `tanggal_dari` / `tanggal_sampai`; `OpnamController::index()` dan `indexMine()` mengganti `whereDate('tanggal_opnam', $tanggal)` dengan rentang `>= $dari` dan `<= $sampai` (sama seperti `ReviewOpnamController::index()`); `OpnamMineTest` dan `OpnamListTest` diubah ke kasus filter rentang dua batas. Suite lengkap 172/172 lolos (846 assertions). Tidak ada modul lain, view lain, atau dokumen progres yang diubah.
+**Files:** `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/mine.blade.php`, `resources/views/opnams/index.blade.php`, `tests/Feature/OpnamMineTest.php`, `tests/Feature/OpnamListTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/OpnamMineTest.php tests/Feature/OpnamListTest.php` (14/14), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 21:16 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`tanggal dari dan tanggal sampai pindakan kebawah dan sejejerkan, tiga kolom lain paskan saja`"
+**Output summary:** Menata ulang form filter Halaman Data Opname: `tanggal_dari` dan `tanggal_sampai` dipindah ke baris kedua, sejajar satu sama lain (masing-masing 180px) bersama tombol Filter; tiga kolom lain (pencarian, status, operator) dibuat `flex: 1` dengan `min-width` agar pas mengisi baris pertama. Hanya `opnams/index.blade.php` yang diubah; `opnams/mine.blade.php` sengaja tidak disentuh karena hanya memiliki dua kolom lain, bukan tiga. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/opnams/index.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 21:36 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`saat saya buka review, status nya berbeda dari status yang ada di data opname`"
+**Output summary:** Menemukan penyebabnya: `admin/review-opnams/show.blade.php:33` menuliskan teks badge "Menunggu Review" secara hard-coded, sementara kelas `badge-{{ $opnam->status }}` mengikuti status asli. Di `opnams/index.blade.php` teks badge diambil dari peta `$statusLabels[$opnam->status]`, sehingga opnam `draft` tampil beda saat dibuka di review. Mengajukan perbaikan satu titik di view review memakai peta label yang sama.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `statusLabels` dan `badge-` pada views.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file saat itu.
+
+## 2026-11-27 21:37 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menyamakan label status di halaman review dengan Data Opname: `admin/review-opnams/show.blade.php` kini memuat peta `$statusLabels` yang sama (`Draft`, `Menunggu Review`, `Perlu Revisi`, `Menunggu Approval Direksi`, `Ditolak`, `Disetujui`, `Dokumen Terbit`) dan menampilkan `$statusLabels[$opnam->status] ?? $opnam->status`, menggantikan teks hardcoded "Menunggu Review". Kelas warna badge dan tombol aksi review tidak diubah. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/admin/review-opnams/show.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 21:45 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`di bagian opname saya yang tanggal dari dan tanggal sampai pindahkan ke bawah dan tambahkan botton filter. kolom yang lain sesuaikan saja dengan layout yang ada`"
+**Output summary:** Mengajukan penataan ulang form filter `opnams/mine.blade.php` mengikuti pola halaman Data Opname: dua baris, tanggal di baris bawah sejajar dengan tombol Filter; kolom pencarian dan status tetap di baris atas. `onchange` pada input tanggal dilepas karena filter sekarang dijalankan tombol.
+**Files:** - (baca saja)
+**Commands:** `read` pada `resources/views/opnams/mine.blade.php`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file saat itu.
+
+## 2026-11-27 21:49 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Form filter Opname Saya dijadikan dua baris: baris pertama berisi pencarian (`q`, flex) dan status (auto-submit tetap); baris kedua berisi `tanggal_dari` + `tanggal_sampai` sejajar (180px) dan tombol **Filter** (90px). `onchange="this.form.submit()"` dilepas dari kedua input tanggal. Controller, route, test, dan view lain tidak diubah. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 22:06 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`untuk fungsi yang klik langsung cari di hapus aja karna sekarang udah ada tomblok filter untuk mencari`"
+**Output summary:** Memahami rằng auto-submit pada `<select name="status">` di `opnams/mine.blade.php` harus dihapus karena pencarian sekarang memakai tombol Filter. Badge status di tabel yang bisa diklik sengaja diusulkan tetap dipertahankan karena merupakan fitur lama yang diminta Regina; tidak ada keputusan untuk menghapusnya.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `onchange`/`Klik untuk filter` pada views.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file saat itu.
+
+## 2026-11-27 22:11 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menghapus `onchange="this.form.submit()"` dari `<select name="status">` di `opnams/mine.blade.php`. Perubahan status sekarang baru diterapkan saat tombol Filter diklik, konsisten dengan input tanggal. Badge status yang bisa diklik di tabel sengaja tidak diubah. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.

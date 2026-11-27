@@ -58,7 +58,7 @@ function hazelBuatTagihan(Opnam $opnam, string $status = Billing::STATUS_MENUNGG
     return $billing;
 }
 
-test('halaman review hanya dapat diakses Admin dan hanya menampilkan opnam menunggu review', function () {
+test('halaman review hanya dapat diakses Admin dan menampilkan review keseluruhan opnam', function () {
     $admin = hazelBuatUser('admin', 'admin-review');
     $direksi = hazelBuatUser('direksi', 'direksi-review');
     $menunggu = hazelBuatOpnam($admin, 'OPN-RV-001', Opnam::STATUS_MENUNGGU_REVIEW);
@@ -81,7 +81,8 @@ test('halaman review hanya dapat diakses Admin dan hanya menampilkan opnam menun
 
     $this->actingAs($admin)
         ->get(route('admin.review-opnams.show', $selesai))
-        ->assertStatus(422);
+        ->assertOk()
+        ->assertSee('Rincian Pekerjaan');
 });
 
 test('Admin meneruskan opnam dan tagihan dibuat otomatis', function () {

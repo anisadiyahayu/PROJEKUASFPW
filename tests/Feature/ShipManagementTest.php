@@ -201,3 +201,74 @@ test('petugas tidak boleh mengakses pengelolaan kapal', function () {
         ->get(route('admin.ships.index'))
         ->assertForbidden();
 });
+
+test('jenis kapal memakai daftar pilihan tetap', function () {
+    $admin = buatAdminKapal();
+    $owner = Owner::create(['name' => 'PT Daftar Jenis']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.ships.create'))
+        ->assertOk()
+        ->assertSee('Tugboat')
+        ->assertSee('Barge')
+        ->assertSee('Ferry')
+        ->assertSee('Kapal Kargo');
+
+    $this->actingAs($admin)
+        ->post(route('admin.ships.store'), [
+            'owner_id' => $owner->id,
+            'name' => 'KM Daftar',
+            'hull_number' => 'HULL-DAFTAR-1',
+            'jenis_kapal' => 'Ferry',
+        ])
+        ->assertRedirect(route('admin.ships.index'));
+
+    $this->assertDatabaseHas('ships', [
+        'hull_number' => 'HULL-DAFTAR-1',
+        'jenis_kapal' => 'Ferry',
+    ]);
+});
+
+test('jenis kapal di luar daftar ditolak', function () {
+    $admin = buatAdminKapal();
+    $owner = Owner::create(['name' => 'PT Jenis Salah']);
+
+    $this->actingAs($admin)
+        ->post(route('admin.ships.store'), [
+            'owner_id' => $owner->id,
+            'name' => 'KM Salah',
+            'hull_number' => 'HULL-SALAH-1',
+            'jenis_kapal' => 'Kapal Angkut',
+        ])
+        ->assertSessionHasErrors('jenis_kapal');
+});
+
+test('jenis kapal lama di luar daftar tetap boleh dipertahankan saat kapal diubah', function () {
+    $admin = buatAdminKapal();
+    $owner = Owner::create(['name' => 'PT Jenis Lama']);
+    $ship = Ship::create([
+        'owner_id' => $owner->id,
+        'name' => 'KM Lama',
+        'hull_number' => 'HULL-LAMA-1',
+        'jenis_kapal' => 'Kapal Lama',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.ships.edit', $ship))
+        ->assertOk()
+        ->assertSee('Kapal Lama');
+
+    $this->actingAs($admin)
+        ->put(route('admin.ships.update', $ship), [
+            'owner_id' => $owner->id,
+            'name' => 'KM Lama Revisi',
+            'hull_number' => 'HULL-LAMA-1',
+            'jenis_kapal' => 'Kapal Lama',
+        ])
+        ->assertRedirect(route('admin.ships.index'));
+
+    $this->assertDatabaseHas('ships', [
+        'id' => $ship->id,
+        'jenis_kapal' => 'Kapal Lama',
+    ]);
+});

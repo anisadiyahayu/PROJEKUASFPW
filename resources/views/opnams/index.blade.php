@@ -26,30 +26,39 @@
     <p class="subtitle">Pantau seluruh transaksi opnam yang diajukan Operator.</p>
 
     <div class="card">
-        <form method="GET" action="{{ route('admin.opnams.index') }}" style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nomor opname atau nama kapal...">
+        <form method="GET" action="{{ route('admin.opnams.index') }}" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 220px;">
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nomor opname atau nama kapal...">
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                    <select name="status">
+                        <option value="">Semua Status</option>
+                        @foreach ($statuses as $status)
+                            <option value="{{ $status }}" @selected(request('status') === $status)>{{ $statusLabels[$status] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                    <select name="operator">
+                        <option value="">Semua Operator</option>
+                        @foreach ($operators as $operator)
+                            <option value="{{ $operator->id }}" @selected(request('operator') === (string) $operator->id)>{{ $operator->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            <div style="width: 180px;">
-                <select name="status">
-                    <option value="">Semua Status</option>
-                    @foreach ($statuses as $status)
-                        <option value="{{ $status }}" @selected(request('status') === $status)>{{ $statusLabels[$status] }}</option>
-                    @endforeach
-                </select>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="width: 180px;">
+                    <label for="tanggal_dari">Tanggal Dari</label>
+                    <input id="tanggal_dari" type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" title="Mencari berdasarkan Tanggal Opname yang diisi saat pencatatan">
+                </div>
+                <div style="width: 180px;">
+                    <label for="tanggal_sampai">Tanggal Sampai</label>
+                    <input id="tanggal_sampai" type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}" title="Mencari berdasarkan Tanggal Opname yang diisi saat pencatatan">
+                </div>
+                <div style="width: 90px;"><button type="submit" class="btn btn-primary">Filter</button></div>
             </div>
-            <div style="width: 180px;">
-                <select name="operator">
-                    <option value="">Semua Operator</option>
-                    @foreach ($operators as $operator)
-                        <option value="{{ $operator->id }}" @selected(request('operator') === (string) $operator->id)>{{ $operator->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div style="width: 180px;">
-                <input type="date" name="tanggal" value="{{ request('tanggal') }}" aria-label="Filter tanggal opname" title="Mencari berdasarkan Tanggal Opname yang diisi saat pencatatan">
-            </div>
-            <div style="width: 90px;"><button type="submit" class="btn btn-primary">Filter</button></div>
         </form>
     </div>
 
@@ -59,6 +68,7 @@
                 <tr>
                     <th>NOMOR OPNAME</th>
                     <th>NAMA KAPAL</th>
+                    <th>JENIS KAPAL</th>
                     <th>OPERATOR</th>
                     <th>TANGGAL OPNAME</th>
                     <th>ESTIMASI BIAYA</th>
@@ -71,6 +81,7 @@
                     <tr>
                         <td class="angka"><strong style="color:#1d4ed8;">{{ $opnam->opnam_number }}</strong></td>
                         <td>{{ $opnam->ship?->name }}</td>
+                        <td>{{ $opnam->jenis_kapal ?: '-' }}</td>
                         <td>{{ $opnam->creator?->name }}</td>
                         <td class="angka">{{ $opnam->tanggal_opnam?->format('d M Y') }}</td>
                         <td class="angka">Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
@@ -81,7 +92,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" style="text-align:center; color:#94a3b8;">Belum ada opnam.</td></tr>
+                    <tr><td colspan="8" style="text-align:center; color:#94a3b8;">Belum ada opnam.</td></tr>
                 @endforelse
             </tbody>
         </table>
