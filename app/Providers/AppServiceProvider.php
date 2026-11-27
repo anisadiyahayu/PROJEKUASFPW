@@ -12,6 +12,7 @@ use App\Models\Ship;
 use App\Models\Tariff;
 use App\Models\TechnicalReport;
 use App\Observers\ActivityLogObserver;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::defaultView('vendor.pagination.custom');
         Owner::observe(ActivityLogObserver::class);
         Ship::observe(ActivityLogObserver::class);
         Opnam::observe(ActivityLogObserver::class);

@@ -20,6 +20,13 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | DB-06 | WORK_TYPES | Anisa | Selesai | CRUD, soft delete, dan WorkTypeSeeder tersedia; 54 WorkType. WorkTypeTest lulus. |
 | DB-07 | MATERIAL_SPECS | Anisa | Selesai | MaterialSpecSeeder idempotent terintegrasi setelah WorkTypeSeeder; 271 spec aktif pada 30 WorkType; 0 soft-deleted, duplikat, atau orphan. MaterialSpecTest lulus. |
 | DB-08 | TARIFFS | Anisa | Dikerjakan | Implementasi TariffSeeder selesai dan idempotent; 81 tarif berhasil dibuat dengan `effective_from=2019-01-01`. Data belum lengkap: 403 nilai tertunda karena pemetaan MaterialSpec/Unit belum dapat dipastikan. Lihat inventarisasi di prompt_history_anisa.md. |
+| DB-02 | OWNERS | Rifqy | Perlu konfirmasi | Disentuh lewat `ShipSeeder` sinkronisasi kapal: `firstOrCreate` OWNERS dari `owner_name`, `address` NULL, tidak menimpa existing; tidak ada kolom baru. CRUD owner mandiri (AD-02) belum dikerjakan. |
+| DB-03 | SHIPS | Rifqy | Perlu konfirmasi | `database/seeders/ShipSeeder.php` + didaftarkan di `DatabaseSeeder` (15 kapal; hanya kolom ERD; `hull_number`=`imo_number`; `jenis_kapal`=`ship_type` verbatim; `firstOrCreate` OWNERS `address` NULL + `updateOrCreate`; transaction; re-runnable). Verifikasi 171/171 `artisan test`. `hull_number`-mapping & PRD 9 no.18/21 tetap terbuka.  ⚠ Kolom `jenis_kapal` ditambahkan di luar ERD atas permintaan Regina 2026-11-25; perlu konfirmasi Rifqy.  |
+| DB-04 | UNITS | Anisa | Belum | |
+| DB-05 | WORK_CATEGORIES | Anisa | Belum | Tambah `is_active` (PRD 6.7), perlu konfirmasi |
+| DB-06 | WORK_TYPES | Anisa | Belum | |
+| DB-07 | MATERIAL_SPECS | Anisa | Belum | |
+| DB-08 | TARIFFS | Anisa | Belum | |
 | DB-09 | OPNAMS | Regina | Selesai | Migrasi & model: `tanggal_opnam`, `catatan`, `total_biaya`, 7 konstanta status. `jenis_kapal` tersalin dari `SHIPS` saat simpan draft; `lokasi` & `adjustment_amount` di luar ERD (permintaan 2026-11-25). |
 | DB-10 | OPNAM_ITEMS | Regina | Selesai | `lokasi`, `faktor`, `ketebalan`, `kompleksitas`, `catatan_tambahan`; snapshot `unit_price`/`subtotal` diuji kebal terhadap perubahan tarif. |
 | DB-11 | OPNAM_ATTACHMENTS | Regina | Selesai | Migrasi & model: `keterangan`, `file_size` = `integer` (byte); terverifikasi via `db:table`. |
@@ -57,14 +64,14 @@ Urutan pengerjaan:
 | PT-08 | Melihat Status Pengajuan | Regina | Selesai | Opname Saya: hanya opnam milik petugas login; pencarian, filter status/tanggal, paginasi (BR-27). |
 | PT-09 | Memperbaiki Opnam yang Dikembalikan | Di luar tupoksi | Belum | Lihat `tupoksi.md` bagian 3 |
 | PT-10 | Melihat Riwayat Aktivitas | Rifqy | Belum | Cakupan: seluruh aktivitas (PRD 3.3) |
-| PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat `tupoksi.md` bagian 3 |
-| AD-01 | Mengelola Pengguna | Halvina | Belum | |
+| PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Hazel | Selesai | Ekspor PDF mengikuti filter aktif dan cakupan role; `ActivityLogPdfExporter` memakai `Dompdf\Dompdf`. |
+| AD-01 | Mengelola Pengguna | Halvina | Belum | Password minimal 8 karakter, tanpa aturan lain (keputusan tim). |
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
 | AD-03 | Mengelola Kategori Pekerjaan | Anisa | Selesai | CRUD, soft delete, dan status aktif/nonaktif di `admin.work-categories.*`; kategori aktif dapat dipilih untuk WorkType, kategori nonaktif tetap tersimpan dan dapat diaktifkan kembali. WorkCategoryTest lulus. |
 | AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Selesai | Fitur CRUD master WorkType, MaterialSpec, Unit, dan Tarif tersedia; test terkait lulus. Penyelesaian CRUD tidak berarti seluruh data Tarif lengkap: DB-08 masih parsial (81 tarif dibuat, 403 nilai tertunda). |
 | AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status/operator/tanggal, paginasi (BR-27); tombol mata membuka detail baca-saja `admin.opnams.show`. |
 | AD-06 | Memeriksa Opnam | Hazel | Selesai | Daftar dan detail review dengan pencarian, filter tanggal, rincian pekerjaan, biaya, dan lampiran. |
-| AD-07 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat `tupoksi.md` bagian 3 |
+| AD-07 | Merevisi Data Opnam | Hazel | Selesai | Revisi saat `menunggu_review` oleh Admin; data, item, dan total dihitung ulang memakai `OpnamCostCalculator`, perubahan tercatat di ACTIVITY_LOGS. |
 | AD-08 | Menyetujui Hasil Review | Hazel | Selesai | Meneruskan ke Direksi, mencatat riwayat, dan membuat tagihan otomatis (ST-08). |
 | AD-09 | Mengembalikan Opnam untuk Revisi | Hazel | Selesai | Catatan wajib tersimpan di `STATUS_HISTORIES.note`. |
 | AD-10 | Melihat Riwayat Perubahan | Rifqy | Belum | Gabungan Riwayat Revisi; konfirmasi cakupan. |
@@ -72,11 +79,11 @@ Urutan pengerjaan:
 | AD-12 | Merevisi Invoice | Hazel | Selesai | Admin, hanya saat `draft`; field teks snapshot dan tanggal. |
 | AD-13 | Mengekspor Invoice ke PDF | Hazel | Selesai | Ekspor pertama mempublikasikan invoice; memakai `Dompdf\Dompdf`. |
 | AD-14 | Melihat Riwayat Aktivitas | Rifqy | Selesai | Audit log; ActivityLogTest lulus. |
-| AD-15 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat `tupoksi.md` bagian 3 |
+| AD-15 | Mengekspor Riwayat Aktivitas ke PDF | Hazel | Selesai | Ekspor PDF mengikuti filter aktif dan cakupan role; `ActivityLogPdfExporter` memakai `Dompdf\Dompdf`. |
 | AD-16 | Melihat dan Mengekspor Laporan Rekapitulasi | Rifqy | Selesai | Halaman rekapitulasi, ekspor PDF dan Excel; WorkRecapitulationTest lulus. |
 | DR-01 | Melihat Draft Menunggu Approval | Hazel | Selesai | Sumber `BILLINGS.status = menunggu_approval`. |
 | DR-02 | Memeriksa Draft Tagihan | Hazel | Selesai | Rincian opnam, penyesuaian, dan total. |
-| DR-03 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat `tupoksi.md` bagian 3 |
+| DR-03 | Merevisi Data Opnam | Hazel | Selesai | Revisi saat `menunggu_approval_direksi` oleh Direksi; tagihan menunggu approval ikut diselaraskan dengan penyesuaian tetap dipertahankan. |
 | DR-04 | Memberikan Diskon atau Markup | Hazel | Selesai | Nominal, satu baris penyesuaian per tagihan. |
 | DR-05 | Mencatat Disposisi | Hazel | Selesai | `disposition_note` wajib. |
 | DR-06 | Menyetujui Tagihan | Hazel | Selesai | Sinkron `BILLINGS` dan `OPNAMS`, buat draf dokumen. |
@@ -91,7 +98,7 @@ Urutan pengerjaan:
 | DR-15 | Mencari dan Melihat Riwayat Perbaikan Kapal | Rifqy | Selesai | Satu fitur dengan AD-11. |
 | DR-16 | Melihat Riwayat Perubahan | Rifqy | Selesai | Riwayat revisi digabung ke Riwayat Perubahan. |
 | DR-17 | Melihat Riwayat Aktivitas | Rifqy | Selesai | Audit log; ActivityLogTest lulus. |
-| DR-18 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat `tupoksi.md` bagian 3 |
+| DR-18 | Mengekspor Riwayat Aktivitas ke PDF | Hazel | Selesai | Ekspor PDF mengikuti filter aktif dan cakupan role; `ActivityLogPdfExporter` memakai `Dompdf\Dompdf`. |
 
 ## 3. Checklist transisi status (10)
 
@@ -104,16 +111,13 @@ Urutan pengerjaan:
 | ST-05 | Opnam: `menunggu_approval_direksi` → `disetujui` | Hazel | Selesai | DR-06 |
 | ST-06 | Opnam: `menunggu_approval_direksi` → `ditolak` | Hazel | Selesai | DR-07 |
 | ST-07 | Opnam: `disetujui` → `dokumen_terbit` | Hazel | Selesai | Pemicu: invoice dipublikasikan dan technical report tersedia |
-| ST-08 | Tagihan: (dibuat) → `menunggu_approval` | Di luar tupoksi | Belum | Diterapkan otomatis saat AD-08; pemilik/langkah belum ditetapkan |
+| ST-08 | Tagihan: (dibuat) → `menunggu_approval` | Hazel | Selesai | Dibuat otomatis saat AD-08, nomor `BLG-%06d`; pemilik ditetapkan 2026-11-26 |
 | ST-09 | Tagihan: `menunggu_approval` → `disetujui` | Hazel | Selesai | DR-06 |
 | ST-10 | Tagihan: `menunggu_approval` → `ditolak` | Hazel | Selesai | DR-07 |
 
 ## Catatan parkir
 
 - PT-07, PT-09, ST-01, ST-04 — alur pengajuan dan perbaikan opnam oleh Petugas belum masuk tugas siapa pun (`tupoksi.md` bagian 3). PT-08 sejak 2026-11-26 menjadi milik Regina.
-- ST-08 — tagihan dibuat otomatis saat AD-08, tetapi pemilik/langkahnya belum ditetapkan.
-- AD-07, DR-03 — revisi data opnam oleh Admin dan Direksi belum masuk tugas siapa pun.
-- PT-11, AD-15, DR-18 — ekspor riwayat aktivitas ke PDF belum masuk tugas siapa pun.
 - Menghitung ulang `unit_price`, `subtotal`, atau `total_biaya` dari tarif master setelah tersimpan (BR-10).
 - Tabel/middleware/policy milik anggota lain, serta field dari mockup (`contact person`, telepon, `Berlaku hingga`, kuantitas minimum, faktor tarif).
 

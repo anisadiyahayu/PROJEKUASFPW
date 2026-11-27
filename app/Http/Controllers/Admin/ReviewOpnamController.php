@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Billing;
 use App\Models\Opnam;
+use App\Models\OpnamItem;
+use App\Services\RevisiOpnamService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 class ReviewOpnamController extends Controller
 {
     private const ROLE = 'admin';
+
+    private const EVENT_REVISI = 'AD-07 Revisi Data Opnam';
 
     public function index(Request $request): View
     {
@@ -55,25 +59,64 @@ class ReviewOpnamController extends Controller
     public function show(Opnam $opnam): View
     {
         abort_unless(auth()->user()?->role === self::ROLE, 403);
-        abort_unless(
-            $opnam->status === Opnam::STATUS_MENUNGGU_REVIEW,
-            422,
-            'Opnam tidak berada pada status menunggu_review.',
-        );
 
         $opnam->load(['ship', 'creator', 'items', 'attachments']);
 
         return view('admin.review-opnams.show', compact('opnam'));
     }
 
+    public function revisi(Opnam $opnam, RevisiOpnamService $service): View
+    {
+        $this->authorizeReview($opnam);
+
+        return view('opnams.revisi', $service->dataForm($opnam, 'Admin', [
+            'kembali' => route('admin.review-opnams.show', $opnam),
+            'simpan_opnam' => route('admin.review-opnams.update-revisi', $opnam),
+            'tambah_item' => route('admin.review-opnams.items.store', $opnam),
+            'item_update' => fn (OpnamItem $item) => route('admin.review-opnams.items.update', [$opnam, $item]),
+            'item_destroy' => fn (OpnamItem $item) => route('admin.review-opnams.items.destroy', [$opnam, $item]),
+        ]));
+    }
+
+    public function updateRevisi(Request $request, Opnam $opnam, RevisiOpnamService $service): RedirectResponse
+    {
+        $this->authorizeReview($opnam);
+
+        $service->perbaruiOpnam($opnam, $request->validate($service->aturanOpnam()), self::EVENT_REVISI, $request);
+
+        return back()->with('status', 'Data opnam direvisi.');
+    }
+
+    public function storeItemRevisi(Request $request, Opnam $opnam, RevisiOpnamService $service): RedirectResponse
+    {
+        $this->authorizeReview($opnam);
+
+        $service->tambahItem($opnam, $request->validate($service->aturanItem()), self::EVENT_REVISI, $request);
+
+        return back()->with('status', 'Item pekerjaan ditambahkan.');
+    }
+
+    public function updateItemRevisi(Request $request, Opnam $opnam, OpnamItem $item, RevisiOpnamService $service): RedirectResponse
+    {
+        $this->authorizeReview($opnam);
+
+        $service->perbaruiItem($opnam, $item, $request->validate($service->aturanItem()), self::EVENT_REVISI, $request);
+
+        return back()->with('status', 'Item pekerjaan diperbarui.');
+    }
+
+    public function destroyItemRevisi(Request $request, Opnam $opnam, OpnamItem $item, RevisiOpnamService $service): RedirectResponse
+    {
+        $this->authorizeReview($opnam);
+
+        $service->hapusItem($opnam, $item, self::EVENT_REVISI, $request);
+
+        return back()->with('status', 'Item pekerjaan dihapus.');
+    }
+
     public function approve(Request $request, Opnam $opnam): RedirectResponse
     {
-        abort_unless(auth()->user()?->role === self::ROLE, 403);
-        abort_unless(
-            $opnam->status === Opnam::STATUS_MENUNGGU_REVIEW,
-            422,
-            'Opnam tidak berada pada status menunggu_review.',
-        );
+        $this->authorizeReview($opnam);
 
         $from = $opnam->status;
         $to = Opnam::STATUS_MENUNGGU_APPROVAL_DIREKSI;
@@ -135,12 +178,7 @@ class ReviewOpnamController extends Controller
 
     public function returnForRevision(Request $request, Opnam $opnam): RedirectResponse
     {
-        abort_unless(auth()->user()?->role === self::ROLE, 403);
-        abort_unless(
-            $opnam->status === Opnam::STATUS_MENUNGGU_REVIEW,
-            422,
-            'Opnam tidak berada pada status menunggu_review.',
-        );
+        $this->authorizeReview($opnam);
 
         $data = $request->validate([
             'catatan' => ['required', 'string'],
@@ -173,5 +211,15 @@ class ReviewOpnamController extends Controller
         });
 
         return back()->with('status', 'Opnam dikembalikan untuk revisi.');
+    }
+
+    private function authorizeReview(Opnam $opnam): void
+    {
+        abort_unless(auth()->user()?->role === self::ROLE, 403);
+        abort_unless(
+            $opnam->status === Opnam::STATUS_MENUNGGU_REVIEW,
+            422,
+            'Opnam tidak berada pada status menunggu_review.',
+        );
     }
 }

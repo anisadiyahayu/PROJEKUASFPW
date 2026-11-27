@@ -63,9 +63,14 @@ class OpnamController extends Controller
             $query->where('created_by', (int) $operator);
         }
 
-        $tanggal = trim((string) $request->query('tanggal', ''));
-        if ($tanggal !== '') {
-            $query->whereDate('tanggal_opnam', $tanggal);
+        $dari = trim((string) $request->query('tanggal_dari', ''));
+        if ($dari !== '') {
+            $query->whereDate('tanggal_opnam', '>=', $dari);
+        }
+
+        $sampai = trim((string) $request->query('tanggal_sampai', ''));
+        if ($sampai !== '') {
+            $query->whereDate('tanggal_opnam', '<=', $sampai);
         }
 
         $opnams = $query->orderByDesc('tanggal_opnam')
@@ -125,9 +130,14 @@ class OpnamController extends Controller
             $query->where('status', $status);
         }
 
-        $tanggal = trim((string) $request->query('tanggal', ''));
-        if ($tanggal !== '') {
-            $query->whereDate('tanggal_opnam', $tanggal);
+        $dari = trim((string) $request->query('tanggal_dari', ''));
+        if ($dari !== '') {
+            $query->whereDate('tanggal_opnam', '>=', $dari);
+        }
+
+        $sampai = trim((string) $request->query('tanggal_sampai', ''));
+        if ($sampai !== '') {
+            $query->whereDate('tanggal_opnam', '<=', $sampai);
         }
 
         $opnams = $query->orderByDesc('tanggal_opnam')
@@ -306,7 +316,7 @@ class OpnamController extends Controller
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::orderBy('name')->get(),
-            'units' => Unit::whereIn('name', ['m²', 'm'])->orderBy('id')->get(),
+            'units' => Unit::orderBy('id')->get(),
             'tariffs' => Tariff::orderByDesc('effective_from')->get(),
             'tanggalOpnam' => $opnam->tanggal_opnam,
         ]);

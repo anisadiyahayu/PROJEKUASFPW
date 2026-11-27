@@ -71,6 +71,9 @@
             <div>
                 <a href="{{ route('activity-logs.index') }}" class="btn btn-light">Reset</a>
             </div>
+            <div>
+                <a href="{{ route('activity-logs.pdf', request()->query()) }}" class="btn btn-primary">Ekspor PDF</a>
+            </div>
         </form>
     </div>
 

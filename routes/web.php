@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ReviewOpnamController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Direksi\DokumenController;
 use App\Http\Controllers\Direksi\TagihanController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Audit\ActivityLogController;
 use App\Http\Controllers\Direksi\ApprovedTransactionController;
 use App\Http\Controllers\OpnamController;
 use App\Http\Controllers\TariffController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reports\ShipRepairHistoryController;
 use App\Http\Controllers\Reports\WorkRecapitulationController;
 use App\Http\Controllers\UnitController;
@@ -69,6 +71,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/review-opnams/{opnam}/approve', [ReviewOpnamController::class, 'approve'])->name('review-opnams.approve');
         Route::post('/review-opnams/{opnam}/return-for-revision', [ReviewOpnamController::class, 'returnForRevision'])->name('review-opnams.return-for-revision');
 
+        Route::get('/review-opnams/{opnam}/revisi', [ReviewOpnamController::class, 'revisi'])->name('review-opnams.revisi');
+        Route::put('/review-opnams/{opnam}/revisi', [ReviewOpnamController::class, 'updateRevisi'])->name('review-opnams.update-revisi');
+        Route::post('/review-opnams/{opnam}/revisi/items', [ReviewOpnamController::class, 'storeItemRevisi'])->name('review-opnams.items.store');
+        Route::put('/review-opnams/{opnam}/revisi/items/{item}', [ReviewOpnamController::class, 'updateItemRevisi'])->name('review-opnams.items.update');
+        Route::delete('/review-opnams/{opnam}/revisi/items/{item}', [ReviewOpnamController::class, 'destroyItemRevisi'])->name('review-opnams.items.destroy');
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
         Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
@@ -80,6 +87,11 @@ Route::middleware(['auth', 'role:admin'])
         // AD-02: data pemilik dan kapal.
         Route::resource('owners', OwnerController::class)->except(['show']);
         Route::resource('ships', ShipController::class)->except(['show']);
+
+        // AD-01: manajemen pengguna. Akun tidak dihapus, hanya dinonaktifkan.
+        Route::resource('users', UserController::class)->except(['show', 'destroy']);
+        Route::patch('users/{user}/deactivate', [UserController::class, 'deactivate'])
+            ->name('users.deactivate');
 
         // Anisa: master kategori, jenis, material, dan satuan.
         Route::resource('work-categories', WorkCategoryController::class)
@@ -117,6 +129,11 @@ Route::middleware(['auth', 'role:direksi'])
 
         Route::get('/tagihans', [TagihanController::class, 'index'])->name('tagihans.index');
         Route::get('/tagihans/{billing}', [TagihanController::class, 'show'])->name('tagihans.show');
+        Route::get('/tagihans/{billing}/revisi-opnam', [TagihanController::class, 'revisiOpnam'])->name('tagihans.revisi-opnam');
+        Route::put('/tagihans/{billing}/revisi-opnam', [TagihanController::class, 'updateRevisiOpnam'])->name('tagihans.update-revisi-opnam');
+        Route::post('/tagihans/{billing}/revisi-opnam/items', [TagihanController::class, 'storeItemRevisi'])->name('tagihans.revisi-opnam.items.store');
+        Route::put('/tagihans/{billing}/revisi-opnam/items/{item}', [TagihanController::class, 'updateItemRevisi'])->name('tagihans.revisi-opnam.items.update');
+        Route::delete('/tagihans/{billing}/revisi-opnam/items/{item}', [TagihanController::class, 'destroyItemRevisi'])->name('tagihans.revisi-opnam.items.destroy');
         Route::post('/tagihans/{billing}/adjustment', [TagihanController::class, 'applyAdjustment'])->name('tagihans.apply-adjustment');
         Route::post('/tagihans/{billing}/approve', [TagihanController::class, 'approve'])->name('tagihans.approve');
         Route::post('/tagihans/{billing}/reject', [TagihanController::class, 'reject'])->name('tagihans.reject');
@@ -158,10 +175,19 @@ Route::middleware(['auth', 'role:admin,direksi'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Riwayat aktivitas dan audit log (semua role)
+| Riwayat aktivitas dan profil (semua role)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+    // UC-U3/UC-U5: halaman profil (data diri dan ubah password).
+    Route::get('/profil', [ProfileController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profil.update');
+    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profil.password.update');
+
+    // Riwayat aktivitas.
     Route::get('/riwayat-aktivitas', [ActivityLogController::class, 'index'])
         ->name('activity-logs.index');
+
+    Route::get('/riwayat-aktivitas/pdf', [ActivityLogController::class, 'exportPdf'])
+        ->name('activity-logs.pdf');
 });

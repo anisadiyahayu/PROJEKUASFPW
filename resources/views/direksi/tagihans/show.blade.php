@@ -14,7 +14,10 @@
             <h1>{{ $billing->billing_number ?? 'Tagihan' }}</h1>
             <p class="subtitle">Periksa rincian dan tentukan keputusan.</p>
         </div>
-        <a href="{{ route('direksi.tagihans.index') }}" class="btn btn-light">Kembali</a>
+        <div style="display:flex; gap:8px;">
+            <a href="{{ route('direksi.tagihans.revisi-opnam', $billing) }}" class="btn btn-primary">Revisi Data Opnam</a>
+            <a href="{{ route('direksi.tagihans.index') }}" class="btn btn-light">Kembali</a>
+        </div>
     </div>
 
     <div class="card">

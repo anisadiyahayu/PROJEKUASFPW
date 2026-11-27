@@ -347,3 +347,202 @@ yang nomor 2 ada di anggota mana?
 ## 2026-11-27 04:10 WIB
 
 **Regina:** iya
+
+---
+
+## 2026-11-27 17:32 WIB
+
+**Regina:** Regina, aku baru selesai audit DB-07 terkait Material Specs dan menemukan satu temuan pada integrasi Opnam.
+
+Saat ini dropdown Opnam sudah mengecualikan material yang soft-deleted, tetapi validasi backend masih menggunakan exists:material_specs,id. Akibatnya, ID material yang sudah di-soft-delete masih lolos validasi awal dan baru gagal pada proses berikutnya.
+
+Selain itu, ada potensi masalah ketika mengedit draft lama yang menggunakan material yang sekarang sudah di-soft-delete.
+
+Usulan aturan:
+1. Material soft-deleted tidak boleh digunakan untuk transaksi baru.
+2. Pada draft lama, material yang sudah terhapus tetap boleh dipertahankan selama ID material tidak diganti.
+3. Jika pengguna mengganti material, hanya material aktif yang boleh dipilih.
+4. Snapshot tariff_id, unit_price, subtotal, dan total historis harus tetap dipertahankan.
+
+Apakah kamu setuju dengan aturan tersebut? Kalau iya, kita bisa koordinasikan perubahan validasi dan test pada modul Opnam supaya tidak mengganggu implementasi yang sudah ada saya regina dan anisa butuh konfirmasi dari saya, jawaban yang pas apa?
+
+---
+
+## 2026-11-27 17:36 WIB
+
+**Regina:** sebenarnya percakapan saya di simpan kemana si?
+
+---
+
+## 2026-11-27 17:38 WIB
+
+**Regina:** setiap saya ketika baik itu mode plan atau mode build di catet di file prompo-log.md dan prompt_history.md
+
+---
+
+## 2026-11-27 17:42 WIB
+
+**Regina:** agent.md ga usah di pegang fokus ke promt_history.md dan prompt_log.md aja
+
+---
+
+## 2026-11-27 17:44 WIB
+
+**Regina:** jalankan
+
+---
+
+## 2026-11-27 17:55 WIB
+
+**Regina:** kenapa semua bagian yang ada jenis kapal belum masuk?
+
+---
+
+## 2026-11-27 18:01 WIB
+
+**Regina:** semua bagian di tugas saya
+
+---
+
+## 2026-11-27 18:04 WIB
+
+**Regina:** yang b
+
+---
+
+## 2026-11-27 18:06 WIB
+
+**Regina:** perlu saya tanyakn ke ripqy?
+
+---
+
+## 2026-11-27 18:34 WIB
+
+**Regina:** gapapa kata rifqy
+
+---
+
+## 2026-11-27 18:36 WIB
+
+**Regina:** A langsung jalankan
+
+---
+
+## 2026-11-27 19:03 WIB
+
+**Regina:** ini kan temen aku anisa pake jenis satuannya ada 5 ya itu tetep bisa ke hitung kan?
+
+---
+
+## 2026-11-27 19:06 WIB
+
+**Regina:** coba baca kode tugas temen saya nisa dia pakai satuan apa ajan dan perhitungannya gimana
+
+---
+
+## 2026-11-27 19:13 WIB
+
+**Regina:** jalankan yang akan menyamakan bagian anisa di tempat saya
+
+---
+
+## 2026-11-27 20:09 WIB
+
+**Regina:** setiap saya promt langsung catat ke prompt_log.md dan promt_history.md jangan minta persetujuan mulu
+
+---
+
+## 2026-11-27 20:13 WIB
+
+**Regina:** Satu kendala teknis: saya saat ini masih di Plan mode, dan mode ini melarang penulisan file — jadi prompt ini belum bisa saya tulis sekarang. Silakan pindah ke Build mode (switch agent). Begitu pindah, saya akan langsung menulis entri prompt ini (memakai waktu kirim asli dari data sesi) dan setiap prompt berikutnya otomatis, tanpa konfirmasi.
+seperti ini ga perlu lagi
+
+---
+
+## 2026-11-27 20:17 WIB
+
+**Regina:** hazel sudah bikin review opnama kenapa saat saya klik buka review di data opname malah error?
+
+---
+
+## 2026-11-27 20:30 WIB
+
+**Regina:** Tombol Buka Review mengarah ke review keseluruhan opname, mulai dari status kondisi sampai bagian waktu, bukan ke satu bagian tertentu saja.
+
+---
+
+## 2026-11-27 20:33 WIB
+
+**Regina:** jangan ubah apapun selain yang saya minta
+
+---
+
+## 2026-11-27 20:39 WIB
+
+**Regina:** jalankan
+
+---
+
+## 2026-11-27 20:51 WIB
+
+**Regina:** di bagian saya format tanggalnya di samakan dengan yang lain
+
+---
+
+## 2026-11-27 20:54 WIB
+
+**Regina:** bukan itu maksud saya, itu format tanggal di tugas saya sama kan dengan format tanggal yang digunakan oleh anggota lain
+
+---
+
+## 2026-11-27 20:54 WIB
+
+**Regina:** masuk saya jadi 2 format tanggal seperti tanggal dari dan tanggal sampai
+
+---
+
+## 2026-11-27 21:02 WIB
+
+**Regina:** jalankan
+
+---
+
+## 2026-11-27 21:16 WIB
+
+**Regina:** tanggal dari dan tanggal sampai pindakan kebawah dan sejejerkan, tiga kolom lain paskan saja
+
+---
+
+## 2026-11-27 21:36 WIB
+
+**Regina:** saat saya buka review, status nya berbeda dari status yang ada di data opname
+
+---
+
+## 2026-11-27 21:37 WIB
+
+**Regina:** jalankan
+
+---
+
+## 2026-11-27 21:45 WIB
+
+**Regina:** di bagian opname saya yang tanggal dari dan tanggal sampai pindahkan ke bawah dan tambahkan botton filter. kolom yang lain sesuaikan saja dengan layout yang ada
+
+---
+
+## 2026-11-27 21:49 WIB
+
+**Regina:** jalankan
+
+---
+
+## 2026-11-27 22:06 WIB
+
+**Regina:** untuk fungsi yang klik langsung cari di hapus aja karna sekarang udah ada tomblok filter untuk mencari
+
+---
+
+## 2026-11-27 22:11 WIB
+
+**Regina:** jalankan
