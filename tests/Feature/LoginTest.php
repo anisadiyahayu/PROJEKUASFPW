@@ -2,29 +2,12 @@
 
 namespace Tests\Feature;
 
-<<<<<<< HEAD
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-=======
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 use Tests\TestCase;
 
 class LoginTest extends TestCase
 {
-<<<<<<< HEAD
-    /**
-     * A basic feature test example.
-     */
-    public function test_example(): void
-    {
-        $response = $this->get('/');
-
-        $response->assertStatus(200);
-    }
-}
-=======
     use RefreshDatabase;
 
     private const ERROR_MESSAGE = 'Username/email atau password salah, atau akun tidak aktif.';
@@ -169,4 +152,3 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 }
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3

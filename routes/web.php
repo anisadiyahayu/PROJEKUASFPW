@@ -15,13 +15,9 @@ use App\Http\Controllers\Reports\ShipRepairHistoryController;
 use App\Http\Controllers\Reports\WorkRecapitulationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\MaterialSpecController;
-use App\Http\Controllers\OpnamController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WorkCategoryController;
 use App\Http\Controllers\WorkTypeController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -111,19 +107,7 @@ Route::middleware(['auth', 'role:admin'])
 | Direksi
 |--------------------------------------------------------------------------
 */
-        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
-        Route::resource('work-categories', WorkCategoryController::class)
-            ->except('show')
-            ->parameters(['work-categories' => 'workCategory']);
-        Route::resource('work-types', WorkTypeController::class)
-            ->except('show')
-            ->parameters(['work-types' => 'workType']);
-        Route::resource('units', UnitController::class)
-            ->except('show');
-        Route::resource('material-specs', MaterialSpecController::class)
-            ->except('show')
-            ->parameters(['material-specs' => 'materialSpec']);
-    });
+       
 
 Route::middleware(['auth', 'role:direksi'])
     ->prefix('direksi')
@@ -140,7 +124,19 @@ Route::middleware(['auth', 'role:direksi'])
         Route::put('/dokumen/invoices/{invoice}', [DokumenController::class, 'updateInvoice'])->name('dokumen.update-invoice');
         Route::get('/dokumen/invoices/{invoice}/download', [DokumenController::class, 'downloadInvoice'])->name('dokumen.download-invoice');
         Route::post('/dokumen/unduh', [DokumenController::class, 'unduh'])->name('dokumen.unduh');
-    });
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
+        Route::resource('work-categories', WorkCategoryController::class)
+            ->except('show')
+            ->parameters(['work-categories' => 'workCategory']);
+        Route::resource('work-types', WorkTypeController::class)
+            ->except('show')
+            ->parameters(['work-types' => 'workType']);
+        Route::resource('units', UnitController::class)
+            ->except('show');
+        Route::resource('material-specs', MaterialSpecController::class)
+            ->except('show')
+            ->parameters(['material-specs' => 'materialSpec']);
+
         Route::get('/transaksi-disetujui', [ApprovedTransactionController::class, 'index'])->name('approved.index');
     });
 
@@ -163,7 +159,7 @@ Route::middleware(['auth', 'role:admin,direksi'])->group(function () {
         ->name('reports.recapitulation.pdf');
     Route::get('/laporan/rekapitulasi/excel', [WorkRecapitulationController::class, 'exportExcel'])
         ->name('reports.recapitulation.excel');
-});
+    });
 
 /*
 |--------------------------------------------------------------------------

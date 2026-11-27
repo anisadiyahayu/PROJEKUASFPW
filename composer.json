@@ -10,16 +10,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-<<<<<<< HEAD
         "dompdf/dompdf": "^3.1",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "phpoffice/phpspreadsheet": "^5.12"
-=======
-        "barryvdh/laravel-dompdf": "^3.1",
-        "laravel/framework": "^13.17",
-        "laravel/tinker": "^3.0"
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

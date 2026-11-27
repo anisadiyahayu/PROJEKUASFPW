@@ -9,13 +9,6 @@ use App\Models\OpnamItem;
 use App\Models\Ship;
 use App\Models\Tariff;
 use App\Models\Unit;
-<<<<<<< HEAD
-use App\Models\WorkCategory;
-use App\Models\WorkType;
-use Illuminate\Contracts\View\View;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-=======
 use App\Models\User;
 use App\Models\WorkCategory;
 use App\Models\WorkType;
@@ -25,20 +18,16 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 
 class OpnamController extends Controller
 {
     private const SESSION_KEY = 'opnam_draft';
 
-<<<<<<< HEAD
-=======
     public function __construct(
         private readonly OpnamCostCalculator $calculator,
         private readonly OpnamNumberGenerator $numberGenerator,
     ) {}
 
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     public function index(Request $request): View
     {
         $statuses = [
@@ -69,16 +58,6 @@ class OpnamController extends Controller
             $query->where('status', $status);
         }
 
-<<<<<<< HEAD
-        $dari = trim((string) $request->query('tanggal_dari', ''));
-        if ($dari !== '') {
-            $query->whereDate('tanggal_opnam', '>=', $dari);
-        }
-
-        $sampai = trim((string) $request->query('tanggal_sampai', ''));
-        if ($sampai !== '') {
-            $query->whereDate('tanggal_opnam', '<=', $sampai);
-=======
         $operator = (string) $request->query('operator', '');
         if (ctype_digit($operator)) {
             $query->where('created_by', (int) $operator);
@@ -87,7 +66,6 @@ class OpnamController extends Controller
         $tanggal = trim((string) $request->query('tanggal', ''));
         if ($tanggal !== '') {
             $query->whereDate('tanggal_opnam', $tanggal);
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
         }
 
         $opnams = $query->orderByDesc('tanggal_opnam')
@@ -95,9 +73,6 @@ class OpnamController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-<<<<<<< HEAD
-        return view('opnams.index', compact('opnams', 'statuses'));
-=======
         $operators = User::where('role', 'petugas')->orderBy('name')->get();
 
         return view('opnams.index', compact('opnams', 'statuses', 'operators'));
@@ -118,7 +93,6 @@ class OpnamController extends Controller
         ]);
 
         return view('opnams.show', compact('opnam'));
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     }
 
     public function indexMine(Request $request): View
@@ -167,31 +141,20 @@ class OpnamController extends Controller
     public function create(Request $request): View
     {
         $step = max(1, min(5, (int) $request->query('step', 1)));
-<<<<<<< HEAD
-
-        return view('opnams.create', [
-            'step' => $step,
-            'draft' => session(self::SESSION_KEY, $this->emptyDraft()),
-=======
         $draft = session(self::SESSION_KEY, $this->emptyDraft());
 
         return view('opnams.create', [
             'step' => $step,
             'draft' => $draft,
             'tanggalOpnam' => $draft['tanggal_opnam'] ?? null,
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
             'ships' => Ship::with('owner')->orderBy('name')->get(),
             'categories' => WorkCategory::orderBy('name')->get(),
             'workTypes' => WorkType::orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::orderBy('name')->get(),
-<<<<<<< HEAD
-            'units' => Unit::orderBy('name')->get(),
-=======
             // Kirim seluruh satuan; pratinjau JS yang menyaring berdasarkan
             // material dan tarif berlaku. Jangan di-unique_by_name karena
             // tarif bisa merujuk ke satuan duplikat (mis. dua baris "m²").
             'units' => Unit::orderBy('id')->get(),
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
             'tariffs' => Tariff::orderByDesc('effective_from')->get(),
         ]);
     }
@@ -207,19 +170,12 @@ class OpnamController extends Controller
                     'ship_id' => ['required', 'exists:ships,id'],
                     'tanggal_opnam' => ['required', 'date'],
                     'lokasi' => ['required', 'in:Dock 01 — Graving Dock,Dock 02 — Floating Dock'],
-<<<<<<< HEAD
-=======
                     'catatan' => ['nullable', 'string'],
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                 ]);
                 $draft['ship_id'] = $data['ship_id'];
                 $draft['tanggal_opnam'] = $data['tanggal_opnam'];
                 $draft['lokasi'] = $data['lokasi'];
-<<<<<<< HEAD
-                $draft['catatan'] = null;
-=======
                 $draft['catatan'] = $data['catatan'] ?? null;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                 break;
 
             case 2:
@@ -250,29 +206,16 @@ class OpnamController extends Controller
 
                     $tariff = Tariff::where('material_spec_id', $material->id)
                         ->where('unit_id', $unit->id)
-<<<<<<< HEAD
-=======
                         ->where('effective_from', '<=', $draft['tanggal_opnam'] ?? now()->toDateString())
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                         ->orderByDesc('effective_from')
                         ->first();
 
                     if (! $tariff) {
-<<<<<<< HEAD
-                        return back()->withErrors(['items' => 'Tarif untuk kombinasi material dan satuan ini tidak ditemukan.'])->withInput();
-=======
                         return back()->withErrors(['items' => 'Tarif berlaku untuk kombinasi material dan satuan ini pada tanggal opnam tidak ditemukan.'])->withInput();
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                     }
 
                     $unitPrice = (float) $tariff->price;
                     $volume = (float) $item['volume'];
-<<<<<<< HEAD
-                    $kompleksitas = $item['kompleksitas'];
-                    $faktor = ['low' => 1, 'medium' => 1.10, 'high' => 1.25][$kompleksitas] ?? 1;
-                    $base = round($unitPrice * $volume, 2);
-                    $adjustment = round($base * ($faktor - 1), 2);
-=======
                     $kompleksitas = $item['kompleksitas'] ?? null;
                     $faktorKetebalan = $this->calculator->faktorKetebalan($item['ketebalan'] ?? null);
                     $faktorKompleksitas = $this->calculator->faktorKompleksitas($kompleksitas);
@@ -282,7 +225,6 @@ class OpnamController extends Controller
                         $faktorKetebalan,
                         $faktorKompleksitas,
                     );
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                     $items[] = [
                         'uid' => $item['uid'] ?? uniqid('item-'),
                         'work_category_id' => (int) $item['work_category_id'],
@@ -292,14 +234,6 @@ class OpnamController extends Controller
                         'tariff_id' => $tariff->id,
                         'volume' => $volume,
                         'unit_price' => $unitPrice,
-<<<<<<< HEAD
-                        'faktor' => $faktor,
-                        'ketebalan' => $item['ketebalan'] ?? null,
-                        'kompleksitas' => $kompleksitas,
-                        'catatan_tambahan' => $item['catatan_tambahan'] ?? null,
-                        'subtotal' => $base,
-                        'adjustment' => $adjustment,
-=======
                         'faktor' => round($faktorKetebalan * $faktorKompleksitas, 2),
                         'faktor_ketebalan' => $faktorKetebalan,
                         'faktor_kompleksitas' => $faktorKompleksitas,
@@ -308,7 +242,6 @@ class OpnamController extends Controller
                         'catatan_tambahan' => $item['catatan_tambahan'] ?? null,
                         'subtotal' => $subtotal,
                         'adjustment' => 0,
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                         'lokasi' => $item['lokasi'] ?? null,
                         'description' => $item['description'],
                         'work_type_name' => $workType->name,
@@ -326,18 +259,11 @@ class OpnamController extends Controller
                 break;
 
             case 4:
-<<<<<<< HEAD
-                $request->validate([
-                    'bukti' => ['nullable', 'array'],
-                    'bukti.*' => ['array'],
-                    'bukti.*.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
-=======
                 $unggahan = config('opnam.unggahan');
                 $request->validate([
                     'bukti' => ['nullable', 'array'],
                     'bukti.*' => ['array'],
                     'bukti.*.*' => ['file', 'mimes:'.$unggahan['mimes'], 'max:'.$unggahan['max_kb']],
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                 ]);
 
                 $validUids = collect($draft['items'] ?? [])->pluck('uid')->filter()->all();
@@ -348,11 +274,7 @@ class OpnamController extends Controller
                     }
                     foreach ($files as $file) {
                         $uploads[$uid][] = [
-<<<<<<< HEAD
-                            'file_path' => $file->store('opnam-attachments', 'public'),
-=======
                             'file_path' => $file->store($unggahan['path'], $unggahan['disk']),
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                             'original_name' => $file->getClientOriginalName(),
                             'mime_type' => $file->getClientMimeType(),
                             'file_size' => $file->getSize(),
@@ -371,8 +293,6 @@ class OpnamController extends Controller
         return redirect()->route('petugas.opnams.create', ['step' => min(5, $step + 1)]);
     }
 
-<<<<<<< HEAD
-=======
     /**
      * PT-03: ubah dan hapus item pada draft tersimpan (PRD 4.6).
      * Status perlu_revisi sengaja tidak disentuh karena PT-09 masih parkir.
@@ -546,7 +466,6 @@ class OpnamController extends Controller
         );
     }
 
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     private function emptyDraft(): array
     {
         return ['ship_id' => null, 'tanggal_opnam' => null, 'lokasi' => null, 'catatan' => null, 'items' => [], 'uploads' => []];
@@ -559,35 +478,17 @@ class OpnamController extends Controller
                 ->with('status', 'Draft belum lengkap. Silakan ulangi dari awal.');
         }
 
-<<<<<<< HEAD
-        $year = now()->year;
-        $sequence = Opnam::where('opnam_number', 'like', "OPN-{$year}-%")->count() + 1;
-        $number = sprintf('OPN-%d-%03d', $year, $sequence);
-        $adjustment = round(collect($draft['items'])->sum('adjustment'), 2);
-        $total = round(collect($draft['items'])->sum(fn ($item) => $item['subtotal'] + $item['adjustment']), 2);
-
-        $opnam = Opnam::create([
-            'opnam_number' => $number,
-=======
         $total = $this->calculator->totalBiaya($draft['items']);
 
         $opnam = $this->numberGenerator->create([
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
             'ship_id' => $draft['ship_id'],
             'created_by' => auth()->id(),
             'status' => Opnam::STATUS_DRAFT,
             'tanggal_opnam' => $draft['tanggal_opnam'],
-<<<<<<< HEAD
             'lokasi' => $draft['lokasi'] ?? null,
             'adjustment_amount' => $adjustment,
             'catatan' => $draft['catatan'] ?? null,
             'total_biaya' => $total,
-=======
-            'catatan' => $draft['catatan'] ?? null,
-            'total_biaya' => $total,
-            // PRD 3.10.2: salinan dari master kapal, bukan FK.
-            'jenis_kapal' => Ship::find($draft['ship_id'])?->jenis_kapal,
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
         ]);
 
         $itemIds = [];
@@ -599,13 +500,9 @@ class OpnamController extends Controller
                 'volume' => $item['volume'],
                 'unit_price' => $item['unit_price'],
                 'subtotal' => $item['subtotal'],
-<<<<<<< HEAD
-                'faktor' => $item['faktor'],
-=======
                 'faktor' => $item['faktor'] ?? 1,
                 'faktor_ketebalan' => $item['faktor_ketebalan'] ?? 1,
                 'faktor_kompleksitas' => $item['faktor_kompleksitas'] ?? 1,
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                 'ketebalan' => $item['ketebalan'] ?? null,
                 'kompleksitas' => $item['kompleksitas'] ?? 'low',
                 'catatan_tambahan' => $item['catatan_tambahan'] ?? null,
@@ -637,10 +534,6 @@ class OpnamController extends Controller
         session()->forget(self::SESSION_KEY);
 
         return redirect()->route('petugas.opnams.create')
-<<<<<<< HEAD
-            ->with('status', "Draft {$number} berhasil disimpan.");
-=======
             ->with('status', "Draft {$opnam->opnam_number} berhasil disimpan.");
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     }
 }
