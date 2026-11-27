@@ -469,7 +469,7 @@ Berikut hal yang dibutuhkan PRD tetapi belum ada di ERD. Menurut keputusan, PRD 
 
 | No | Penambahan | Alasan | Status |
 |---|---|---|---|
-| 1 | `WORK_CATEGORIES.is_active` boolean | AD-03 mengelola kategori beserta status aktifnya (Analisis Fitur v3) | Perlu konfirmasi |
+| 1 | `WORK_CATEGORIES.is_active` boolean | AD-03 mengelola kategori beserta status aktifnya (Analisis Fitur v3); kategori aktif dapat dipilih saat membuat WorkType, kategori nonaktif tetap tersimpan dan dapat diaktifkan kembali | Disepakati dan diterapkan |
 | 2 | Penandaan invoice belum terbit atau sudah terbit pada `INVOICES` (misalnya `status` atau `issued_at`) | AD-12 dan DR-10 hanya boleh merevisi sebelum terbit, tetapi ERD tidak bisa membedakan | **[TERBUKA]**, lihat Bagian 9 no. 2 |
 | 3 | `OPNAMS.jenis_kapal` string nullable | Opnam perlu mencatat jenis kapal. Disimpan di `OPNAMS` sebagai nilai saat opnam supaya tabel `SHIPS` tidak berubah | Perlu konfirmasi, daftar nilai **[TERBUKA]**, lihat Bagian 9 no. 18 |
 | 4 | `OPNAM_ITEMS.ketebalan` decimal nullable; `OPNAM_ITEMS.kompleksitas` string nullable; `OPNAM_ITEMS.faktor_ketebalan` dan `faktor_kompleksitas` decimal default 1 (snapshot) | Perhitungan ketebalan pelat dan kompleksitas pekerjaan butuh tempat input dan hasil di item opnam, tanpa mengubah `TARIFFS` | **[TERBUKA]**, lihat Bagian 9 no. 14, 19, 20, 23 |
@@ -548,8 +548,7 @@ Agent harus bertanya sebelum mengerjakan bagian terkait.
 | 11 | `adjustment_value` berupa persen atau nominal? Boleh lebih dari satu penyesuaian per tagihan? | DR-04 |
 | 12 | Konfirmasi rekomendasi pembuatan tagihan, perhitungan `total_biaya`, dan pemicu `dokumen_terbit`. | 4.6, 4.7 |
 | 13 | `issued_by` saat dokumen diterbitkan sistem: diisi Direksi yang menyetujui? | DR-08, DR-09 |
-| 14 | "Faktor tambahan tarif sesuai spesifikasi teknis" (muncul di pembagian tugas, tidak ada di use case atau ERD): dipakai atau tidak, dan bagaimana kolomnya? | AD-04 |
-| 15 | Konfirmasi `WORK_CATEGORIES.is_active`. | AD-03 |
+| 14 | Faktor tambahan tarif sesuai spesifikasi teknis tidak dijelaskan di use case atau ERD: dipakai atau tidak, dan bagaimana representasinya? Faktor ini merupakan tupoksi Hazel, bukan Anisa. | AD-04 |
 | 16 | Tahapan akhir pencatatan: Analisis Fitur menyebut "bukti pekerjaan", dokumen use case menyebut "tinjauan akhir". Mana yang dipakai? | PT-01 |
 | 17 | Tarif tidak punya tanggal berakhir. Apakah perlu? | TARIFFS |
 | 18 | Daftar jenis kapal untuk `OPNAMS.jenis_kapal`: pilihan tetap atau teks bebas, dan apa nilainya? (ditanyakan ke client dan pemilik SHIPS) | 3.10.2, 6.7 no. 3 |
@@ -557,7 +556,7 @@ Agent harus bertanya sebelum mengerjakan bagian terkait.
 | 20 | Faktor kompleksitas: apa saja tingkatnya dan berapa nilai tiap tingkat? (ditanyakan ke pemilik master tarif dan client) | 3.10.4, 6.7 no. 4, no. 14 |
 | 21 | Aturan pembulatan `subtotal` dan `total_biaya`. | 3.10.4 |
 | 22 | Daftar kolom pekerjaan tambahan dari client, dan apakah masing-masing per item atau per opnam. | 3.10.2, 6.7 no. 5 |
-| 23 | Faktor tambahan tetap dipakai atau dihapus dari tupoksi (`tupoksi.md` bagian 3 no. 10). Keputusan ini menentukan 6.7 no. 4. | 3.10.4, no. 14 |
+| 23 | Keputusan teknis apakah faktor tambahan tarif dipakai dan bagaimana representasinya; tanggung jawab faktor ini tetap pada Hazel, bukan Anisa. | 3.10.4, no. 14 |
 
 ---
 
@@ -568,11 +567,11 @@ Agent harus bertanya sebelum mengerjakan bagian terkait.
 | DB-01 | USERS | Halvina | Belum | |
 | DB-02 | OWNERS | Rifqy | Belum | |
 | DB-03 | SHIPS | Rifqy | Belum | ⚠ Kolom `jenis_kapal` ditambahkan di luar ERD atas permintaan Regina 2026-11-25; perlu konfirmasi Rifqy. |
-| DB-04 | UNITS | Anisa | Belum | |
-| DB-05 | WORK_CATEGORIES | Anisa | Belum | |
-| DB-06 | WORK_TYPES | Anisa | Belum | |
-| DB-07 | MATERIAL_SPECS | Anisa | Belum | |
-| DB-08 | TARIFFS | Anisa | Belum | |
+| DB-04 | UNITS | Anisa | Selesai | CRUD dan UnitSeeder tersedia; 17 satuan; UnitTest lulus pada audit final. |
+| DB-05 | WORK_CATEGORIES | Anisa | Selesai | CRUD, soft delete, dan `is_active` diterapkan; 8 kategori. Kategori aktif dipilih untuk WorkType; kategori nonaktif tersimpan dan dapat diaktifkan kembali. Catatan konfirmasi ditutup. |
+| DB-06 | WORK_TYPES | Anisa | Selesai | CRUD, soft delete, dan WorkTypeSeeder tersedia; 54 WorkType; WorkTypeTest lulus. |
+| DB-07 | MATERIAL_SPECS | Anisa | Selesai | Seeder master idempotent terintegrasi setelah WorkTypeSeeder; 271 MaterialSpec aktif pada 30 WorkType; tanpa soft-deleted, duplikat, atau orphan; MaterialSpecTest 13/13 lulus. |
+| DB-08 | TARIFFS | Anisa | Dikerjakan | Implementasi TariffSeeder selesai dan idempotent; 81 tarif dibuat dengan `effective_from=2019-01-01`. Data tarif masih parsial: 403 nilai tertunda karena pemetaan MaterialSpec/Unit belum dapat dipastikan. Rincian di prompt_history_anisa.md. |
 | DB-09 | OPNAMS | Regina | Selesai | Migrasi & model: `tanggal_opnam`, `catatan`, `total_biaya`, 7 konstanta status. `jenis_kapal` tersalin dari `SHIPS` saat simpan draft; `lokasi` & `adjustment_amount` di luar ERD (permintaan 2026-11-25). |
 | DB-10 | OPNAM_ITEMS | Regina | Selesai | `lokasi`, `faktor`, `ketebalan`, `kompleksitas`, `catatan_tambahan`; snapshot `unit_price`/`subtotal` diuji kebal terhadap perubahan tarif. |
 | DB-11 | OPNAM_ATTACHMENTS | Regina | Selesai | Migrasi & model: `keterangan`, `file_size` = `integer` (byte); terverifikasi via `db:table`. |
@@ -605,8 +604,8 @@ Agent harus bertanya sebelum mengerjakan bagian terkait.
 | PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat 10.5 |
 | AD-01 | Mengelola Pengguna | Halvina | Belum | |
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
-| AD-03 | Mengelola Kategori Pekerjaan | Anisa | Selesai | CRUD + soft delete di `admin.work-categories.*`; WorkCategoryTest lulus. |
-| AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Selesai | CRUD + soft delete di `admin.work-types.*`, `admin.material-specs.*`, `admin.units.*`; test terkait lulus. |
+| AD-03 | Mengelola Kategori Pekerjaan | Anisa | Selesai | CRUD, soft delete, dan status aktif/nonaktif di `admin.work-categories.*`; kategori aktif dapat dipilih untuk WorkType, kategori nonaktif tetap tersimpan dan dapat diaktifkan kembali. WorkCategoryTest lulus; konfirmasi `is_active` ditutup. |
+| AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Selesai | Fitur CRUD master WorkType, MaterialSpec, Unit, dan Tarif tersedia; test terkait lulus. Kelengkapan data Tarif terpisah: DB-08 masih parsial, 81 tarif dibuat dan 403 nilai tertunda. |
 | AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status/operator/tanggal, paginasi (BR-27); tombol mata membuka detail baca-saja `admin.opnams.show`. |
 | AD-06 | Memeriksa Opnam | Hazel | Selesai | Daftar dan detail review dengan pencarian, filter tanggal, rincian pekerjaan, biaya, dan lampiran. |
 | AD-07 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat 10.5 |

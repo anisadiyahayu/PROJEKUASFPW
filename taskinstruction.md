@@ -185,13 +185,19 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 
 **Tugas konkret**
 
-- [ ] Migrasi dan model kelima tabel sesuai ERD, termasuk FK: `WORK_TYPES.work_category_id`, `MATERIAL_SPECS.work_type_id`, `TARIFFS.material_spec_id`, `TARIFFS.unit_id`, `TARIFFS.created_by`.
-- [ ] `deleted_at` hanya pada `WORK_CATEGORIES`, `WORK_TYPES`, `MATERIAL_SPECS`.
-- [ ] CRUD kategori pekerjaan (AD-03).
-- [ ] CRUD jenis pekerjaan, material/spesifikasi, satuan, dan tarif dasar (AD-04).
-- [ ] Hanya Admin yang dapat mengelola tarif. Petugas tidak boleh mengubah tarif dasar (BR-02).
-- [ ] Setiap tarif baru menyimpan `price`, `effective_from`, `created_by`, `created_at`.
-- [ ] Pastikan perubahan tarif tidak menyentuh `OPNAM_ITEMS` yang sudah ada (BR-10).
+- [x] Migrasi dan model kelima tabel sesuai ERD, termasuk FK: `WORK_TYPES.work_category_id`, `MATERIAL_SPECS.work_type_id`, `TARIFFS.material_spec_id`, `TARIFFS.unit_id`, `TARIFFS.created_by`.
+- [x] `deleted_at` hanya pada `WORK_CATEGORIES`, `WORK_TYPES`, `MATERIAL_SPECS`.
+- [x] CRUD kategori pekerjaan (AD-03).
+- [x] CRUD jenis pekerjaan, material/spesifikasi, satuan, dan tarif dasar (AD-04). Implementasi CRUD selesai; kelengkapan data tarif dicatat terpisah pada DB-08.
+- [x] Hanya Admin yang dapat mengelola tarif. Petugas tidak boleh mengubah tarif dasar (BR-02).
+- [x] Setiap tarif baru menyimpan `price`, `effective_from`, `created_by`, `created_at`.
+- [x] Pastikan perubahan tarif tidak menyentuh `OPNAM_ITEMS` yang sudah ada (BR-10).
+
+**Catatan keputusan kategori:** `WORK_CATEGORIES.is_active` disepakati dan diterapkan. Kategori aktif dapat dipilih saat membuat WorkType; kategori nonaktif tetap tersimpan dan dapat diaktifkan kembali.
+
+**Batas scope:** Faktor tambahan tarif merupakan tupoksi Hazel, bukan Anisa. Anisa tidak menambahkan faktor atau kolom faktor ke `TARIFFS`; pertanyaan teknis terkait dirujuk ke PRD Bagian 9.
+
+**Kelengkapan data tarif:** Implementasi CRUD dan `TariffSeeder` sudah tersedia; 81 tarif memakai `effective_from=2019-01-01`. DB-08 tetap parsial karena 403 nilai tarif tertunda hingga pasangan MaterialSpec/Unit dapat dipastikan.
 
 **Yang harus ditanyakan dulu**
 
@@ -200,7 +206,6 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 | Perilaku hapus (soft atau hard) | 9 no. 21 |
 | Apakah tarif punya tanggal berakhir (ERD hanya `effective_from`) | 9 no. 17 |
 | Bagaimana memilih tarif yang "berlaku" jika ada beberapa `effective_from` | 5, BR-14 |
-| "Faktor tambahan tarif" di tugas tim: tidak ada di ERD | 9 no. 30 |
 
 **Jangan**
 

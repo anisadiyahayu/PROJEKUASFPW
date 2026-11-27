@@ -1,5 +1,8 @@
 <div style="margin-bottom:16px;">
     <label for="work_category_id">Kategori pekerjaan <span aria-hidden="true">*</span></label>
+    @if (!empty($inactiveCategory))
+        <p role="status">Kategori saat ini “{{ $inactiveCategory->name }}” nonaktif. Pilih kategori aktif untuk menyimpan perubahan.</p>
+    @endif
     <select id="work_category_id" name="work_category_id" required>
         <option value="">Pilih kategori</option>
         @foreach ($categories as $category)

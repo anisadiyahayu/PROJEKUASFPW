@@ -18,6 +18,7 @@
                 <tr>
                     <th>NAMA KATEGORI</th>
                     <th>DESKRIPSI</th>
+                    <th>STATUS</th>
                     <th>AKSI</th>
                 </tr>
             </thead>
@@ -26,6 +27,7 @@
                     <tr>
                         <td><strong>{{ $category->name }}</strong></td>
                         <td>{{ $category->description ?: '—' }}</td>
+                        <td>{{ $category->is_active ? 'Aktif' : 'Nonaktif' }}</td>
                         <td style="white-space:nowrap;">
                             <a href="{{ route('admin.work-categories.edit', $category) }}" class="btn btn-light">Edit</a>
                             <form method="POST" action="{{ route('admin.work-categories.destroy', $category) }}" style="display:inline;" onsubmit="return confirm('Hapus kategori ini?')">
@@ -36,7 +38,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="3" style="text-align:center; color:#94a3b8;">Belum ada kategori pekerjaan.</td></tr>
+                    <tr><td colspan="4" style="text-align:center; color:#94a3b8;">Belum ada kategori pekerjaan.</td></tr>
                 @endforelse
             </tbody>
         </table>

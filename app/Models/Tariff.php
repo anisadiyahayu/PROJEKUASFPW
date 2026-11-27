@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use LogicException;
 
 class Tariff extends Model
 {
@@ -20,6 +21,13 @@ class Tariff extends Model
             'price' => 'decimal:2',
             'effective_from' => 'date',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (): never {
+            throw new LogicException('Tarif yang sudah tersimpan tidak dapat diubah. Buat tarif baru.');
+        });
     }
 
     public function materialSpec(): BelongsTo

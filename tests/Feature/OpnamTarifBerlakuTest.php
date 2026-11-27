@@ -104,7 +104,7 @@ test('item ditolak bila belum ada tarif berlaku pada tanggal opnam', function ()
     ])->assertSessionHasErrors('items');
 });
 
-test('perubahan tarif master tidak mengubah unit price dan subtotal yang sudah tersimpan', function () {
+test('tarif baru yang berlaku tidak mengubah snapshot transaksi opnam lama', function () {
     $data = siapkanTarifBerlaku();
 
     $tariff = Tariff::create([
@@ -119,12 +119,27 @@ test('perubahan tarif master tidak mengubah unit price dan subtotal yang sudah t
     $this->post(route('petugas.opnams.store-step'), ['step' => 4]);
     $this->post(route('petugas.opnams.store-step'), ['step' => 5]);
 
-    $tariff->update(['price' => 5000]);
+    $tariffBaru = Tariff::create([
+        'material_spec_id' => $data['material']->id,
+        'unit_id' => $data['unit']->id,
+        'created_by' => $data['admin']->id,
+        'price' => 5000,
+        'effective_from' => '2026-06-20',
+    ]);
+    $tarifUntukTanggalOpnam = Tariff::query()
+        ->where('material_spec_id', $data['material']->id)
+        ->where('unit_id', $data['unit']->id)
+        ->where('effective_from', '<=', '2026-06-25')
+        ->orderByDesc('effective_from')
+        ->firstOrFail();
 
     $item = OpnamItem::firstOrFail();
     $opnam = Opnam::firstOrFail();
 
-    expect((float) $item->unit_price)->toBe(1000.0)
+    expect($tarifUntukTanggalOpnam->is($tariffBaru))->toBeTrue()
+        ->and($tariff->fresh()->price)->toBe('1000.00')
+        ->and($item->tariff_id)->toBe($tariff->id)
+        ->and((float) $item->unit_price)->toBe(1000.0)
         ->and((float) $item->subtotal)->toBe(2000.0)
         ->and((float) $opnam->total_biaya)->toBe(2000.0);
 });

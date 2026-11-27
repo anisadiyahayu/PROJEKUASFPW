@@ -965,3 +965,183 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `Get-Date` (2026-11-27 10:20 SE Asia Standard Time), `git status --short`, `git diff --stat`, `composer dump-autoload --no-interaction`, `C:\php\php.exe -l` pada controller, rute, dan test, `C:\php\php.exe artisan route:list --except-vendor`, `C:\php\php.exe -d extension=pdo_sqlite vendor\bin\pest` (99/99 lolos), `C:\php\php.exe -d extension=pdo_sqlite artisan test` (driver sqlite tidak terbawa ke subprocess, diganti pest langsung)
 **Manual modifications:** -
 **Notes / follow-up:** `prompt_history.md` sengaja dipertahankan sesuai instruksi Pemilik, sehingga menjadi pengecualian dari aturan `AGENTS.md`. Blok 18:33 dan 18:45 WIB dipulihkan sebagai `retroactive`. Narasi desain mengikuti `layouts/simship.blade.php` dengan dial ENERGY 1 / RHYTHM 1 / MOTION 1, bukan desain baru. `pdo_sqlite` tersedia sebagai DLL tetapi tidak aktif di `C:\php\php.ini`, sehingga test dijalankan dengan `-d extension=pdo_sqlite`.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Selesaikan verifikasi BR-10 pasca-guard: perbarui skenario integrasi Tarif/Opnam agar membuat tarif baru (tarif awal 1.000 berlaku 2026-01-01, Opnam 2026-06-25, tarif baru 5.000 berlaku 2026-06-20), pastikan snapshot transaksi lama tetap, jalankan test terkait dan regresi relevan, catat hasil aktual; jangan commit, push, atau merge."
+**Output summary:** Skenario di `OpnamTarifBerlakuTest` diubah dari meng-update Tarif tersimpan menjadi membuat record Tarif baru. Test membuktikan Tarif baru berlaku pada tanggal Opnam, sementara `tariff_id`, `unit_price`, `subtotal`, dan `total_biaya` Opnam tersimpan tetap merujuk snapshot lama. Test target lulus (3/3, 17 assertions); `OpnamDraftTest` lulus (9/9, 90 assertions); `OpnamItemEditTest` lulus (10/10, 44 assertions). `TariffTest` gagal 1 dari 11: assertion activity log mengharapkan `effective_from` sebagai `2026-01-01`, aktualnya `2026-01-01 00:00:00` (baris 117). BR-10 belum dinyatakan lulus penuh karena regresi Tarif ini gagal.
+**Files:** `tests/Feature/OpnamTarifBerlakuTest.php`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/OpnamTarifBerlakuTest.php` (3/3), `C:\php84\php.exe artisan test tests/Feature/TariffTest.php` (10/11; gagal pada format tanggal di activity log), `C:\php84\php.exe artisan test tests/Feature/OpnamDraftTest.php` (9/9), `C:\php84\php.exe artisan test tests/Feature/OpnamItemEditTest.php` (10/10)
+**Manual modifications:** -
+**Notes / follow-up:** Tidak diubah implementasi Opnam maupun assertion TarifTest yang berada di luar skenario perubahan ini. Tidak ada commit, push, atau merge.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Lanjutkan dari hasil pekerjaan BR-10 terakhir. Periksa format data ActivityLog dan konsistensi format tanggal; jika datetime memang benar, sesuaikan assertion test saja tanpa mengubah implementasi aplikasi. Jalankan ulang TariffTest, OpnamTarifBerlakuTest, OpnamDraftTest, dan OpnamItemEditTest; perbarui prompt_history_anisa.md; jangan commit, push, atau merge."
+**Output summary:** Pemeriksaan menunjukkan kolom Tarif adalah `DATE`, model meng-cast `effective_from` ke `date`, dan observer menulis nilai mentah `getChanges()` ke JSON ActivityLog, aktual `2026-01-01 00:00:00`. Assertion pada `TariffTest` disesuaikan dengan nilai ActivityLog tersebut, tanpa mengubah implementasi aplikasi. Keempat suite lulus: TariffTest 11/11 (80 assertions), OpnamTarifBerlakuTest 3/3 (17), OpnamDraftTest 9/9 (90), OpnamItemEditTest 10/10 (44).
+**Files:** `tests/Feature/TariffTest.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/TariffTest.php` (11/11), `C:\php84\php.exe artisan test tests/Feature/OpnamTarifBerlakuTest.php` (3/3), `C:\php84\php.exe artisan test tests/Feature/OpnamDraftTest.php` (9/9), `C:\php84\php.exe artisan test tests/Feature/OpnamItemEditTest.php` (10/10)
+**Manual modifications:** -
+**Notes / follow-up:** Implementasi aplikasi tidak diubah. Tidak ada commit, push, atau merge.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Audit final DB-05 dan AD-03 untuk `WORK_CATEGORIES.is_active`: verifikasi migrasi, model, CRUD, integrasi WORK_TYPES dan penggunaan kategori; implementasikan keputusan kategori aktif/nonaktif dengan validasi backend, retensi relasi, serta test; jalankan dua test terkait dan seluruh suite. Jangan mengubah modul milik Halvina, Regina, atau Hazel, PRD, taskinstruction, atau item parkir; jangan lakukan operasi Git."
+**Output summary:** Audit menemukan kolom `is_active` belum ada dan CRUD kategori serta integrasi WORK_TYPES belum mengimplementasikan status. Migration aditif dengan default aktif ditambahkan; Admin dapat mengelola status, kategori nonaktif tetap terlihat di index dan dikecualikan dari opsi serta validasi backend WORK_TYPES. Test menegaskan relasi jenis lama tetap utuh dan aktivasi kembali memulihkan pilihan kategori. `WorkCategoryTest` 11/11 (42 assertions), `WorkTypeTest` 11/11 (46 assertions), seluruh suite 162/162 (789 assertions) lulus. Temuan tersisa: Opnam masih menampilkan dan menerima kategori nonaktif; tidak diubah karena batasan eksplisit untuk tidak mengubah modul Regina, sehingga status lintas-modul belum sepenuhnya bersih.
+**Files:** `database/migrations/2026_11_27_120000_add_is_active_to_work_categories_table.php`, `app/Models/WorkCategory.php`, `app/Http/Controllers/WorkCategoryController.php`, `app/Http/Controllers/WorkTypeController.php`, `resources/views/work-categories/_form.blade.php`, `resources/views/work-categories/index.blade.php`, `resources/views/work-types/_form.blade.php`, `tests/Feature/WorkCategoryTest.php`, `tests/Feature/WorkTypeTest.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/WorkCategoryTest.php` (11/11), `C:\php84\php.exe artisan test tests/Feature/WorkTypeTest.php` (11/11), `C:\php84\php.exe artisan test` (162/162)
+**Manual modifications:** -
+**Notes / follow-up:** Tidak mengubah controller/view/test Opnam, PRD, taskinstruction, middleware/policy, atau faktor tambahan Tarif. Tidak menjalankan `git add`, commit, push, merge, atau stash. Status DB-05/AD-03 masih memiliki temuan Opnam lintas-modul yang perlu ditangani pemiliknya.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Lakukan verifikasi ulang khusus DB-08 terkait aturan immutability Tarif. Periksa model dan seluruh jalur save/update/fill/forceFill, create baru, proteksi hapus Tarif yang direferensikan OPNAM_ITEMS, dan bypass query builder/raw SQL. Tambahkan atau sesuaikan test hanya bila ada celah nyata. Jangan ubah unique constraint, data, migration, atau modul Opnam; jangan commit, push, merge, stash, atau staging."
+**Output summary:** Verifikasi aktual menemukan guard model tidak ada dan `ActivityLogTest` mengharapkan `$tariff->update()` berhasil. Ditambahkan guard event `updating` yang menolak update instance Eloquent; test membuktikan update/save setelah fill/save setelah forceFill ditolak dan nilai DB tetap. Create baru tetap diperbolehkan. Penghapusan Tarif terpakai tetap ditolak oleh pemeriksaan controller dan FK restrictive. Query builder mass update dan raw SQL melewati event model; tidak ditemukan pemakaian bypass di kode aplikasi dan proteksi database tidak ditambahkan sesuai batasan. `TariffTest` 12/12, `ActivityLogTest` 6/6, `OpnamTarifBerlakuTest` 3/3, suite penuh 163/163 lulus.
+**Files:** `app/Models/Tariff.php`, `tests/Feature/TariffTest.php`, `tests/Feature/ActivityLogTest.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/TariffTest.php` (12/12), `C:\php84\php.exe artisan test tests/Feature/ActivityLogTest.php` (6/6), `C:\php84\php.exe artisan test tests/Feature/OpnamTarifBerlakuTest.php` (3/3), `C:\php84\php.exe artisan test` (163/163)
+**Manual modifications:** -
+**Notes / follow-up:** Tidak mengubah migration, unique constraint, data, atau modul Opnam. Eloquent query-builder bulk update/raw SQL serta event-silenced writes tetap dapat melewati model guard; tidak ada jalur tersebut dalam aplikasi. Tidak ada operasi staging atau Git lainnya.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Verifikasi DB-07: periksa validasi MaterialSpec soft-deleted pada pembuatan dan pengeditan Opnam, bedakan transaksi baru dari histori/snapshot, dan laporkan kebutuhan perbaikan. Jangan mengubah modul Opnam milik Regina tanpa koordinasi/persetujuan, jangan mengubah migration/data/PRD/taskinstruction, dan jangan staging atau melakukan operasi Git."
+**Output summary:** Dropdown Opnam memakai query Eloquent yang mengecualikan MaterialSpec soft-deleted. Backend masih menggunakan `exists:material_specs,id`: wizard step 2 dapat melewati validasi lalu gagal dengan 404 di `findOrFail`; tambah/edit item menolak kemudian di pemeriksaan kombinasi, bukan di validasi material. Belum ada Feature Test request untuk soft-deleted ID di Opnam. Draft historis tetap memiliki snapshots/relasi tarif tersimpan, dan detail baca-saja menggunakan `withTrashed`; namun edit draft terkait material terhapus tidak berjalan mulus karena query/lookup biasa mengecualikan material itu. Tanpa perubahan kode karena harus mendapat koordinasi Regina.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/OpnamDraftTest.php` (9/9), `C:\php84\php.exe artisan test tests/Feature/OpnamItemEditTest.php` (10/10), `C:\php84\php.exe artisan test tests/Feature/MaterialSpecTest.php` (13/13)
+**Manual modifications:** -
+**Notes / follow-up:** Koordinasikan dengan Regina sebelum mengubah `OpnamController`, view, atau test Opnam. Rekomendasi: validasi material baru hanya untuk row yang tidak soft-deleted; tetapkan perilaku khusus untuk mempertahankan ID material historis saat edit draft, lalu uji penolakan material terhapus pada transaksi/tambah item baru dan preservasi snapshots. Tidak mengubah migration/data, PRD/taskinstruction, serta tidak melakukan staging, commit, push, merge, reset, atau stash.
+
+## 2026-11-27 19:38 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Buat UnitSeeder untuk 17 satuan master IPERINDO dengan code sebagai identitas unik, idempotent, integrasikan ke DatabaseSeeder bila belum, periksa struktur project dan tabel sebelum perubahan, jalankan seeder khusus dan verifikasi jumlah/kode serta test Unit bila aman; jangan mengubah schema atau file yang tidak diperlukan, jangan menjalankan migrate:fresh/db:wipe, dan jangan melakukan operasi Git."
+**Output summary:** Dibuat `UnitSeeder` menggunakan `Unit::updateOrCreate()` untuk 17 pasangan code/name yang diminta dan ditambahkan pemanggilan seeder ke `DatabaseSeeder`. Skema aktual `units` memiliki `id`, `code`, `name`, `created_at`, `updated_at`, unique `code`; tabel kosong sebelum seeding. Seeder khusus sukses dua kali; hasil akhir 17 baris dan 17 code unik sesuai daftar. `UnitTest` tidak dijalankan karena menggunakan `RefreshDatabase` dan batasan melarang menjalankan migration.
+**Files:** `database/seeders/UnitSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `& 'C:\php84\php.exe' artisan tinker --execute="echo json_encode(DB::select('SHOW CREATE TABLE units'), JSON_PRETTY_PRINT); echo PHP_EOL; echo json_encode(DB::table('units')->orderBy('code')->get(['id','code','name']), JSON_PRETTY_PRINT);"`; `& 'C:\php84\php.exe' artisan db:seed --class=Database\Seeders\UnitSeeder --no-interaction` (dua kali); `& 'C:\php84\php.exe' artisan tinker --execute="echo 'count=' . DB::table('units')->count() . PHP_EOL; echo json_encode(DB::table('units')->orderBy('code')->get(['code','name']), JSON_PRETTY_PRINT) . PHP_EOL;"`; `& 'C:\php84\php.exe' artisan tinker --execute="echo 'count=' . DB::table('units')->count() . '; distinct=' . DB::table('units')->distinct()->count('code') . PHP_EOL; echo implode(',', DB::table('units')->orderBy('code')->pluck('code')->all()) . PHP_EOL;"`; `& 'C:\php84\php.exe' -l database/seeders/UnitSeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`.
+**Manual modifications:** -
+**Notes / follow-up:** `UnitTest` belum dijalankan untuk menghindari migration melalui `RefreshDatabase`. `DatabaseSeeder` penuh tidak dijalankan agar `UserSeeder` tidak mengubah akun DB lokal. Tidak ada migration/schema change atau operasi Git.
+
+## 2026-11-27 19:45 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Buat WorkCategorySeeder berdasarkan delapan kategori IPERINDO 2019, gunakan nama sebagai key unik, idempotent, aktifkan hanya kategori baru, jangan mengubah kategori lama, serta preflight dan laporkan kategori soft-deleted bernama sama alih-alih membuat duplikat/memulihkannya. Integrasikan ke DatabaseSeeder; jalankan seeder dua kali dan verifikasi; jangan menjalankan migrate:fresh/db:wipe atau DatabaseSeeder penuh."
+**Output summary:** Struktur migration/model dan DB lokal cocok; tidak ada data kategori atau nama target soft-deleted sebelum perubahan. Dibuat seeder dengan preflight soft-delete dan `firstOrCreate()` agar row lama/statusnya tidak berubah; kategori baru dibuat aktif. DatabaseSeeder memanggil seeder setelah UnitSeeder. Seeder khusus sukses dua kali; masing-masing verifikasi mendapatkan 8 kategori dan 8 nama unik dengan seluruh data sesuai. `WorkCategoryTest` tidak dijalankan karena `RefreshDatabase` berisiko menjalankan reset/migrasi test database.
+**Files:** `database/seeders/WorkCategorySeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** `& 'C:\php84\php.exe' artisan tinker --execute="echo json_encode(DB::select('SHOW CREATE TABLE work_categories'), JSON_PRETTY_PRINT) . PHP_EOL; echo 'count=' . DB::table('work_categories')->count() . PHP_EOL; echo json_encode(DB::table('work_categories')->orderBy('name')->get(['id','name','is_active','deleted_at']), JSON_PRETTY_PRINT) . PHP_EOL;"`; `& 'C:\php84\php.exe' -l database/seeders/WorkCategorySeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan db:seed --class=Database\Seeders\WorkCategorySeeder --no-interaction` (dua kali); tinker verifikasi sesudah eksekusi pertama dan kedua (masing-masing count 8, distinct name 8).
+**Manual modifications:** -
+**Notes / follow-up:** `WorkCategoryTest` belum dijalankan karena `RefreshDatabase` berpotensi melakukan reset/migrasi test DB. Tidak menjalankan migration, penghapusan data, atau DatabaseSeeder penuh. UnitSeeder dipertahankan. Tidak ada operasi Git.
+
+## 2026-11-27 19:49 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Audit struktur WORK_TYPES dan relasi master, periksa aturan PRD/taskinstruction serta cari dokumen IPERINDO 2019; inventarisasi jenis pekerjaan A–H sesuai sumber tanpa mengarang, jangan membuat Seeder atau mengubah kode/data/schema, dan catat audit di prompt_history_anisa.md."
+**Output summary:** Migration/model/CRUD konsisten dengan WORK_TYPES ber-FK kategori, SoftDeletes, dan tidak memiliki unique constraint nama; PRD/ERD tidak menyebut unique constraint. DB aktual cocok, delapan kategori tersedia dan aktif, tabel WORK_TYPES kosong. Tidak ditemukan dokumen IPERINDO 2019 di repository (PDF/DOC/spreadsheet maupun isi PRD/taskinstruction). Nama jenis pekerjaan serta pemilahan MATERIAL_SPEC tidak dapat diinventarisasi tanpa sumber; tidak ada nama ditebak dan tidak ada implementasi dibuat.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Introspeksi read-only `SHOW CREATE TABLE work_types` dan query tabel work_types/work_categories melalui `artisan tinker`; pencarian repository untuk file PDF/DOC/DOCX/XLS/XLSX/CSV dan kata kunci IPERINDO/A1–H3. Tidak menjalankan test, migration, atau seeder.
+**Manual modifications:** -
+**Notes / follow-up:** Perlu dokumen sumber IPERINDO 2019 yang dimaksud sebelum inventarisasi lengkap dan desain WorkTypeSeeder. Tidak ada perubahan kode, data, schema, ataupun operasi Git.
+
+## 2026-11-27 19:59 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Dokumen sumber IPERINDO 2019 sudah tersedia di `docs/referensi/Standar_Tarif_IPERINDO_2019.pdf`. Baca PDF langsung termasuk scan/tabel; inventarisasi kategori A–H dengan bagian dan halaman PDF/cetak; pilah WORK_TYPE dan MATERIAL_SPEC; cocokkan struktur master; jangan mengubah database atau membuat Seeder; perbarui audit."
+**Output summary:** File sumber yang benar tersedia sebagai `docs/referensi/Standar Tarif Iperindo.pdf` (spasi), 24 halaman scan. Halaman tercetak 1–22 cocok dengan PDF 2–23. Inventarisasi kandidat A–H dicatat di `prompt_history_anisa.md` dan dirinci dalam respons. E3 tidak ada di urutan scan (E2 diikuti E4); tidak diisi dengan tebakan. PDF p24 “Replate Cost” tidak masuk kategori A–H secara eksplisit. Tidak ada kode/data/schema/seeder yang diubah.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Pembacaan visual langsung `docs/referensi/Standar Tarif Iperindo.pdf`; pembacaan read-only migration WorkType/MaterialSpec, model WorkType/WorkCategory/MaterialSpec, PRD/SKILL/task instruction dari audit sebelumnya. Tidak menjalankan test, migration, seeder, atau operasi database.
+**Manual modifications:** -
+**Notes / follow-up:** Nama file yang diberikan user berbeda dari file aktual hanya pada spasi/underscore. Usulan klasifikasi menunggu review sebelum implementasi WorkTypeSeeder. Konfirmasi sumber untuk E3 diperlukan.
+
+## 2026-11-27 20:23 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Finalisasi inventarisasi WORK_TYPES berdasarkan PDF IPERINDO 2019 setelah review. Terapkan pemisahan C5 (pengelasan fitting/sambungan), E1 menjadi empat WorkType, E2 menjadi lima WorkType; pertahankan kategori lain; A12 bukan WorkType; jangan membuat E3 atau memasukkan Replate Cost PDF24; tampilkan tabel lengkap dengan referensi halaman, MaterialSpec dan catatan tarif; jangan implementasi; perbarui history."
+**Output summary:** Final table lengkap A–H disampaikan. Pemisahan yang disetujui diterapkan pada daftar inventarisasi saja: C5 dua jenis pengelasan; E1 empat pekerjaan; E2 lima pekerjaan. A12 tetap aturan waktu/hari; E3 tetap tidak ada; PDF24 Replate Cost tidak dimasukkan. Variasi ukuran/kapasitas/material/lokasi tetap MaterialSpec. Tidak ada duplikasi tak disengaja yang direncanakan.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Pemeriksaan timestamp WIB; menggunakan hasil pembacaan visual sumber `docs/referensi/Standar Tarif Iperindo.pdf` dan struktur master dari audit sebelumnya. Tidak menjalankan test, migration, seeder, atau perintah database.
+**Manual modifications:** -
+**Notes / follow-up:** Menunggu review akhir sebelum pembuatan WorkTypeSeeder. Tidak ada perubahan kode, database, schema, migration, atau operasi Git.
+
+## 2026-11-27 20:36 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Implementasikan WorkTypeSeeder idempotent untuk seluruh 52 WorkType sesuai inventarisasi final; lakukan preflight migration/model/CRUD/seeder/database/kategori/data termasuk soft-delete; hentikan jika konflik; integrasikan setelah WorkCategorySeeder; uji dua kali, verifikasi distribusi, unique pair, FK, lint/test aman; dokumentasikan; tanpa operasi Git destruktif."
+**Output summary:** Preflight read-only selesai. Skema aktual cocok; delapan kategori target aktif/tidak terhapus; tabel work_types kosong termasuk soft-deleted; WorkTypeSeeder belum ada dan DatabaseSeeder belum memanggilnya. Ditemukan konflik jumlah: tabel inventarisasi final sebelumnya menghasilkan A=12 dan C=16 (total 54), bukan distribusi diminta A=11 dan C=15 (total 52). Implementasi dihentikan untuk menghindari menebak data yang disetujui.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Read-only `artisan tinker` untuk `SHOW CREATE TABLE work_types`, membaca kategori dan seluruh baris work_types via query builder yang memasukkan soft-deleted; pemeriksaan file migration/model/controller/seeder. Tidak menjalankan lint/test/seeder/migration.
+**Manual modifications:** -
+**Notes / follow-up:** Mohon tetapkan daftar final 52, khusus keputusan apakah dua layanan Tunda/Pandu menjadi satu WorkType dan status kandidat `Pembersihan dan Pengecatan Tank Top, Bilge Space`/C4. Tidak ada perubahan kode atau database dan tidak ada operasi Git.
+
+## 2026-11-27 20:45 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Keputusan final adalah seluruh 54 WorkType dengan distribusi A=12, B=4, C=16, D=3, E=10, F=5, G=1, H=3. Jangan gabung Tunda/PANDU atau Tank Top/Bilge Space. Buat WorkTypeSeeder idempotent, preflight SoftDeletes, integrasikan setelah WorkCategorySeeder, jalankan khusus dua kali, verifikasi count/distribusi/pasangan/orphan, PHP lint dan test aman; jangan ubah schema atau melakukan operasi Git."
+**Output summary:** WorkTypeSeeder dibuat berisi 54 nama inventarisasi final dan melakukan preflight kategori/pasangan soft-deleted; memakai relasi kategori dengan `firstOrCreate`. DatabaseSeeder memanggilnya setelah WorkCategorySeeder. Seeder khusus sukses dua kali; verifikasi menghasilkan 54 aktif, distribusi tepat sesuai keputusan, 0 pasangan duplikat, 0 orphan. PHP lint lulus untuk kedua file; WorkTypeTest 11 passed/46 assertions.
+**Files:** `database/seeders/WorkTypeSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** `& 'C:\php84\php.exe' -l database/seeders/WorkTypeSeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan db:seed --class='Database\Seeders\WorkTypeSeeder' --no-interaction` (dua kali); read-only `artisan tinker` untuk schema/kategori/data dan verifikasi distribusi, unique pairs, orphan; `& 'C:\php84\php.exe' artisan test --filter=WorkTypeTest`.
+**Manual modifications:** -
+**Notes / follow-up:** Preflight awal menemukan 8 kategori aktif dan work_types kosong termasuk soft-deleted. Percobaan pertama query verifikasi parse error karena quoting PowerShell; dikoreksi dan query verifikasi berhasil. Tidak menjalankan migration, DatabaseSeeder penuh, operasi penghapusan, atau operasi Git.
+
+## 2026-11-27 21:00 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Implementasikan MaterialSpecSeeder berdasar langsung PDF IPERINDO 2019 untuk 54 WorkType, hanya spesifikasi teknis yang benar-benar didukung; periksa skema/model/relasi/CRUD/seeder; idempotensi dan preflight soft-delete; integrasi, dua kali seeding, verifikasi, lint/test aman dan dokumentasi; tanpa ubah schema atau Git.
+**Output summary:** Pemeriksaan struktur dan DB selesai (54 WorkType aktif, 0 MaterialSpec termasuk soft-deleted). PDF scan tidak memiliki lapisan teks dan perintah ekstraksi tidak memperoleh rincian tabel; catatan audit lama hanya memberi kandidat umum, tidak cukup membuktikan rentang spesifik. Draft mapping yang belum terverifikasi dibuang sebelum dijalankan; integrasi draft dibatalkan. Tidak ada data yang diubah. Lint DatabaseSeeder lulus; MaterialSpecTest lulus 13/13 (62 assertions) pada sqlite `:memory:`. Implementasi dan seeding MaterialSpec belum selesai.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`; draft `database/seeders/MaterialSpecSeeder.php` dihapus sebelum dijalankan, perubahan draft pada `database/seeders/DatabaseSeeder.php` dibatalkan.
+**Commands:** read-only pemeriksaan migration/model/CRUD/tests/seeder; read-only `artisan tinker` untuk schema/count; `pdftotext -layout 'docs/referensi/Standar Tarif Iperindo.pdf' -` (hasil scan hanya pemisah halaman); PHP lint draft dan `DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan test --filter=MaterialSpecTest` (13 passed, 62 assertions; sqlite `:memory:`).
+**Manual modifications:** -
+**Notes / follow-up:** Tidak menjalankan seeder, migration, DatabaseSeeder penuh, penghapusan data, atau operasi Git. Untuk melanjutkan tanpa mengarang, nilai/rentang pada tabel scan perlu ditranskripsikan secara visual dan dicocokkan per WorkType.
+
+## 2026-11-27 21:03 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Periksa langsung secara visual halaman scan PDF IPERINDO 2019, transkripsikan variasi spesifikasi teknis A–H, cocokkan dengan 54 WorkType, pisahkan tarif/metode/satuan/catatan, tandai item yang perlu verifikasi, jangan membuat seeder atau mengubah database/schema/aplikasi, dokumentasikan dan tampilkan inventarisasi lengkap.
+**Output summary:** Seluruh 24 halaman dirender dan diperiksa visual; bagian A–H berada pada PDF 2–23. Inventarisasi kandidat MaterialSpec disusun per WorkType dengan ukuran/rentang, material, tipe, kapasitas dan lokasi bila eksplisit. Tarif, satuan, metode kerja dan band GT tarif dikecualikan; 30 WorkType memiliki kandidat, 24 tidak. Celah rentang dan ejaan meragukan ditandai, tidak diisi/normalisasi. Hasil disimpan di prompt_history_anisa.md; tidak ada seeder/data/aplikasi berubah.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Membuka/render visual `docs/referensi/Standar Tarif Iperindo.pdf`; pemeriksaan daftar WorkType pada `database/seeders/WorkTypeSeeder.php`. Tidak ada perintah database/seeder/lint/test.
+**Manual modifications:** -
+**Notes / follow-up:** PDF 24 “Replate Cost” tidak dipetakan ke A–H. C3 “Bulbows Bow” dan F4 “Galvanish” perlu verifikasi ejaan sebelum normalisasi; celah C3 6–8 mm dan E2 sleeve 251–255/351–355 mm tetap tidak diisi. Seeder tetap belum dibuat atau dijalankan.
+
+## 2026-11-27 21:19 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Implementasikan MaterialSpecSeeder berdasarkan 30 kandidat transkripsi visual; periksa schema/model/relasi/data; idempotensi dan preflight konflik/soft-delete; integrasikan setelah WorkTypeSeeder; jalankan seeder dua kali, verifikasi distribusi/relasi/duplikasi, PHP lint dan test aman; dokumentasikan tanpa Git.
+**Output summary:** MaterialSpecSeeder dibuat untuk 30 WorkType kandidat dan diintegrasikan; dua run khusus sukses, menghasilkan 271 MaterialSpec aktif. Verifikasi: 0 soft-deleted, 0 pasangan duplikat, 0 orphan dan 0 relasi ke WorkType terhapus. Kedua PHP lint lulus; MaterialSpecTest 13 passed/62 assertions. Status DB-07 disinkronkan sebagai Selesai pada tasklist.md dan prd.md.
+**Files:** `database/seeders/MaterialSpecSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`, `tasklist.md`, `prd.md`
+**Commands:** read-only `artisan tinker` preflight; `& 'C:\php84\php.exe' -l database/seeders/MaterialSpecSeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan db:seed --class='Database\Seeders\MaterialSpecSeeder' --no-interaction` (dua kali); read-only tinker verifikasi total/distribusi/dupe/orphan/soft-deletes; `& 'C:\php84\php.exe' artisan test --filter=MaterialSpecTest`.
+**Manual modifications:** -
+**Notes / follow-up:** Tidak menjalankan DatabaseSeeder penuh, migration, penghapusan data, atau operasi Git. Query verifikasi pertama parse error karena quoting PowerShell; query read-only dikutip ulang dan sukses.
+
+## 2026-11-27 21:41 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Audit dan siapkan tarif DB-08 dari PDF IPERINDO dengan pemeriksaan schema/model/relasi/seeder/immutability/pemakaian Opnam; transkripsi visual A–H, pemetaan WorkType/MaterialSpec/Unit/harga/tanggal, implementasi hanya jika valid; dokumentasi hasil aktual tanpa mengubah Opnam/schema/Git.
+**Output summary:** Schema aktual unik pada material/unit/effective_from; tarif immutable; preflight menemukan 0 tarif, 17 Unit, 271 MaterialSpec. Inventarisasi awal menyebut 153 kandidat dan 331 pending; audit unique key/MaterialSpec merevisi 72 kandidat komposit (pipa/elbow/katup) menjadi pending, sehingga exact-map valid 81. Hasil tindak lanjut tercatat di entri prompt berikut.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`, `tasklist.md`, `prd.md`
+**Commands:** Read-only `artisan tinker` untuk SHOW CREATE TABLE, count/tariff duplicates, Unit codes, MaterialSpec counts, dan user roles; pemeriksaan migration/model/relasi/UnitSeeder/MaterialSpecSeeder/TariffController/OpnamController/TariffTest/SKILL.md; membaca visual PDF scan 24 halaman. Tidak menjalankan seeder, migration, lint, test, atau operasi Git.
+**Manual modifications:** -
+**Notes / follow-up:** Pada tahap awal menunggu keputusan pemilik; Anisa kemudian menyetujui subset exact-map. PDF 24 “Replate Cost” tidak dipetakan ke A–H. Query awal yang mencoba `tariffs.deleted_at` gagal karena kolom tidak ada; skema diintrospeksi, lalu query count dan duplikasi read-only berhasil.
+
+## 2026-11-27 22:14 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Lanjutkan hanya subset tarif exact-map; pakai effective_from 2019-01-01, cek unique key, idempotent tanpa overwrite, jalankan seeder dua kali, pertahankan pending, lint/test aman, dokumentasikan tanpa perubahan schema/model/controller/Opnam/Git.
+**Output summary:** Audit merevisi kandidat awal 153 menjadi 81 exact-map karena 72 harga pipa/elbow/katup tidak memiliki MaterialSpec kombinasi diameter×jenis yang unik. Seeder run 1: 81 dibuat/0 dilewati; run 2: 0 dibuat/81 dilewati. Verifikasi 81 row, effective date benar, 0 FK invalid/duplicate. TariffSeederTest + TariffTest lulus (13 tests/90 assertions); PHP lint lulus. Total pending 403 (331 awal beserta alasan + 72 yang dikoreksi).
+**Files:** `database/seeders/TariffSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `tests/Feature/TariffSeederTest.php` (baru), `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`, `tasklist.md`, `prd.md`
+**Commands:** PHP lint; `artisan db:seed --class=Database\\Seeders\\TariffSeeder` dua kali; read-only Tinker verification; `artisan test --compact tests/Feature/TariffSeederTest.php tests/Feature/TariffTest.php`. Tidak menjalankan migration/DatabaseSeeder penuh atau Git.
+**Manual modifications:** -
+**Notes / follow-up:** DB-08 berstatus Dikerjakan karena 403 nilai masih tertahan. Schema, migration, model, controller, dan Opnam tidak diubah.
+
+## 2026-11-28 00:04 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Sinkronkan dokumentasi final tupoksi Anisa dengan implementasi dan audit terakhir. Tandai DB-04/05/06 selesai, pertahankan DB-07 selesai dan DB-08 parsial (81 tarif, 403 tertunda), tutup konfirmasi is_active, bedakan CRUD AD-04 dari kelengkapan data tarif, dan tetapkan faktor tambahan tarif sebagai tupoksi Hazel, bukan Anisa. Jangan ubah kode, database, test, tupoksi anggota lain, atau Git.
+**Output summary:** Status DB-04/05/06 diperbarui menjadi Selesai; DB-07 dipertahankan Selesai dengan 271 specs/30 WorkType; DB-08 tetap Dikerjakan dengan 81 tarif berlaku 2019-01-01 dan 403 nilai tertunda. AD-03/AD-04 tetap Selesai dengan penjelasan scope yang diperjelas. Catatan `is_active` ditutup; faktor tambahan dihapus dari tupoksi Anisa dan dinyatakan sebagai tupoksi Hazel. Hasil audit test terdahulu dicatat sebagai 62/309, tanpa menjalankan test baru.
+**Files:** `tasklist.md`, `prd.md`, `taskinstruction.md`, `tupoksi.md`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Pembacaan dokumen progres dan patch dokumentasi saja; tidak ada command aplikasi/database/test/Git.
+**Manual modifications:** -
+**Notes / follow-up:** Tidak mengubah baris tanggung jawab anggota lain. Tidak ada kode, seeder, migration, schema, test, maupun data database yang berubah.

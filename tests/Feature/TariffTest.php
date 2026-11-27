@@ -114,7 +114,7 @@ test('admin dapat menambah record tarif baru dan mencatat pembuat serta activity
         'event' => 'Tarif dibuat',
     ]);
     expect(ActivityLog::where('subject_id', $tariff->id)->first()->new_values)
-        ->toMatchArray(['price' => '1250.50', 'effective_from' => '2026-01-01']);
+        ->toMatchArray(['price' => '1250.50', 'effective_from' => '2026-01-01 00:00:00']);
 });
 
 test('kombinasi material satuan dan tanggal efektif harus unik', function () {
@@ -197,6 +197,26 @@ test('tarif baru pada tanggal berlaku lain menambah riwayat tanpa mengubah snaps
         'price' => '1000.00',
         'effective_from' => '2026-01-01',
     ]);
+});
+
+test('tarif tersimpan menolak perubahan melalui update, save, fill, dan forceFill', function () {
+    $data = siapkanTarif();
+    $tariff = Tariff::create([
+        ...payloadTarif($data, ['price' => '1000.00']),
+        'created_by' => $data['admin']->id,
+    ]);
+
+    expect(fn () => $tariff->update(['price' => '2000.00']))
+        ->toThrow(LogicException::class);
+    expect($tariff->fresh()->price)->toBe('1000.00');
+
+    $tariff->refresh()->fill(['price' => '3000.00']);
+    expect(fn () => $tariff->save())->toThrow(LogicException::class);
+    expect($tariff->fresh()->price)->toBe('1000.00');
+
+    $tariff->refresh()->forceFill(['price' => '4000.00']);
+    expect(fn () => $tariff->save())->toThrow(LogicException::class);
+    expect($tariff->fresh()->price)->toBe('1000.00');
 });
 
 test('tarif yang belum dipakai dapat di-hard-delete dan dicatat', function () {

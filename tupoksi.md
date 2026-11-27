@@ -7,7 +7,7 @@ Pembagian tugas dan tanggung jawab anggota tim. Acuan persyaratan produk ada di 
 | Anggota | Modul | Tugas |
 |---|---|---|
 | Regina | Opnam dan Kalkulasi Biaya | Halaman daftar opnam; form pencatatan opnam; tambah, edit, hapus detail pekerjaan sesuai status transaksi; hubungkan opnam dengan data kapal; kalkulasi biaya otomatis berdasarkan tarif dan spesifikasi; unggah foto/bukti pekerjaan |
-| Anisa | Master Data Pekerjaan dan Tarif | CRUD kategori pekerjaan; CRUD jenis pekerjaan; CRUD material dan spesifikasi; CRUD satuan pekerjaan; CRUD tarif dasar; faktor tambahan tarif sesuai spesifikasi teknis (**belum ada di PRD, lihat PRD Bagian 9 no. 14**) |
+| Anisa | Master Data Pekerjaan dan Tarif | CRUD kategori pekerjaan; CRUD jenis pekerjaan; CRUD material dan spesifikasi; CRUD satuan pekerjaan; CRUD tarif dasar |
 | Rifqy | Master Data Owner dan Kapal serta Laporan | CRUD owner kapal; CRUD kapal; hubungkan kapal dengan owner; pencarian riwayat perbaikan kapal; halaman rekapitulasi pekerjaan; membantu ekspor laporan PDF/Excel; riwayat perubahan dan audit log |
 | Halvina | Autentikasi, Pengguna, dan Dashboard | Login dan logout; ubah password; CRUD pengguna; tiga role (Admin, Petugas, Direksi); middleware dan policy; dashboard per role; lihat dan ubah profil |
 | Hazel | Review, Approval, Disposisi, dan Dokumen Tagihan | Halaman review opnam; setujui hasil review atau kembalikan opnam untuk revisi; proses approval tagihan Direksi; tolak tagihan; diskon dan markup; catat disposisi; Invoice PDF; Technical Report PDF; unduh dan cetak dokumen |
@@ -15,6 +15,7 @@ Pembagian tugas dan tanggung jawab anggota tim. Acuan persyaratan produk ada di 
 ## 2. Aturan khusus
 - Middleware dan policy dipakai oleh semua modul, jadi perubahannya hanya dilakukan oleh Halvina.
 - Tugas Rifqy untuk ekspor laporan berstatus membantu, sehingga pemilik mesin ekspor bersama perlu dikonfirmasi (lihat bagian 3 no. 8).
+- Faktor tambahan tarif merupakan tupoksi Hazel, bukan Anisa; rincian yang belum dispesifikasikan tetap dirujuk ke PRD Bagian 9.
 - Modul yang dipakai sebagai dasar pembagian: Umum (UC-U), Petugas (PT), Admin (AD), Direksi (DR), dan Basis data (17 tabel).
 
 ## 3. Item yang belum punya pemilik (parkir)
@@ -32,4 +33,3 @@ Item ini tidak boleh dikerjakan sebelum tim memutuskan pemiliknya.
 | 7 | AD-10, AD-11, AD-14, PT-10, DR-13, DR-16, DR-17 | Cakupan riwayat dan audit per role belum dipisah ke pemilik | Konfirmasi pemilik masing-masing |
 | 8 | Mesin ekspor PDF/Excel | Modul ekspor bersama | Sudah diputuskan 2026-11-26: mesin PDF milik Hazel (dompdf), ekspor Excel belum diputuskan |
 | 9 | Middleware dan policy | Dipakai semua modul | Sudah ke Halvina, konfirmasi tim |
-| 10 | Faktor tambahan tarif (Anisa) | Tidak ada di use case, ERD, atau PRD | Putuskan dipakai atau dihapus dari tupoksi |
