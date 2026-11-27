@@ -235,8 +235,8 @@
             .join('');
 
         // Satuan mengikuti material yang dipilih dan tarif yang berlaku,
-        // sehingga hanya m² atau m yang muncul dan harga tidak pernah 0
-        // karena salah pilih satuan.
+        // sehingga hanya satuan yang punya tarif yang muncul. Nama satuan
+        // bebas sesuai master Anisa, tidak dibatasi m² atau m.
         const unitOptions = (material, selected) => {
             const daftar = material
                 ? tarifBerlaku()

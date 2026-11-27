@@ -94,17 +94,26 @@ test('filter status hanya menampilkan status terpilih', function () {
         ->assertDontSee('OPN-001');
 });
 
-test('filter tanggal hanya menampilkan opnam pada tanggal yang dipilih', function () {
+test('filter rentang tanggal hanya menampilkan opnam dalam rentang yang dipilih', function () {
     $admin = adminUntukDaftarOpnam();
     $ship = kapalUntukDaftarOpnam('Kapal Satu', 'HULL-001');
     opnamUntukDaftar($admin, $ship, 'OPN-001', Opnam::STATUS_DRAFT, '2026-01-05');
     opnamUntukDaftar($admin, $ship, 'OPN-002', Opnam::STATUS_DRAFT, '2026-02-10');
+    opnamUntukDaftar($admin, $ship, 'OPN-003', Opnam::STATUS_DRAFT, '2026-03-15');
 
     $this->actingAs($admin)
-        ->get(route('admin.opnams.index', ['tanggal' => '2026-02-10']))
+        ->get(route('admin.opnams.index', ['tanggal_dari' => '2026-02-10', 'tanggal_sampai' => '2026-03-15']))
         ->assertOk()
         ->assertSee('OPN-002')
+        ->assertSee('OPN-003')
         ->assertDontSee('OPN-001');
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.index', ['tanggal_dari' => '2026-01-05', 'tanggal_sampai' => '2026-01-05']))
+        ->assertOk()
+        ->assertSee('OPN-001')
+        ->assertDontSee('OPN-002')
+        ->assertDontSee('OPN-003');
 });
 
 test('daftar opnam dipaginasi', function () {
@@ -205,4 +214,18 @@ test('detail opnam menampilkan lokasi pekerjaan dari item', function () {
         ->get(route('admin.opnams.show', $opnam))
         ->assertOk()
         ->assertSee('Dock 02 — Floating Dock', false);
+});
+
+test('daftar opnam menampilkan jenis kapal dari snapshot', function () {
+    $admin = adminUntukDaftarOpnam();
+    $ship = kapalUntukDaftarOpnam('Kapal Jenis', 'HULL-JENIS');
+    $ship->update(['jenis_kapal' => 'Ferry']);
+    $opnam = opnamUntukDaftar($admin, $ship, 'OPN-JENIS', Opnam::STATUS_DRAFT, '2026-01-05');
+    $opnam->update(['jenis_kapal' => 'Barge']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.opnams.index'))
+        ->assertOk()
+        ->assertSee('JENIS KAPAL')
+        ->assertSee('Barge');
 });

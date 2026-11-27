@@ -71,4 +71,22 @@ return [
         'panjang_seq' => 3,
     ],
 
+    /*
+      |--------------------------------------------------------------------------
+      | Daftar jenis kapal (DB-03 / PT-01)
+      |--------------------------------------------------------------------------
+      |
+      | Keputusan Regina 2026-11-27: jenis kapal memakai pilihan tetap. Rifqy
+      | selaku pemilik SHIPS tidak keberatan. Pertanyaan terkait: PRD 9 no. 18.
+      | Nilai lama di SHIPS/OPNAMS yang tidak ada dalam daftar tetap dibaca
+      | sebagai snapshot dan tidak dinormalisasi.
+      |
+      */
+    'jenis_kapal' => [
+        'Tugboat',
+        'Barge',
+        'Ferry',
+        'Kapal Kargo',
+    ],
+
 ];

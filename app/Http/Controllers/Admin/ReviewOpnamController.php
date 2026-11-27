@@ -58,7 +58,7 @@ class ReviewOpnamController extends Controller
 
     public function show(Opnam $opnam): View
     {
-        $this->authorizeReview($opnam);
+        abort_unless(auth()->user()?->role === self::ROLE, 403);
 
         $opnam->load(['ship', 'creator', 'items', 'attachments']);
 

@@ -70,16 +70,25 @@ test('opname saya mendukung pencarian dan filter status', function () {
         ->assertDontSee('OPN-100');
 });
 
-test('opname saya dapat difilter dengan satu tanggal', function () {
+test('opname saya dapat difilter dengan rentang tanggal', function () {
     $data = siapkanOpnameSaya();
     buatOpnamSaya($data['petugas'], $data['ship'], 'OPN-100', Opnam::STATUS_DRAFT, '2026-06-25');
     buatOpnamSaya($data['petugas'], $data['ship'], 'OPN-200', Opnam::STATUS_DRAFT, '2026-06-26');
+    buatOpnamSaya($data['petugas'], $data['ship'], 'OPN-300', Opnam::STATUS_DRAFT, '2026-06-27');
 
     $this->actingAs($data['petugas'])
-        ->get(route('petugas.opnams.index', ['tanggal' => '2026-06-26']))
+        ->get(route('petugas.opnams.index', ['tanggal_dari' => '2026-06-26', 'tanggal_sampai' => '2026-06-27']))
         ->assertOk()
         ->assertSee('OPN-200')
+        ->assertSee('OPN-300')
         ->assertDontSee('OPN-100');
+
+    $this->actingAs($data['petugas'])
+        ->get(route('petugas.opnams.index', ['tanggal_dari' => '2026-06-25', 'tanggal_sampai' => '2026-06-25']))
+        ->assertOk()
+        ->assertSee('OPN-100')
+        ->assertDontSee('OPN-200')
+        ->assertDontSee('OPN-300');
 });
 
 test('opname saya dipaginasi', function () {
@@ -97,4 +106,17 @@ test('opname saya dipaginasi', function () {
         ->get(route('petugas.opnams.index', ['page' => 2]))
         ->assertOk()
         ->assertSee('OPN-001');
+});
+
+test('opname saya menampilkan jenis kapal dari snapshot', function () {
+    $data = siapkanOpnameSaya();
+    $opnam = buatOpnamSaya($data['petugas'], $data['ship'], 'OPN-JENIS', Opnam::STATUS_DRAFT, '2026-06-25');
+    $opnam->update(['jenis_kapal' => 'Tugboat']);
+    $data['ship']->update(['jenis_kapal' => 'Barge']);
+
+    $this->actingAs($data['petugas'])
+        ->get(route('petugas.opnams.index'))
+        ->assertOk()
+        ->assertSee('JENIS KAPAL')
+        ->assertSee('Tugboat');
 });

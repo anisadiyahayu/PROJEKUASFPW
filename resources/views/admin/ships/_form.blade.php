@@ -34,7 +34,19 @@
         </div>
         <div>
             <label for="jenis_kapal">Jenis Kapal</label>
-            <input id="jenis_kapal" type="text" name="jenis_kapal" value="{{ old('jenis_kapal', $ship->jenis_kapal) }}" maxlength="255" placeholder="Contoh: Tugboat, Barge, Ferry">
+            @php
+                $jenisKapal = config('opnam.jenis_kapal', []);
+                $jenisKapalSekarang = old('jenis_kapal', $ship->jenis_kapal);
+                if ($jenisKapalSekarang && ! in_array($jenisKapalSekarang, $jenisKapal, true)) {
+                    $jenisKapal[] = $jenisKapalSekarang;
+                }
+            @endphp
+            <select id="jenis_kapal" name="jenis_kapal">
+                <option value="">— Pilih jenis kapal —</option>
+                @foreach ($jenisKapal as $opsi)
+                    <option value="{{ $opsi }}" @selected((string) $jenisKapalSekarang === (string) $opsi)>{{ $opsi }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 
