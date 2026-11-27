@@ -2,20 +2,14 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
-=======
 use Illuminate\Database\Eloquent\Factories\HasFactory;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use RuntimeException;
 
 class User extends Authenticatable
 {
-<<<<<<< HEAD
-=======
     use HasFactory;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     use Notifiable;
 
     public const ROLE_PETUGAS = 'petugas';
@@ -29,10 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
-<<<<<<< HEAD
-=======
         'last_login_at',
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     ];
 
     protected $hidden = [
@@ -46,10 +37,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-<<<<<<< HEAD
-=======
             'last_login_at' => 'datetime',
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
         ];
     }
 

@@ -1,24 +1,23 @@
 <?php
 
-<<<<<<< HEAD
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\ReviewOpnamController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Direksi\DokumenController;
+use App\Http\Controllers\Direksi\TagihanController;
+use App\Http\Controllers\MaterialSpecController;
 use App\Http\Controllers\Admin\OwnerController;
 use App\Http\Controllers\Admin\ShipController;
 use App\Http\Controllers\Audit\ActivityLogController;
 use App\Http\Controllers\Direksi\ApprovedTransactionController;
 use App\Http\Controllers\OpnamController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reports\ShipRepairHistoryController;
 use App\Http\Controllers\Reports\WorkRecapitulationController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-=======
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\MaterialSpecController;
-use App\Http\Controllers\OpnamController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WorkCategoryController;
 use App\Http\Controllers\WorkTypeController;
-use Illuminate\Http\Request;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,46 +30,6 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', fn () => view('auth.login'))->name('login');
-
-<<<<<<< HEAD
-    Route::post('/login', function (Request $request) {
-        $data = $request->validate([
-            'username' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', 'max:255'],
-        ]);
-
-        $credentials = [
-            'username' => strtolower(trim($data['username'])),
-            'password' => $data['password'],
-            'is_active' => true,
-        ];
-
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors(['username' => 'Username atau password salah, atau akun tidak aktif.'])
-                ->onlyInput('username');
-        }
-
-        $request->session()->regenerate();
-
-        return redirect()->route($request->user()->dashboardRoute());
-    })->middleware('throttle:5,1')->name('login.store');
-});
-
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return redirect()->route('login');
-})->middleware('auth')->name('logout');
-
-/*
-|--------------------------------------------------------------------------
-| Petugas
-|--------------------------------------------------------------------------
-*/
-=======
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('login.store');
@@ -80,7 +39,11 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
+/*
+|--------------------------------------------------------------------------
+| Petugas
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:petugas'])
     ->prefix('petugas')
     ->name('petugas.')
@@ -89,33 +52,53 @@ Route::middleware(['auth', 'role:petugas'])
         Route::get('/opnams', [OpnamController::class, 'indexMine'])->name('opnams.index');
         Route::get('/opnams/create', [OpnamController::class, 'create'])->name('opnams.create');
         Route::post('/opnams/create', [OpnamController::class, 'storeStep'])->name('opnams.store-step');
-<<<<<<< HEAD
-    });
-
-/*
-|--------------------------------------------------------------------------
-| Admin
-|--------------------------------------------------------------------------
-*/
-=======
         Route::get('/opnams/{opnam}/edit', [OpnamController::class, 'edit'])->name('opnams.edit');
         Route::post('/opnams/{opnam}/items', [OpnamController::class, 'storeItem'])->name('opnams.items.store');
         Route::put('/opnams/{opnam}/items/{item}', [OpnamController::class, 'updateItem'])->name('opnams.items.update');
         Route::delete('/opnams/{opnam}/items/{item}', [OpnamController::class, 'destroyItem'])->name('opnams.items.destroy');
     });
 
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.admin')->name('dashboard');
+        Route::get('/review-opnams', [ReviewOpnamController::class, 'index'])->name('review-opnams.index');
+        Route::get('/review-opnams/{opnam}', [ReviewOpnamController::class, 'show'])->name('review-opnams.show');
+        Route::post('/review-opnams/{opnam}/approve', [ReviewOpnamController::class, 'approve'])->name('review-opnams.approve');
+        Route::post('/review-opnams/{opnam}/return-for-revision', [ReviewOpnamController::class, 'returnForRevision'])->name('review-opnams.return-for-revision');
+        Route::get('/review-opnams/{opnam}/revisi', [ReviewOpnamController::class, 'revisi'])->name('review-opnams.revisi');
+        Route::put('/review-opnams/{opnam}/revisi', [ReviewOpnamController::class, 'updateRevisi'])->name('review-opnams.update-revisi');
+        Route::post('/review-opnams/{opnam}/revisi/items', [ReviewOpnamController::class, 'storeItemRevisi'])->name('review-opnams.items.store');
+        Route::put('/review-opnams/{opnam}/revisi/items/{item}', [ReviewOpnamController::class, 'updateItemRevisi'])->name('review-opnams.items.update');
+        Route::delete('/review-opnams/{opnam}/revisi/items/{item}', [ReviewOpnamController::class, 'destroyItemRevisi'])->name('review-opnams.items.destroy');
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
+        Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
         Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
-<<<<<<< HEAD
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
 
         // AD-02: data pemilik dan kapal.
         Route::resource('owners', OwnerController::class)->except(['show']);
         Route::resource('ships', ShipController::class)->except(['show']);
+
+        // AD-01: manajemen pengguna. Akun tidak dihapus, hanya dinonaktifkan.
+        Route::resource('users', UserController::class)->except(['show', 'destroy']);
+        Route::patch('users/{user}/deactivate', [UserController::class, 'deactivate'])
+            ->name('users.deactivate');
+
+        // Anisa: master kategori, jenis, material, dan satuan.
+        Route::resource('work-categories', WorkCategoryController::class)
+            ->except(['show'])
+            ->parameters(['work-categories' => 'workCategory']);
+        Route::resource('work-types', WorkTypeController::class)
+            ->except(['show'])
+            ->parameters(['work-types' => 'workType']);
+        Route::resource('material-specs', MaterialSpecController::class)
+            ->except(['show'])
+            ->parameters(['material-specs' => 'materialSpec']);
+        Route::resource('units', UnitController::class)->except(['show']);
     });
 
 /*
@@ -123,28 +106,30 @@ Route::middleware(['auth', 'role:admin'])
 | Direksi
 |--------------------------------------------------------------------------
 */
-=======
-        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
-        Route::resource('work-categories', WorkCategoryController::class)
-            ->except('show')
-            ->parameters(['work-categories' => 'workCategory']);
-        Route::resource('work-types', WorkTypeController::class)
-            ->except('show')
-            ->parameters(['work-types' => 'workType']);
-        Route::resource('units', UnitController::class)
-            ->except('show');
-        Route::resource('material-specs', MaterialSpecController::class)
-            ->except('show')
-            ->parameters(['material-specs' => 'materialSpec']);
-    });
+       
 
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 Route::middleware(['auth', 'role:direksi'])
     ->prefix('direksi')
     ->name('direksi.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.direksi')->name('dashboard');
-<<<<<<< HEAD
+        Route::get('/tagihans', [TagihanController::class, 'index'])->name('tagihans.index');
+        Route::get('/tagihans/{billing}', [TagihanController::class, 'show'])->name('tagihans.show');
+        Route::get('/tagihans/{billing}/revisi-opnam', [TagihanController::class, 'revisiOpnam'])->name('tagihans.revisi-opnam');
+        Route::put('/tagihans/{billing}/revisi-opnam', [TagihanController::class, 'updateRevisiOpnam'])->name('tagihans.update-revisi-opnam');
+        Route::post('/tagihans/{billing}/revisi-opnam/items', [TagihanController::class, 'storeItemRevisi'])->name('tagihans.revisi-opnam.items.store');
+        Route::put('/tagihans/{billing}/revisi-opnam/items/{item}', [TagihanController::class, 'updateItemRevisi'])->name('tagihans.revisi-opnam.items.update');
+        Route::delete('/tagihans/{billing}/revisi-opnam/items/{item}', [TagihanController::class, 'destroyItemRevisi'])->name('tagihans.revisi-opnam.items.destroy');
+        Route::post('/tagihans/{billing}/adjustment', [TagihanController::class, 'applyAdjustment'])->name('tagihans.apply-adjustment');
+        Route::post('/tagihans/{billing}/approve', [TagihanController::class, 'approve'])->name('tagihans.approve');
+        Route::post('/tagihans/{billing}/reject', [TagihanController::class, 'reject'])->name('tagihans.reject');
+        Route::get('/dokumen', [DokumenController::class, 'index'])->name('dokumen.index');
+        Route::get('/dokumen/invoices/{invoice}/edit', [DokumenController::class, 'editInvoice'])->name('dokumen.edit-invoice');
+        Route::put('/dokumen/invoices/{invoice}', [DokumenController::class, 'updateInvoice'])->name('dokumen.update-invoice');
+        Route::get('/dokumen/invoices/{invoice}/download', [DokumenController::class, 'downloadInvoice'])->name('dokumen.download-invoice');
+        Route::post('/dokumen/unduh', [DokumenController::class, 'unduh'])->name('dokumen.unduh');
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
+
         Route::get('/transaksi-disetujui', [ApprovedTransactionController::class, 'index'])->name('approved.index');
     });
 
@@ -167,7 +152,7 @@ Route::middleware(['auth', 'role:admin,direksi'])->group(function () {
         ->name('reports.recapitulation.pdf');
     Route::get('/laporan/rekapitulasi/excel', [WorkRecapitulationController::class, 'exportExcel'])
         ->name('reports.recapitulation.excel');
-});
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -175,8 +160,10 @@ Route::middleware(['auth', 'role:admin,direksi'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+    // UC-U3: halaman profil (saat ini hanya bagian ubah password).
+    Route::get('/profil', [ProfileController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profil.password.update');
+
     Route::get('/riwayat-aktivitas', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/riwayat-aktivitas/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.pdf');
 });
-=======
-    });
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3

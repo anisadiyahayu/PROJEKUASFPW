@@ -11,10 +11,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Models\WorkCategory;
 use App\Models\WorkType;
-<<<<<<< HEAD
-=======
 use App\Services\OpnamNumberGenerator;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -60,21 +57,14 @@ test('wizard menyimpan draft dengan status draft dan snapshot biaya', function (
         ->assertSee('Dock 01 — Graving Dock')
         ->assertSee('Dock 02 — Floating Dock')
         ->assertDontSee('Pilih Lokasi')
-<<<<<<< HEAD
-        ->assertDontSee('name="catatan"');
-=======
         ->assertSee('name="catatan"', false);
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 
     $this->post(route('petugas.opnams.store-step'), [
         'step' => 1,
         'ship_id' => $data['ship']->id,
         'tanggal_opnam' => '2026-06-25',
         'lokasi' => 'Dock 02 — Floating Dock',
-<<<<<<< HEAD
-=======
         'catatan' => 'Catatan uji opnam',
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     ])->assertRedirect(route('petugas.opnams.create', ['step' => 2]));
 
     $this->post(route('petugas.opnams.store-step'), [
@@ -105,22 +95,6 @@ test('wizard menyimpan draft dengan status draft dan snapshot biaya', function (
     $opnam = Opnam::firstOrFail();
     expect($opnam->status)->toBe(Opnam::STATUS_DRAFT)
         ->and($opnam->opnam_number)->toMatch('/^OPN-\d{4}-\d{3}$/')
-<<<<<<< HEAD
-        ->and((float) $opnam->adjustment_amount)->toBe(500.0)
-        ->and((float) $opnam->total_biaya)->toBe(2500.0)
-        ->and($opnam->lokasi)->toBe('Dock 02 — Floating Dock')
-        ->and($opnam->catatan)->toBeNull();
-
-    $item = OpnamItem::firstOrFail();
-    expect((float) $item->unit_price)->toBe(1000.0)
-        ->and((float) $item->subtotal)->toBe(2000.0)
-        ->and((float) $item->faktor)->toBe(1.25)
-        ->and($item->kompleksitas)->toBe('high')
-        ->and($item->ketebalan)->toBe(12)
-        ->and($item->catatan_tambahan)->toBe('Mohon lengkapi foto kondisi pelat.')
-        ->and($item->lokasi)->toBe('Dock 02 — Floating Dock')
-        ->and($item->tariff_id)->toBe($data['tariff']->id);
-=======
         ->and((float) $opnam->total_biaya)->toBe(2300.0)
         ->and($opnam->catatan)->toBe('Catatan uji opnam')
         ->and($opnam->jenis_kapal)->toBe('Kapal Kargo');
@@ -183,7 +157,6 @@ test('faktor tersimpan sebagai snapshot dan tidak berubah saat konfigurasi diuba
         ->and((float) $item->fresh()->faktor_ketebalan)->toBe(1.2)
         ->and((float) $item->fresh()->faktor_kompleksitas)->toBe(1.1)
         ->and((float) $opnam->fresh()->total_biaya)->toBe(13200.0);
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 });
 
 test('bukti pekerjaan divalidasi format dan ukurannya', function () {
@@ -297,11 +270,6 @@ test('semua langkah wizard dapat dirender', function () {
     foreach ([1, 2, 3, 4, 5] as $step) {
         $this->get(route('petugas.opnams.create', ['step' => $step]))->assertOk();
     }
-<<<<<<< HEAD
-});
-
-test('kompleksitas medium pada item tambahan dihitung dengan faktor 1,10', function () {
-=======
 
     $this->get(route('petugas.opnams.create', ['step' => 2]))
         ->assertOk()
@@ -314,7 +282,6 @@ test('kompleksitas medium pada item tambahan dihitung dengan faktor 1,10', funct
 });
 
 test('kompleksitas medium dan low memakai faktor bawaan 1,10x dan 1x', function () {
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     $data = siapkanDataOpnam();
     $this->actingAs($data['petugas']);
 
@@ -364,16 +331,6 @@ test('kompleksitas medium dan low memakai faktor bawaan 1,10x dan 1x', function 
     $opnam = Opnam::firstOrFail();
 
     expect($items)->toHaveCount(2)
-<<<<<<< HEAD
-        ->and((float) $items[0]->faktor)->toBe(1.10)
-        ->and($items[0]->kompleksitas)->toBe('medium')
-        ->and((float) $items[0]->subtotal)->toBe(10000.0)
-        ->and((float) $items[1]->faktor)->toBe(1.0)
-        ->and($items[1]->kompleksitas)->toBe('low')
-        ->and((float) $opnam->adjustment_amount)->toBe(1000.0)
-        ->and((float) $opnam->total_biaya)->toBe(13000.0);
-});
-=======
         ->and((float) $items[0]->subtotal)->toBe(11000.0)
         ->and((float) $items[0]->faktor_kompleksitas)->toBe(1.1)
         ->and((float) $items[1]->subtotal)->toBe(2000.0)
@@ -467,4 +424,3 @@ test('satuan duplikat tetap dikirim supaya label opsi tidak kosong', function ()
         ->assertOk()
         ->assertSee('"id":'.$unitDuplikat->id.',"name":"m\\u00b2"', false);
 });
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3

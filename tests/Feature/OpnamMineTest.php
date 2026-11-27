@@ -35,10 +35,6 @@ function buatOpnamSaya(User $creator, Ship $ship, string $number, string $status
         'created_by' => $creator->id,
         'status' => $status,
         'tanggal_opnam' => $tanggal,
-<<<<<<< HEAD
-        'lokasi' => 'Dock 01 — Graving Dock',
-=======
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
         'total_biaya' => 1000000,
     ]);
 }
