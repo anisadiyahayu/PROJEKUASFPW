@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
-=======
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 >>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 use Illuminate\Foundation\Auth\User as Authenticatable;
