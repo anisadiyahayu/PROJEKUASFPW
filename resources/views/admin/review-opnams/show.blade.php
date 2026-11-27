@@ -14,7 +14,10 @@
             <h1>{{ $opnam->opnam_number }}</h1>
             <p class="subtitle">Periksa rincian pekerjaan sebelum mengambil keputusan.</p>
         </div>
-        <a href="{{ route('admin.review-opnams.index') }}" class="btn btn-light">Kembali</a>
+        <div style="display:flex; gap:8px;">
+            <a href="{{ route('admin.review-opnams.revisi', $opnam) }}" class="btn btn-primary">Revisi Data Opnam</a>
+            <a href="{{ route('admin.review-opnams.index') }}" class="btn btn-light">Kembali</a>
+        </div>
     </div>
 
     <div class="card">
