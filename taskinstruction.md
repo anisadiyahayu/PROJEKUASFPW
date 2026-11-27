@@ -85,7 +85,7 @@ Detail lengkap ada di `prd.md` Bagian 6. Berikut yang paling sering dipakai.
 
 `USERS.username`, `USERS.email`, `SHIPS.hull_number`, `UNITS.code`, `WORK_CATEGORIES.name`, `OPNAMS.opnam_number`, `BILLINGS.billing_number` (nullable), `INVOICES.invoice_number`, `TECHNICAL_REPORTS.report_number`.
 
-Cara pembuatan nomor dokumen **tidak dispesifikasikan** (PRD 9, no. 32). Tanyakan sebelum membuat generator nomor.
+Cara pembuatan nomor dokumen sudah diputuskan 2026-11-26: otomatis `prefix + id`, dengan `issued_by` adalah Direksi yang menyetujui (PRD 9, no. 32).
 
 ### 3.3 Transisi status yang diizinkan
 
@@ -101,7 +101,7 @@ Selain tabel ini, **tidak diizinkan** sampai pengguna mengonfirmasi.
 | ST-04 | `perlu_revisi` | `menunggu_review` | PT-09 | Di luar tupoksi | Parkir, tersirat |
 | ST-05 | `menunggu_approval_direksi` | `disetujui` | DR-06 | Hazel | Tersirat, konfirmasi |
 | ST-06 | `menunggu_approval_direksi` | `ditolak` | DR-07 | Hazel | Tersirat, konfirmasi |
-| ST-07 | `disetujui` | `dokumen_terbit` | DR-08 / DR-09 | Hazel | Tersirat, pemicu belum jelas |
+| ST-07 | `disetujui` | `dokumen_terbit` | Publikasi invoice pertama (DR-11, AD-13, atau DR-12) | Hazel | Sudah diputuskan 2026-11-26, technical report harus sudah dibuat |
 
 Pembuatan opnam baru berstatus `draft` (PT-06) dimiliki Regina.
 
@@ -109,13 +109,13 @@ Pembuatan opnam baru berstatus `draft` (PT-06) dimiliki Regina.
 
 | ID | Dari | Ke | Pemicu | Pemilik | Catatan |
 |---|---|---|---|---|---|
-| ST-08 | (dibuat) | `menunggu_approval` | Langkah pembuatan tidak dispesifikasikan | Di luar tupoksi | Parkir |
+| ST-08 | (dibuat) | `menunggu_approval` | AD-08 membuat tagihan otomatis dari `OPNAMS.total_biaya` | Hazel | Sudah diputuskan 2026-11-26, pakai rekomendasi PRD 4.7 |
 | ST-09 | `menunggu_approval` | `disetujui` | DR-06 | Hazel | |
 | ST-10 | `menunggu_approval` | `ditolak` | DR-07 | Hazel | |
 
 ### 3.4 Pencatatan riwayat
 
-Setiap perubahan status opnam yang ada di tabel 3.3 dicatat ke `STATUS_HISTORIES` (`from_status`, `to_status`, `note`, `changed_by`). Pemilik tunggal tabel ini belum ditetapkan (Bagian 6, no. 6). Sebelum diputuskan, jangan mengubah struktur tabelnya.
+Setiap perubahan status opnam dan tagihan yang ada di tabel 3.3 dicatat ke `STATUS_HISTORIES` (`from_status`, `to_status`, `note`, `changed_by`). Pemilik tunggal tabel ini sudah diputuskan 2026-11-26: Hazel (Bagian 6, no. 6). Struktur tabel tidak diubah.
 
 ---
 
@@ -291,7 +291,7 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 
 **Tabel:** `BILLINGS` (DB-13), `BILLING_ADJUSTMENTS` (DB-14), `INVOICES` (DB-15), `TECHNICAL_REPORTS` (DB-16).
 
-**Use case:** AD-06, AD-08, AD-09, AD-13, DR-01, DR-02, DR-04, DR-05, DR-06, DR-07, DR-08, DR-09, DR-11, DR-12.
+**Use case:** AD-06, AD-08, AD-09, AD-12, AD-13, DR-01, DR-02, DR-04, DR-05, DR-06, DR-07, DR-08, DR-09, DR-10, DR-11, DR-12.
 
 **Aturan bisnis:** BR-07, BR-08, BR-09, BR-16, BR-17, BR-18, BR-22, BR-23, BR-24.
 
@@ -311,27 +311,20 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 - [ ] Terbitkan technical report PDF setelah tagihan disetujui. Technical report **tidak menampilkan harga** (DR-09, BR-09, BR-23). Isi snapshot kapal, lambung, owner.
 - [ ] Ekspor invoice ke PDF untuk Admin (AD-13) dan Direksi (DR-11).
 - [ ] Unduh atau cetak dokumen yang sudah terbit (DR-12).
+- [ ] Buat tagihan otomatis dari opnam yang diteruskan (ST-08, AD-08).
+- [ ] Revisi invoice oleh Admin (AD-12) dan Direksi (DR-10) hanya saat `draft`. Field yang boleh diubah adalah snapshot teks dan `issue_date`, nominal tetap dari `BILLINGS`.
+- [ ] Publikasikan invoice pada ekspor atau unduh pertama. Status opnam menjadi `dokumen_terbit` bila technical report sudah ada (ST-07).
 - [ ] Hanya Direksi yang dapat memberi persetujuan akhir dan penyesuaian harga (BR-07).
 
-**Yang harus ditanyakan dulu**
+**Status keputusan (2026-11-26)**
 
-| Hal | Rujukan PRD |
-|---|---|
-| Bagaimana record `BILLINGS` dibuat dari opnam yang diteruskan (ST-08) | 9 no. 15 |
-| Tempat menyimpan alasan penolakan (BILLINGS tidak punya kolom alasan; `STATUS_HISTORIES.note` hanya kandidat) | 9 no. 14 |
-| Apakah tagihan yang ditolak final atau bisa diperbaiki dan diajukan ulang | 9 no. 6 |
-| Apakah DR-01 membaca `OPNAMS.status` atau `BILLINGS.status`; siapa yang berwenang atas keputusan | 9 no. 36 |
-| Aksi mana (DR-08, DR-09, atau keduanya) yang mengubah opnam menjadi `dokumen_terbit` | 9 no. 37 |
-| Apakah DR-08 dan DR-11 aksi yang sama | 9 no. 4 |
-| Aturan pembuatan `billing_number`, `invoice_number`, `report_number` | 9 no. 32 |
-| Pemetaan nama status `menunggu_approval_direksi` menggantikan `diteruskan_ke_direksi` | 9 no. 35 |
-| Hubungan `subtotal_amount`, `adjustment_amount`, `total_amount` dengan `OPNAMS.total_biaya` | tidak dispesifikasikan |
+ST-08, tempat alasan penolakan, alur setelah penolakan, otoritas status opnam dan tagihan, pemicu `dokumen_terbit`, perbedaan DR-08 dan DR-11, format nomor dokumen, serta hubungan nominal tagihan sudah diputuskan dan dipakai. Tidak ada pertanyaan yang memblokir modul Hazel. Tagihan yang ditolak bersifat final, tanpa pengajuan ulang.
 
 **Jangan**
 
 - Jangan menampilkan harga di technical report.
 - Jangan menerbitkan dokumen sebelum tagihan berstatus `disetujui`.
-- Jangan mengerjakan AD-07, DR-03, AD-12, DR-10 (Bagian 6).
+- Jangan mengerjakan AD-07 dan DR-03 (Bagian 6). AD-12 dan DR-10 sudah menjadi milik Hazel.
 - Jangan membuat transisi status di luar Bagian 3.3.
 
 ---
@@ -344,15 +337,15 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 |---|---|---|
 | 1 | PT-07, PT-08, PT-09, ST-01, ST-04 (alur pengajuan dan perbaikan opnam oleh Petugas) | Tentukan pemilik |
 | 2 | AD-07, DR-03 (revisi data opnam oleh Admin dan Direksi) | Tentukan pemilik |
-| 3 | AD-12, DR-10 (revisi invoice) | Tentukan pemilik |
+| 3 | AD-12, DR-10 (revisi invoice) | Sudah diputuskan 2026-11-26: Hazel, hanya sebelum terbit |
 | 4 | PT-11, AD-15, DR-17 (ekspor riwayat aktivitas ke PDF) | Tentukan pemilik |
-| 5 | ST-08 (pembuatan tagihan dari opnam yang diteruskan) | Tentukan pemilik dan cara pembuatannya |
-| 6 | DB-12 `STATUS_HISTORIES` (dipakai Regina dan Hazel) | Tentukan pemilik tunggal |
+| 5 | ST-08 (pembuatan tagihan dari opnam yang diteruskan) | Sudah diputuskan 2026-11-26: Hazel, pakai rekomendasi 4.7 |
+| 6 | DB-12 `STATUS_HISTORIES` (dipakai Regina dan Hazel) | Sudah diputuskan 2026-11-26: Hazel |
 | 7 | AD-10, AD-11, AD-14, PT-10, DR-13, DR-16 (cakupan riwayat dan audit) | Konfirmasi cakupan masing-masing |
-| 8 | Mesin ekspor PDF/Excel bersama | Tentukan pemilik |
+| 8 | Mesin ekspor PDF/Excel bersama | Sudah diputuskan 2026-11-26: mesin PDF milik Hazel (dompdf), ekspor Excel belum diputuskan |
 | 9 | Middleware dan policy | Sudah ditetapkan ke Halvina, konfirmasi tim |
 
-Catatan: item 1 membuat Petugas belum bisa mengajukan opnam di sistem. Akibatnya alur Hazel (review) belum bisa diuji dari ujung ke ujung sampai item 1 dan item 5 diputuskan.
+Catatan: item 1 membuat Petugas belum bisa mengajukan opnam lewat UI. Alur review Hazel diuji lewat data opnam berstatus `menunggu_review`. Item 5 sudah diputuskan, sehingga tagihan dapat dibuat otomatis.
 
 ---
 
@@ -411,5 +404,5 @@ Ringkasan dari PRD Bagian 9, dikelompokkan menurut pemilik yang terdampak. Seles
 | Anisa | Hapus soft vs hard; tanggal berakhir tarif; pemilihan tarif berlaku; faktor tambahan tarif |
 | Rifqy | Cakupan riwayat Petugas; penggabungan riwayat; AD-11 vs DR-15; isi laporan dan ekspor; hapus owner dan kapal |
 | Regina | Batas unggahan; Simpan Draft; rumus `total_biaya`; makna `catatan`, `tanggal_opnam`, `lokasi`, `keterangan`; format `opnam_number` |
-| Hazel | Pembuatan tagihan; penyimpanan alasan tolak; alur setelah tolak; otoritas status opnam vs tagihan; pemicu `dokumen_terbit`; DR-08 vs DR-11; format nomor dokumen |
-| Tim | Pemilik item parkir (Bagian 6); nama status `menunggu_approval_direksi`; apakah Direksi boleh merevisi opnam dan invoice; waktu revisi invoice |
+| Hazel | Sudah diputuskan 2026-11-26: pembuatan tagihan, alasan tolak final, otoritas status, pemicu `dokumen_terbit`, DR-08 vs DR-11, format nomor. Tidak ada yang memblokir. |
+| Tim | Sudah diputuskan: AD-12/DR-10, ST-08, DB-12, mesin PDF. Masih terbuka: PT-11/AD-15/DR-18, ekspor Excel, revisi data opnam (AD-07/DR-03) |

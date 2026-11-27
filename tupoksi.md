@@ -25,11 +25,11 @@ Item ini tidak boleh dikerjakan sebelum tim memutuskan pemiliknya.
 |---|---|---|---|
 | 1 | PT-07, PT-08, PT-09, ST-01, ST-04 | Alur pengajuan dan perbaikan opnam oleh Petugas belum masuk tugas siapa pun | Tentukan pemilik |
 | 2 | AD-07, DR-03 | Revisi data opnam oleh Admin dan Direksi belum masuk tugas siapa pun | Tentukan pemilik |
-| 3 | AD-12, DR-10 | Revisi invoice belum masuk tugas siapa pun | Tentukan pemilik |
+| 3 | AD-12, DR-10 | Revisi invoice | Sudah diputuskan 2026-11-26: pemilik Hazel, revisi hanya sebelum invoice terbit |
 | 4 | PT-11, AD-15, DR-18 | Ekspor riwayat aktivitas belum masuk tugas siapa pun | Tentukan pemilik |
-| 5 | ST-08 | Pembuatan tagihan dari opnam yang diteruskan belum punya pemilik (PRD punya rekomendasi di 4.7) | Tentukan pemilik dan konfirmasi cara |
-| 6 | DB-12 STATUS_HISTORIES | Dipakai Regina (opnam) dan Hazel (tagihan) | Tentukan pemilik tunggal |
+| 5 | ST-08 | Pembuatan tagihan dari opnam yang diteruskan | Sudah diputuskan 2026-11-26: pemilik Hazel, pakai rekomendasi PRD 4.7 |
+| 6 | DB-12 STATUS_HISTORIES | Dipakai Regina (opnam) dan Hazel (tagihan) | Sudah diputuskan 2026-11-26: pemilik tunggal Hazel |
 | 7 | AD-10, AD-11, AD-14, PT-10, DR-13, DR-16, DR-17 | Cakupan riwayat dan audit per role belum dipisah ke pemilik | Konfirmasi pemilik masing-masing |
-| 8 | Mesin ekspor PDF/Excel | Modul ekspor bersama belum punya pemilik | Tentukan pemilik |
+| 8 | Mesin ekspor PDF/Excel | Modul ekspor bersama | Sudah diputuskan 2026-11-26: mesin PDF milik Hazel (dompdf), ekspor Excel belum diputuskan |
 | 9 | Middleware dan policy | Dipakai semua modul | Sudah ke Halvina, konfirmasi tim |
 | 10 | Faktor tambahan tarif (Anisa) | Tidak ada di use case, ERD, atau PRD | Putuskan dipakai atau dihapus dari tupoksi |

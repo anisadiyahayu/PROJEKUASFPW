@@ -468,7 +468,7 @@ class OpnamController extends Controller
 
     private function emptyDraft(): array
     {
-        return ['ship_id' => null, 'tanggal_opnam' => null, 'lokasi' => null, 'catatan' => null, 'items' => [], 'uploads' => []];
+        return ['ship_id' => null, 'tanggal_opnam' => null, 'lokasi' => null, 'catatan' => null, 'adjustment_amount' => 0, 'items' => [], 'uploads' => []];
     }
 
     private function saveDraft(array $draft): RedirectResponse
@@ -478,17 +478,20 @@ class OpnamController extends Controller
                 ->with('status', 'Draft belum lengkap. Silakan ulangi dari awal.');
         }
 
-        $total = $this->calculator->totalBiaya($draft['items']);
+        $ship = Ship::findOrFail($draft['ship_id']);
+        $adjustment = round((float) ($draft['adjustment_amount'] ?? 0), 2);
+        $total = round($this->calculator->totalBiaya($draft['items']) + $adjustment, 2);
 
         $opnam = $this->numberGenerator->create([
             'ship_id' => $draft['ship_id'],
             'created_by' => auth()->id(),
             'status' => Opnam::STATUS_DRAFT,
             'tanggal_opnam' => $draft['tanggal_opnam'],
+            'lokasi' => $draft['lokasi'] ?? null,
+            'jenis_kapal' => $ship->jenis_kapal,
+            'adjustment_amount' => $adjustment,
             'catatan' => $draft['catatan'] ?? null,
             'total_biaya' => $total,
-            // PRD 3.10.2: salinan dari master kapal, bukan FK.
-            'jenis_kapal' => Ship::find($draft['ship_id'])?->jenis_kapal,
         ]);
 
         $itemIds = [];

@@ -77,8 +77,7 @@
                         <td><span class="badge badge-{{ $opnam->status }}">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</span></td>
                         <td>
                             <a href="{{ route('admin.opnams.show', $opnam) }}" class="btn btn-light" style="padding:5px 8px;" title="Detail opnam">👁</a>
-                            <span class="btn btn-light" style="padding:5px 8px;" title="Riwayat belum tersedia">◷</span>
-                            <span class="btn btn-light" style="padding:5px 8px; opacity:.5;">Buka Review</span>
+                            <a href="{{ route('admin.review-opnams.show', $opnam) }}" class="btn btn-light" style="padding:5px 8px;" title="Buka review">Buka Review</a>
                         </td>
                     </tr>
                 @empty
