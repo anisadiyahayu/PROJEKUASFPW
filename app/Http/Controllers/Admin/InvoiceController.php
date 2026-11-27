@@ -14,6 +14,18 @@ class InvoiceController extends Controller
 {
     private const ROLE = 'admin';
 
+    public function index(): View
+    {
+        abort_unless(auth()->user()?->role === self::ROLE, 403);
+
+        $invoices = Invoice::query()
+            ->with(['billing.opnam.ship'])
+            ->orderByDesc('id')
+            ->paginate(15);
+
+        return view('admin.invoices.index', compact('invoices'));
+    }
+
     public function edit(Invoice $invoice): View
     {
         $this->authorizeRevision($invoice);

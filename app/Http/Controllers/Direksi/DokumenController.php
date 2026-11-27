@@ -16,6 +16,22 @@ class DokumenController extends Controller
 {
     private const ROLE = 'direksi';
 
+    public function index(): View
+    {
+        abort_unless(auth()->user()?->role === self::ROLE, 403);
+
+        $invoices = Invoice::query()
+            ->with(['billing.opnam.ship'])
+            ->orderByDesc('id')
+            ->paginate(15, ['*'], 'invoice_page');
+        $reports = TechnicalReport::query()
+            ->with(['billing.opnam.ship'])
+            ->orderByDesc('id')
+            ->paginate(15, ['*'], 'report_page');
+
+        return view('direksi.dokumen.index', compact('invoices', 'reports'));
+    }
+
     public function editInvoice(Invoice $invoice): View
     {
         $this->authorizeRevision($invoice);

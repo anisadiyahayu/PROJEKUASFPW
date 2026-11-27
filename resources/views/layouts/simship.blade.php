@@ -51,6 +51,8 @@
         .badge-ditolak { background: #fee2e2; color: #991b1b; }
         .badge-disetujui { background: #dcfce7; color: #166534; }
         .badge-dokumen_terbit { background: #ede9fe; color: #5b21b6; }
+        .badge-menunggu_approval { background: #dbeafe; color: #1e40af; }
+        .badge-terbit { background: #dcfce7; color: #166534; }
         .summary { background: #f8fafc; border-radius: 8px; padding: 14px; }
         .summary .row { display: flex; justify-content: space-between; padding: 4px 0; color: #64748b; }
         .summary .total { border-top: 1px solid #e2e8f0; margin-top: 8px; padding-top: 10px; font-weight: 700; color: #1e3a8a; font-size: 18px; }
@@ -69,7 +71,33 @@
         .pagination .current { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
         .dropzone { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 34px; text-align: center; color: #64748b; }
         .dropzone.dragover { background: #eff6ff; border-color: #1d4ed8; color: #1d4ed8; }
-<<<<<<< HEAD
+        .btn { transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+        .btn-primary:hover { background: #1e40af; }
+        .btn-light:hover { background: #e2e8f0; }
+        a:hover { text-decoration: underline; }
+        a, button, select, label[for] { cursor: pointer; }
+        :focus-visible { outline: 2px solid #1d4ed8; outline-offset: 2px; }
+        .table-wrap { overflow-x: auto; }
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .stack { display: grid; gap: 14px; }
+        .muted { color: #64748b; }
+        .nowrap { white-space: nowrap; }
+        .right { text-align: right; }
+        .empty { text-align: center; color: #64748b; padding: 20px; }
+        @media (max-width: 760px) {
+            .app { flex-direction: column; }
+            .sidebar { width: 100%; flex: none; border-right: 0; border-bottom: 1px solid #e2e8f0; }
+            .nav { display: flex; flex-wrap: wrap; gap: 4px; }
+            .nav a, .nav span.item { margin-bottom: 0; }
+            .nav-label, .nav .divider { display: none; }
+            .topbar { padding: 0 16px; }
+            .content { padding: 16px; }
+            .grid, .two-col { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; align-items: stretch; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .btn { transition: none; }
+        }
         .btn-danger { background: #b91c1c; color: #fff; }
         .btn-sm { padding: 5px 9px; font-size: 12px; }
         .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
@@ -88,8 +116,6 @@
         .filters > div { min-width: 150px; }
         details.changes summary { cursor: pointer; color: #1d4ed8; font-size: 12px; }
         details.changes pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 11px; overflow-x: auto; }
-=======
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     </style>
     @stack('styles')
 </head>
@@ -101,7 +127,6 @@
         'direksi' => 'Direksi',
         default => ucfirst(auth()->user()->role),
     };
-<<<<<<< HEAD
     $menus = [
         'petugas' => [
             ['label' => 'Dashboard', 'url' => route('petugas.dashboard'), 'active' => 'petugas.dashboard'],
@@ -137,35 +162,18 @@
         ],
     ];
     $menu = $menus[auth()->user()->role] ?? $menus['petugas'];
-=======
-    $operatorMenu = [
-        'Dashboard' => route('petugas.dashboard'),
-        'Data Kapal' => null,
-        'Buat Opname' => route('petugas.opnams.create'),
-        'Opname Saya' => route('petugas.opnams.index'),
-        'Status Pengajuan' => null,
+    $direksiMenu = [
+        'Dashboard' => route('direksi.dashboard'),
+        'Tagihan' => route('direksi.tagihans.index'),
+        'Dokumen' => route('direksi.dokumen.index'),
         'Riwayat Aktivitas' => null,
         'Profil' => null,
     ];
-    $supervisorMenu = [
-        'Dashboard' => route('admin.dashboard'),
-        'Data Pemilik Kapal' => null,
-        'Data Kapal' => null,
-        'Master Satuan' => route('admin.units.index'),
-        'Master Material' => route('admin.material-specs.index'),
-        'Master Pekerjaan' => route('admin.work-categories.index'),
-        'Jenis Pekerjaan' => route('admin.work-types.index'),
-        'Master Tarif' => null,
-        'Data Opname' => route('admin.opnams.index'),
-        'Review Opname' => null,
-        'Laporan' => null,
-        'Riwayat Revisi' => null,
-        'Riwayat Aktivitas' => null,
-        'Manajemen Pengguna' => null,
-        'Profil' => null,
-    ];
-    $menu = auth()->user()->role === 'admin' ? $supervisorMenu : $operatorMenu;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
+    $menu = match (auth()->user()->role) {
+        'admin' => $supervisorMenu,
+        'direksi' => $direksiMenu,
+        default => $operatorMenu,
+    };
     $initials = collect(explode(' ', auth()->user()->name))->map(fn ($p) => mb_substr($p, 0, 1))->join('');
 @endphp
 <div class="app">
@@ -183,19 +191,15 @@
         </div>
         <nav class="nav">
             <p class="nav-label">Menu {{ $roleLabel }}</p>
-<<<<<<< HEAD
             @foreach ($menu as $item)
                 @if ($item['url'])
                     <a href="{{ $item['url'] }}" class="{{ request()->routeIs($item['active']) ? 'active' : '' }}">{{ $item['label'] }}</a>
                 @else
                     <span class="item">{{ $item['label'] }}</span>
-=======
-            @foreach ($menu as $label => $url)
-                @if ($url)
+                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
                     <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Master Satuan' => 'admin.units.*', 'Master Material' => 'admin.material-specs.*', 'Master Pekerjaan' => 'admin.work-categories.*', 'Jenis Pekerjaan' => 'admin.work-types.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
                 @else
                     <span class="item">{{ $label }}</span>
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                 @endif
             @endforeach
         </nav>
@@ -217,7 +221,6 @@
             @if (session('status'))
                 <div class="info" style="margin-bottom:16px;">{{ session('status') }}</div>
             @endif
-<<<<<<< HEAD
             @if ($errors->any())
                 <div class="alert-error">
                     <strong>Periksa kembali data berikut:</strong>
@@ -228,8 +231,6 @@
                     </ul>
                 </div>
             @endif
-=======
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
             @yield('content')
         </main>
     </div>

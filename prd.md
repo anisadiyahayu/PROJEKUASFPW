@@ -433,7 +433,7 @@ Sumber: ERD revisi (17 tabel, 24 relasi) ditambah Bagian 6.7. Panjang string dan
 
 ### 6.4 Log aktivitas
 
-**ACTIVITY_LOGS**: `id` PK; `user_id` FK nullable; `event`; `subject_type` dan `subject_id` (polimorfik); `description`; `old_values` json nullable; `new_values` json nullable; `ip_address` nullable; `created_at`.
+Setiap use case di bawah ini dilacak ke sumbernya dan ke lokasi PRD tempat ia didokumentasikan. Referensi sumber: DOCX = `Daftar_Use_Case_SIMSHIP.docx`, nomor bagian. DIAG = `Usecase.pdf`, nomor halaman. ERD = `Design_Database_Project.pdf`.
 
 Kolom "role" di tampilan diambil dari `USERS.role`. Kolom "modul" diturunkan dari `subject_type`.
 
@@ -563,6 +563,110 @@ Agent harus bertanya sebelum mengerjakan bagian terkait.
 
 ## 10. Keputusan yang Sudah Dimasukkan dari Analisis Fitur v3
 
+| ID | Item | Pemilik | Status | Catatan |
+|---|---|---|---|---|
+| DB-01 | USERS | Halvina | Belum | |
+| DB-02 | OWNERS | Rifqy | Belum | |
+| DB-03 | SHIPS | Rifqy | Belum | ⚠ Kolom `jenis_kapal` ditambahkan di luar ERD atas permintaan Regina 2026-11-25; perlu konfirmasi Rifqy. |
+| DB-04 | UNITS | Anisa | Belum | |
+| DB-05 | WORK_CATEGORIES | Anisa | Belum | |
+| DB-06 | WORK_TYPES | Anisa | Belum | |
+| DB-07 | MATERIAL_SPECS | Anisa | Belum | |
+| DB-08 | TARIFFS | Anisa | Belum | |
+| DB-09 | OPNAMS | Regina | Selesai | Migrasi & model: `tanggal_opnam`, `catatan`, `total_biaya`, 7 konstanta status; + `lokasi` & `adjustment_amount` (di luar ERD, permintaan 2026-11-25). |
+| DB-10 | OPNAM_ITEMS | Regina | Selesai | `lokasi`, `faktor`, `ketebalan`, `kompleksitas`, `catatan_tambahan`; 4 kolom terakhir di luar ERD (disetujui 2026-11-26). |
+| DB-11 | OPNAM_ATTACHMENTS | Regina | Selesai | Migrasi & model: `keterangan`, `file_size` = `integer` (byte); terverifikasi via `db:table`. |
+| DB-12 | STATUS_HISTORIES | Di luar tupoksi | Belum | Dipakai Regina dan Hazel, lihat 10.5 |
+| DB-13 | BILLINGS | Hazel | Belum | |
+| DB-14 | BILLING_ADJUSTMENTS | Hazel | Belum | |
+| DB-15 | INVOICES | Hazel | Belum | |
+| DB-16 | TECHNICAL_REPORTS | Hazel | Belum | |
+| DB-17 | ACTIVITY_LOGS | Rifqy | Belum | Audit log |
+
+### 10.3 Checklist use case (49)
+
+| ID | Use case | Pemilik | Status | Catatan |
+|---|---|---|---|---|
+| UC-U1 | Login | Halvina | Belum | |
+| UC-U2 | Logout | Halvina | Belum | |
+| UC-U3 | Mengubah Password | Halvina | Belum | |
+| UC-U4 | Melihat Dashboard | Halvina | Belum | |
+| UC-U5 | Melihat dan Mengubah Profil | Halvina | Belum | |
+| PT-01 | Mencatat Opnam Pekerjaan | Regina | Selesai | Langkah 1: wajib kapal/tanggal/`lokasi` (select 2 dock); Catatan tidak ditampilkan (kolom tetap). Faktor 1x/1,25x dihitung & disimpan. |
+| PT-02 | Memilih Data Kapal | Regina | Selesai | Pilih `SHIPS` + `OWNERS`, auto-fill (BR-11). |
+| PT-03 | Menambahkan Detail Pekerjaan | Regina | Selesai | Item dinamis; `Ketebalan`, `Kompleksitas`→`faktor`, `Catatan Tambahan`; UI Faktor & Lokasi dihapus; spesifikasi auto dari master. |
+| PT-04 | Mengunggah Foto/Bukti Pekerjaan | Regina | Selesai | Upload per item via UID (`bukti[uid][]`); tiap file ke `opnam_item_id` benar; JPG/PNG/PDF ≤10 MB. |
+| PT-05 | Melihat Perhitungan Biaya | Regina | Selesai | Snapshot `unit_price`/`subtotal`; `total_biaya` = jumlah subtotal. |
+| PT-06 | Menyimpan Draft Opnam | Regina | Selesai | Tombol Simpan Draft di Final Review; nomor `OPN-{tahun}-{3 digit}`. |
+| PT-07 | Mengajukan Opnam untuk Review | Di luar tupoksi | Belum | Lihat 10.5 |
+| PT-08 | Melihat Status Pengajuan | Regina | Selesai | Opname Saya: daftar opnam milik petugas login; filter & paginasi; 3 tes lulus. |
+| PT-09 | Memperbaiki Opnam yang Dikembalikan | Di luar tupoksi | Belum | Lihat 10.5 |
+| PT-10 | Melihat Riwayat Aktivitas | Rifqy | Belum | Konfirmasi, cakupan belum jelas |
+| PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat 10.5 |
+| AD-01 | Mengelola Pengguna | Halvina | Belum | |
+| AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
+| AD-03 | Mengelola Kategori Pekerjaan | Anisa | Belum | |
+| AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, dan Tarif | Anisa | Belum | |
+| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Tampilan Supervisor sesuai screenshot; pencarian, filter status/tanggal, paginasi; 5 tes Pest lulus. |
+| AD-06 | Memeriksa Opnam | Hazel | Belum | Halaman review opnam |
+| AD-07 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat 10.5 |
+| AD-08 | Menyetujui Hasil Review | Hazel | Belum | |
+| AD-09 | Mengembalikan Opnam untuk Revisi | Hazel | Belum | |
+| AD-10 | Melihat Riwayat Revisi | Rifqy | Belum | Konfirmasi |
+| AD-11 | Melihat Riwayat Pekerjaan Kapal | Rifqy | Belum | Konfirmasi, terkait pencarian riwayat perbaikan |
+| AD-12 | Merevisi Invoice | Di luar tupoksi | Belum | Lihat 10.5 |
+| AD-13 | Mengekspor Invoice ke PDF | Hazel | Belum | Konfirmasi |
+| AD-14 | Melihat Riwayat Aktivitas | Rifqy | Belum | Audit log |
+| AD-15 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat 10.5 |
+| AD-16 | Melihat dan Mengekspor Laporan Rekapitulasi | Rifqy | Belum | Halaman rekapitulasi |
+| DR-01 | Melihat Draft Menunggu Approval | Hazel | Belum | |
+| DR-02 | Memeriksa Draft Tagihan | Hazel | Belum | |
+| DR-03 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat 10.5 |
+| DR-04 | Memberikan Diskon atau Markup | Hazel | Belum | |
+| DR-05 | Mencatat Disposisi | Hazel | Belum | |
+| DR-06 | Menyetujui Tagihan | Hazel | Belum | |
+| DR-07 | Menolak Tagihan | Hazel | Belum | |
+| DR-08 | Menerbitkan Invoice PDF | Hazel | Belum | |
+| DR-09 | Menerbitkan Technical Report PDF | Hazel | Belum | |
+| DR-10 | Merevisi Invoice | Di luar tupoksi | Belum | Lihat 10.5 |
+| DR-11 | Mengekspor Invoice ke PDF | Hazel | Belum | Konfirmasi |
+| DR-12 | Mengunduh atau Mencetak Dokumen | Hazel | Belum | |
+| DR-13 | Melihat Rekap Tagihan | Rifqy | Belum | Konfirmasi |
+| DR-14 | Mengekspor Laporan PDF/Excel | Rifqy | Belum | Membantu ekspor laporan |
+| DR-15 | Mencari dan Melihat Riwayat Perbaikan Kapal | Rifqy | Belum | |
+| DR-16 | Melihat Riwayat Aktivitas | Rifqy | Belum | Audit log |
+| DR-17 | Mengekspor Riwayat Aktivitas ke PDF | Di luar tupoksi | Belum | Lihat 10.5 |
+
+### 10.4 Checklist transisi status (10)
+
+| ID | Transisi | Pemilik | Status | Catatan |
+|---|---|---|---|---|
+| ST-01 | Opnam: `draft` → `menunggu_review` | Di luar tupoksi | Belum | PT-07, lihat 10.5 |
+| ST-02 | Opnam: `menunggu_review` → `perlu_revisi` | Hazel | Belum | AD-09 |
+| ST-03 | Opnam: `menunggu_review` → `menunggu_approval_direksi` | Hazel | Belum | AD-08, konfirmasi nama status |
+| ST-04 | Opnam: `perlu_revisi` → `menunggu_review` | Di luar tupoksi | Belum | Tersirat, lihat 10.5 |
+| ST-05 | Opnam: `menunggu_approval_direksi` → `disetujui` | Hazel | Belum | Tersirat, konfirmasi |
+| ST-06 | Opnam: `menunggu_approval_direksi` → `ditolak` | Hazel | Belum | Tersirat, konfirmasi |
+| ST-07 | Opnam: `disetujui` → `dokumen_terbit` | Hazel | Belum | Tersirat, konfirmasi |
+| ST-08 | Tagihan: (dibuat) → `menunggu_approval` | Di luar tupoksi | Belum | Langkah pembuatan belum jelas, lihat 10.5 |
+| ST-09 | Tagihan: `menunggu_approval` → `disetujui` | Hazel | Belum | DR-06 |
+| ST-10 | Tagihan: `menunggu_approval` → `ditolak` | Hazel | Belum | DR-07 |
+
+### 10.5 Item di luar tupoksi (parkir)
+
+Item berikut tidak tercantum di tugas anggota mana pun, atau pemiliknya belum jelas. Item ini tetap ada di checklist dengan Pemilik "Di luar tupoksi". **Agent tidak boleh mengerjakannya sebelum tim memutuskan pemiliknya.**
+
+| No | Item | Alasan belum ada di tupoksi | Keputusan yang dibutuhkan |
+|---|---|---|---|
+| 1 | PT-07, PT-09, ST-01, ST-04 | Alur pengajuan dan perbaikan opnam oleh Petugas belum masuk tugas siapa pun | Tentukan pemilik. PT-08 (Opname Saya) sudah menjadi milik Regina. |
+| 2 | AD-07, DR-03 | Revisi data opnam oleh Admin dan Direksi belum masuk tugas siapa pun | Tentukan pemilik |
+| 3 | AD-12, DR-10 | Revisi invoice belum masuk tugas siapa pun | Tentukan pemilik |
+| 4 | PT-11, AD-15, DR-17 | Ekspor riwayat aktivitas belum masuk tugas siapa pun | Tentukan pemilik |
+| 5 | ST-08 | Langkah pembuatan tagihan dari opnam yang diteruskan belum jelas | Tentukan pemilik dan cara pembuatannya |
+| 6 | DB-12 STATUS_HISTORIES | Dipakai Regina (opnam) dan Hazel (tagihan) | Tentukan pemilik tunggal |
+| 7 | AD-10, AD-11, AD-14, PT-10, DR-13, DR-16 | Cakupan riwayat dan audit untuk Petugas, Admin, dan Direksi belum dipisah | Konfirmasi cakupan masing-masing |
+| 8 | Mesin ekspor PDF/Excel | Modul ekspor bersama belum punya pemilik | Tentukan pemilik |
+| 9 | Middleware dan policy | Dipakai semua modul | Sudah ditetapkan ke Halvina, konfirmasi tim |
 | Keputusan | Dampak di PRD |
 |---|---|
 | Riwayat Aktivitas dilihat semua role atas seluruh aktivitas | PT-10, AD-14, DR-17 |
@@ -578,3 +682,10 @@ Agent harus bertanya sebelum mengerjakan bagian terkait.
 | Hapus pada owner dan kapal memakai soft delete | AD-02 |
 | Profil harus ada untuk Admin dan Direksi | UC-U5 |
 | Laporan rekap dan Riwayat Aktivitas terpisah | AD-16, DR-14 |
+| Tagihan dibuat otomatis dari opnam yang diteruskan saat AD-08 (ST-08) | ST-08, BILLINGS |
+| Alasan penolakan tagihan disimpan di `STATUS_HISTORIES.note` | DR-07, DB-12 |
+| Nomor dokumen otomatis `prefix + id`, `issued_by` adalah Direksi yang menyetujui | INVOICES, TECHNICAL_REPORTS |
+| DR-11 (ekspor invoice) dan DR-12 (unduh atau cetak dokumen) tetap terpisah | DR-11, DR-12 |
+| `INVOICES.status` (`draft`/`terbit`) ditambahkan sebagai penanda revisi dan publikasi | AD-12, DR-10, 6.7 no. 2 |
+| Mesin PDF menjadi milik Hazel memakai dompdf, ekspor Excel belum diputuskan | AD-13, DR-11, DR-12 |
+| Status opnam menjadi `dokumen_terbit` saat invoice dipublikasikan dan technical report tersedia | ST-07 |
