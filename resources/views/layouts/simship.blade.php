@@ -202,6 +202,10 @@
                 <span aria-hidden="true">🔔</span>
                 <div class="avatar">{{ $initials }}</div>
                 <div><strong>{{ auth()->user()->name }}</strong><small>{{ $roleLabel }}</small></div>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-light btn-sm">Logout</button>
+                </form>
             </div>
         </header>
         <main class="content">
