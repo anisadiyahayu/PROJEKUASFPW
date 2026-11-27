@@ -626,6 +626,7 @@ Permintaan PRD ini menyatakan bahwa PRD akan dipakai sebagai acuan pengembangan 
 
 ## 8. Ketertelusuran Persyaratan
 
+<<<<<<< Updated upstream
 Setiap use case di bawah ini dilacak ke sumbernya dan ke lokasi PRD tempat ia didokumentasikan. Referensi sumber: DOCX = `Daftar_Use_Case_SIMSHIP.docx`, nomor bagian. DIAG = `Usecase.pdf`, nomor halaman. ERD = `Design_Database_Project.pdf`.
 
 ### 8.1 Use case
@@ -887,3 +888,27 @@ Item berikut tidak tercantum di tugas anggota mana pun, atau pemiliknya belum je
 | 7 | AD-10, AD-11, AD-14, PT-10, DR-13, DR-16 | Cakupan riwayat dan audit untuk Petugas, Admin, dan Direksi belum dipisah | Konfirmasi cakupan masing-masing |
 | 8 | Mesin ekspor PDF/Excel | Modul ekspor bersama belum punya pemilik | Tentukan pemilik |
 | 9 | Middleware dan policy | Dipakai semua modul | Sudah ditetapkan ke Halvina, konfirmasi tim |
+=======
+| Keputusan | Dampak di PRD |
+|---|---|
+| Riwayat Aktivitas dilihat semua role atas seluruh aktivitas | PT-10, AD-14, DR-17 |
+| Riwayat Revisi digabung ke Riwayat Perubahan (Admin dan Direksi) | AD-10, DR-16 |
+| Riwayat Pekerjaan Kapal dan Riwayat Perbaikan Kapal adalah satu fitur | AD-11, DR-15 |
+| Direksi boleh merevisi data opnam dan invoice | DR-03, DR-10 |
+| Revisi invoice hanya sebelum terbit | AD-12, DR-10 |
+| Invoice dan technical report diterbitkan oleh sistem setelah persetujuan | DR-08, DR-09 |
+| Tombol Simpan Draft tersedia di tahapan pencatatan | PT-06 |
+| Pengajuan ulang setelah perbaikan Petugas kembali ke `menunggu_review` | PT-09 |
+| Tagihan yang ditolak bersifat final, pengajuan ulang tidak diimplementasikan (keputusan Hazel 2026-11-26) | DR-07 |
+| Catatan pengembalian disimpan di riwayat status | AD-09 |
+| Hapus pada owner dan kapal memakai soft delete | AD-02 |
+| Profil harus ada untuk Admin dan Direksi | UC-U5 |
+| Laporan rekap dan Riwayat Aktivitas terpisah | AD-16, DR-14 |
+| Tagihan dibuat otomatis dari opnam yang diteruskan saat AD-08 (ST-08) | ST-08, BILLINGS |
+| Alasan penolakan tagihan disimpan di `STATUS_HISTORIES.note` | DR-07, DB-12 |
+| Nomor dokumen otomatis `prefix + id`, `issued_by` adalah Direksi yang menyetujui | INVOICES, TECHNICAL_REPORTS |
+| DR-11 (ekspor invoice) dan DR-12 (unduh atau cetak dokumen) tetap terpisah | DR-11, DR-12 |
+| `INVOICES.status` (`draft`/`terbit`) ditambahkan sebagai penanda revisi dan publikasi | AD-12, DR-10, 6.7 no. 2 |
+| Mesin PDF menjadi milik Hazel memakai dompdf, ekspor Excel belum diputuskan | AD-13, DR-11, DR-12 |
+| Status opnam menjadi `dokumen_terbit` saat invoice dipublikasikan dan technical report tersedia | ST-07 |
+>>>>>>> Stashed changes
