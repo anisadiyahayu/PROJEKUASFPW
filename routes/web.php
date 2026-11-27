@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ShipController;
 use App\Http\Controllers\Audit\ActivityLogController;
 use App\Http\Controllers\Direksi\ApprovedTransactionController;
 use App\Http\Controllers\OpnamController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reports\ShipRepairHistoryController;
 use App\Http\Controllers\Reports\WorkRecapitulationController;
 use App\Http\Controllers\UnitController;
@@ -159,6 +160,10 @@ Route::middleware(['auth', 'role:admin,direksi'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+    // UC-U3: halaman profil (saat ini hanya bagian ubah password).
+    Route::get('/profil', [ProfileController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profil.password.update');
+
     Route::get('/riwayat-aktivitas', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('/riwayat-aktivitas/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.pdf');
 });
