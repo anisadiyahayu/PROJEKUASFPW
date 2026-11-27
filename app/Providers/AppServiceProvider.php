@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-<<<<<<< HEAD
 use App\Models\Billing;
 use App\Models\BillingAdjustment;
 use App\Models\Invoice;
@@ -13,8 +12,6 @@ use App\Models\Ship;
 use App\Models\Tariff;
 use App\Models\TechnicalReport;
 use App\Observers\ActivityLogObserver;
-=======
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,7 +26,6 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-<<<<<<< HEAD
      *
      * Observer audit didaftarkan terpusat di sini agar model milik modul lain
      * tidak perlu diubah, tetapi setiap perubahan tetap tercatat ke
@@ -46,11 +42,5 @@ class AppServiceProvider extends ServiceProvider
         Tariff::observe(ActivityLogObserver::class);
         Invoice::observe(ActivityLogObserver::class);
         TechnicalReport::observe(ActivityLogObserver::class);
-=======
-     */
-    public function boot(): void
-    {
-        //
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     }
 }

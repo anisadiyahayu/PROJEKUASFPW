@@ -1,11 +1,5 @@
 <?php
 
-<<<<<<< HEAD
-use App\Models\Opnam;
-use App\Models\Owner;
-use App\Models\Ship;
-use App\Models\User;
-=======
 use App\Models\MaterialSpec;
 use App\Models\Opnam;
 use App\Models\OpnamItem;
@@ -16,7 +10,6 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Models\WorkCategory;
 use App\Models\WorkType;
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -101,25 +94,14 @@ test('filter status hanya menampilkan status terpilih', function () {
         ->assertDontSee('OPN-001');
 });
 
-<<<<<<< HEAD
-test('filter tanggal hanya menampilkan opnam dalam rentang', function () {
-=======
 test('filter tanggal hanya menampilkan opnam pada tanggal yang dipilih', function () {
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     $admin = adminUntukDaftarOpnam();
     $ship = kapalUntukDaftarOpnam('Kapal Satu', 'HULL-001');
     opnamUntukDaftar($admin, $ship, 'OPN-001', Opnam::STATUS_DRAFT, '2026-01-05');
     opnamUntukDaftar($admin, $ship, 'OPN-002', Opnam::STATUS_DRAFT, '2026-02-10');
 
     $this->actingAs($admin)
-<<<<<<< HEAD
-        ->get(route('admin.opnams.index', [
-            'tanggal_dari' => '2026-02-01',
-            'tanggal_sampai' => '2026-02-28',
-        ]))
-=======
         ->get(route('admin.opnams.index', ['tanggal' => '2026-02-10']))
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
         ->assertOk()
         ->assertSee('OPN-002')
         ->assertDontSee('OPN-001');
@@ -143,8 +125,6 @@ test('daftar opnam dipaginasi', function () {
         ->assertOk()
         ->assertSee('OPN-001');
 });
-<<<<<<< HEAD
-=======
 
 test('filter operator hanya menampilkan opnam milik petugas terpilih', function () {
     $admin = adminUntukDaftarOpnam();
@@ -226,4 +206,3 @@ test('detail opnam menampilkan lokasi pekerjaan dari item', function () {
         ->assertOk()
         ->assertSee('Dock 02 — Floating Dock', false);
 });
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
