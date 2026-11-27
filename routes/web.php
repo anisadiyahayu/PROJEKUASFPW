@@ -1,5 +1,14 @@
 <?php
 
+<<<<<<< Updated upstream
+=======
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\ReviewOpnamController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Direksi\DokumenController;
+use App\Http\Controllers\Direksi\TagihanController;
+use App\Http\Controllers\MaterialSpecController;
+>>>>>>> Stashed changes
 use App\Http\Controllers\OpnamController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,6 +72,14 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.admin')->name('dashboard');
+        Route::get('/review-opnams', [ReviewOpnamController::class, 'index'])->name('review-opnams.index');
+        Route::get('/review-opnams/{opnam}', [ReviewOpnamController::class, 'show'])->name('review-opnams.show');
+        Route::post('/review-opnams/{opnam}/approve', [ReviewOpnamController::class, 'approve'])->name('review-opnams.approve');
+        Route::post('/review-opnams/{opnam}/return-for-revision', [ReviewOpnamController::class, 'returnForRevision'])->name('review-opnams.return-for-revision');
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
+        Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
         Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
     });
 
@@ -71,4 +88,18 @@ Route::middleware(['auth', 'role:direksi'])
     ->name('direksi.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.direksi')->name('dashboard');
+<<<<<<< Updated upstream
     });
+=======
+        Route::get('/tagihans', [TagihanController::class, 'index'])->name('tagihans.index');
+        Route::get('/tagihans/{billing}', [TagihanController::class, 'show'])->name('tagihans.show');
+        Route::post('/tagihans/{billing}/adjustment', [TagihanController::class, 'applyAdjustment'])->name('tagihans.apply-adjustment');
+        Route::post('/tagihans/{billing}/approve', [TagihanController::class, 'approve'])->name('tagihans.approve');
+        Route::post('/tagihans/{billing}/reject', [TagihanController::class, 'reject'])->name('tagihans.reject');
+        Route::get('/dokumen', [DokumenController::class, 'index'])->name('dokumen.index');
+        Route::get('/dokumen/invoices/{invoice}/edit', [DokumenController::class, 'editInvoice'])->name('dokumen.edit-invoice');
+        Route::put('/dokumen/invoices/{invoice}', [DokumenController::class, 'updateInvoice'])->name('dokumen.update-invoice');
+        Route::get('/dokumen/invoices/{invoice}/download', [DokumenController::class, 'downloadInvoice'])->name('dokumen.download-invoice');
+        Route::post('/dokumen/unduh', [DokumenController::class, 'unduh'])->name('dokumen.unduh');
+    });
+>>>>>>> Stashed changes
