@@ -956,6 +956,45 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Manual modifications:** -
 **Notes / follow-up:** Item/Modul: AD-05. Cakupan sengaja minimal: hanya view detail, test, dan log prompt. Tidak ada migrasi, model, atau file `.md` progres lain yang diubah; `tasklist.md` tidak disentuh karena status AD-05 sudah `Selesai`.
 
+## 2026-11-27 20:27 WIB (retroactive (jam tidak tercatat))
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`<ShipSeeder lengkap 15 kapal dengan field imo_number, name, ship_type, is_special_type, flag, port_of_registry, gross_tonnage, length_overall, breadth, draft, main_engine_brand, main_engine_hp, propeller_type, propeller_diameter, propeller_blades, rudder_type, owner_name> Masukkan seeder data kapal tersebut. Lalu sinkronkan dengan sistem yang mempunyai korelasi terhadap data kapal`"
+**Output summary:** Tidak bisa dieksekusi apa adanya: seeder menulis kolom di luar ERD SHIPS dan tidak mengisi `owner_id`/`hull_number`; skema `ships` hanya `owner_id`, `name`, `hull_number` (UK), `jenis_kapal` (nullable), `deleted_at`, timestamps. Per aturan "jangan menebak" berhenti dan tanya format Bagian 8 (peminta, sumber `hull_number`, sinkronisasi OWNERS, `jenis_kapal`, field di luar ERD, cakupan sinkronisasi).
+**Files:** -
+**Commands:** pemeriksaan repo (`SKILL.md`, `taskinstruction.md`, `prd.md`, `tasklist.md`, migrasi, `Ship`, `Owner`, `ShipController`, `ShipRequest`, `DatabaseSeeder`, `PROMPT_LOG.md`, `PERTANYAAN_TERBUKA.md`)
+**Manual modifications:** -
+**Notes / follow-up:** Item DB-03 SHIPS / AD-02 (Rifqy). Belum mengubah file.
+
+## 2026-11-27 20:27 WIB (retroactive (jam tidak tercatat))
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`rekomendasikan saya jawaban untuk memverifikasi yang kamu butuhkan`"
+**Output summary:** Rekomendasi per pertanyaan Bagian 8 dengan penanda terverifikasi vs best pick: peminta Rifqy; `hull_number`=salin `imo_number`; upsert OWNERS dari `owner_name`, `address` NULL, transaction; `jenis_kapal`=salin `ship_type` verbatim (cadangan NULL; PRD 9 no.18 tetap terbuka); field di luar ERD dibuang, tarif→Anisa tidak disentuh; cakupan sync data master + korelasi otomatis + seeder terdaftar + snapshot tidak dihitung ulang. Tidak mengubah file.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Menunggu konfirmasi user; masih terbuka PRD 9 no.18/no.21/no.33.
+
+## 2026-11-27 20:27 WIB
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`setuju dengan rekomendasi`"
+**Output summary:** Membuat `database/seeders/ShipSeeder.php` (15 kapal; hanya kolom ERD; `hull_number`=`imo_number`; `jenis_kapal`=`ship_type` verbatim; `firstOrCreate` OWNERS `address` NULL; `updateOrCreate` SHIPS; `DB::transaction`; re-runnable) dan mendaftarkan di `DatabaseSeeder` setelah `UserSeeder`. Memverifikasi standalone pada schema ERD persis (15+15, 0 orphan, 0 duplikat, tanpa kolom tambahan) lalu end-to-end pada worktree `main` bersih: `artisan migrate:fresh --seed` semua migrasi + seeder; `artisan db:table ships` 8 kolom + UK + FK; `ships=15` `owners=15` `activity_logs=30`; `artisan test` 171/171 lolos (826 assertions); `ShipManagementTest`+`OwnerManagementTest` 19/19 lolos. Tidak menulis kolom snapshot/tabel lintas tupoksi. Snapshot lama tidak dihitung ulang.
+**Files:** `database/seeders/ShipSeeder.php`, `database/seeders/DatabaseSeeder.php`, `app/Providers/AppServiceProvider.php`, `PROMPT_LOG.md`
+**Commands:** `artisan migrate:fresh --seed`, `artisan db:table ships`, `artisan tinker`, `artisan test`, `artisan test tests/Feature/ShipManagementTest.php tests/Feature/OwnerManagementTest.php`, `composer install`, `git worktree add`, `php -l`, verifikasi standalone PHP, `php artisan` dicoba di `ship-management`
+**Manual modifications:** -
+**Notes / follow-up:** Item DB-03 SHIPS dikerjakan; DB-02 OWNERS ikut disentuh (sinkronisasi owner). **Tertahan di `ship-management`:** `php artisan` tidak bisa dijalankan karena committed merge conflict di ~21 file (`app/Models/{Opnam,Invoice,OpnamItem,User}.php`, `app/Http/Controllers/OpnamController.php`, `routes/web.php`, `composer.json`, `composer.lock`, `.gitignore`, views, tests, `AGENTS.md`, `tasklist.md`, `app/Providers/AppServiceProvider.php`). `main` bersih kecuali `.gitignore`. Verifikasi penuh dilakukan pada worktree `main`. `AppServiceProvider.php` diperbaiki minimal menghapus penanda conflict (memulihkan sisi HEAD/`main`; wajib agar `artisan` boot). Perlu keputusan tim sisi mana yang dipakai / basis `main`. `tasklist.md` belum ditandai `Selesai`. Butuh konfirmasi: PRD 9 no.18/no.21/no.33.
+
+## 2026-11-27 20:53 WIB
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`A, selesaikan di branch ship-management saja tanpa push atau merge ke main, lalu rangkum daftar open items per pemilik (Halvina, Anisa, Regina, Hazel) untuk saya konfirmasikan ke tim.`"
+**Output summary:** Opsi A dipilih. Menyelesaikan committed merge conflict di `ship-management` (tanpa push, tanpa `git merge`, hanya resolusi teks + konten bersih `main` sebagai basis untuk file konflik). Konflik `app/Providers/AppServiceProvider.php` dipulihkan; model `Opnam`/`OpnamItem`/`Invoice`/`User` di-UNION; `UserFactory` dilengkapi; `OpnamController`, views opnam, layouts, `routes/web.php`, `tests/Feature/{LoginTest,OpnamDraftTest,OpnamListTest,OpnamMineTest}.php`, `AGENTS.md`, `tasklist.md` diambil versi `main` bersih; `composer.json` UNION 3 paket (`dompdf/dompdf`, `barryvdh/laravel-dompdf`, `phpoffice/phpspreadsheet`, karena app memakai ketiganya); `composer.lock` di-`composer update`; `.gitignore` dibersihkan; konflik `tasklist.md` di-union + DB-02/DB-03 saya pertahankan. 0 penanda conflict. `ShipSeeder` + `DatabaseSeeder` + seeder kapal saya tetap. VERIFIKASI di `ship-management`: `artisan migrate:fresh --seed` OK; `artisan db:table ships` 8 kolom + UK + FK; `ships=15` `owners=15` `activity_logs=30` `orphans=0`; `ShipManagementTest`+`OwnerManagementTest` 19/19; suite penuh 133/134 dengan satu kegagalan known-baseline `ExampleTest` `/` 302 guest (AGENTS mencatat; bukan regresi). TIDAK ada push; TIDAK `git merge` ke `main`; hanya working tree `ship-management`. Item semantik ditandai SEMENTARA/open, tidak saya putuskan. Rangkum daftar open items per pemilik (Halvina/Anisa/Regina/Hazel).
+**Files:** .gitignore, AGENTS.md, app/Http/Controllers/OpnamController.php, app/Models/{Invoice,Opnam,OpnamItem,User}.php, app/Providers/AppServiceProvider.php, composer.json, composer.lock, database/factories/UserFactory.php, database/seeders/DatabaseSeeder.php, database/seeders/ShipSeeder.php, resources/views/layouts/{app,simship}.blade.php, resources/views/opnams/{_summary,create,index,mine}.blade.php, routes/web.php, tasklist.md, tests/Feature/{LoginTest,OpnamDraftTest,OpnamListTest,OpnamMineTest}.php, PROMPT_LOG.md
+**Commands:** composer update; artisan migrate:fresh --seed; artisan db:table ships; artisan tinker; artisan test; artisan test tests/Feature/ShipManagementTest.php tests/Feature/OwnerManagementTest.php; git grep (conflict scan); git status
+**Manual modifications:** -
+**Notes / follow-up:** Resolusi conflict di ship-management; pilihan sementara perlu konfirmasi pemilik (terutama Regina opnam-kalkulasi, Halvina login, Hazel invoice status, Anisa master tarif) + PRD 9 open + taskinstruction Bagian 6 parkir. Belum `Selesai`. Tidak push/merge main.
 ## 2026-11-27 10:20 WIB
 **Pemilik:** Hazel
 **AI:** opencode/big-pickle (Big Pickle)

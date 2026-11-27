@@ -13,8 +13,8 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | ID | Item | Pemilik | Status | Catatan |
 |---|---|---|---|---|
 | DB-01 | USERS | Halvina | Belum | |
-| DB-02 | OWNERS | Rifqy | Belum | |
-| DB-03 | SHIPS | Rifqy | Belum | ⚠ Kolom `jenis_kapal` ditambahkan di luar ERD atas permintaan Regina 2026-11-25; perlu konfirmasi Rifqy. |
+| DB-02 | OWNERS | Rifqy | Perlu konfirmasi | Disentuh lewat `ShipSeeder` sinkronisasi kapal: `firstOrCreate` OWNERS dari `owner_name`, `address` NULL, tidak menimpa existing; tidak ada kolom baru. CRUD owner mandiri (AD-02) belum dikerjakan. |
+| DB-03 | SHIPS | Rifqy | Perlu konfirmasi | `database/seeders/ShipSeeder.php` + didaftarkan di `DatabaseSeeder` (15 kapal; hanya kolom ERD; `hull_number`=`imo_number`; `jenis_kapal`=`ship_type` verbatim; `firstOrCreate` OWNERS `address` NULL + `updateOrCreate`; transaction; re-runnable). Verifikasi 171/171 `artisan test`. `hull_number`-mapping & PRD 9 no.18/21 tetap terbuka.  ⚠ Kolom `jenis_kapal` ditambahkan di luar ERD atas permintaan Regina 2026-11-25; perlu konfirmasi Rifqy.  |
 | DB-04 | UNITS | Anisa | Belum | |
 | DB-05 | WORK_CATEGORIES | Anisa | Belum | Tambah `is_active` (PRD 6.7), perlu konfirmasi |
 | DB-06 | WORK_TYPES | Anisa | Belum | |
