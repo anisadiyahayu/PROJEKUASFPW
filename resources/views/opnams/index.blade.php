@@ -16,15 +16,12 @@
         ];
     @endphp
 
-<<<<<<< HEAD
-=======
     <style>
         .opnam-table th { font-size: 11px; }
         .opnam-table td { font-size: 12px; line-height: 1.35; }
         .opnam-table td.angka { white-space: nowrap; }
     </style>
 
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     <h1>Data Opname</h1>
     <p class="subtitle">Pantau seluruh transaksi opnam yang diajukan Operator.</p>
 
@@ -41,13 +38,6 @@
                     @endforeach
                 </select>
             </div>
-<<<<<<< HEAD
-            <div style="width: 170px;">
-                <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" aria-label="Tanggal dari">
-            </div>
-            <div style="width: 170px;">
-                <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}" aria-label="Tanggal sampai">
-=======
             <div style="width: 180px;">
                 <select name="operator">
                     <option value="">Semua Operator</option>
@@ -58,18 +48,13 @@
             </div>
             <div style="width: 180px;">
                 <input type="date" name="tanggal" value="{{ request('tanggal') }}" aria-label="Filter tanggal opname" title="Mencari berdasarkan Tanggal Opname yang diisi saat pencatatan">
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
             </div>
             <div style="width: 90px;"><button type="submit" class="btn btn-primary">Filter</button></div>
         </form>
     </div>
 
     <div class="card" style="padding: 0; overflow: hidden;">
-<<<<<<< HEAD
-        <table>
-=======
         <table class="opnam-table">
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
             <thead>
                 <tr>
                     <th>NOMOR OPNAME</th>
@@ -84,16 +69,6 @@
             <tbody>
                 @forelse ($opnams as $opnam)
                     <tr>
-<<<<<<< HEAD
-                        <td><strong style="color:#1d4ed8;">{{ $opnam->opnam_number }}</strong></td>
-                        <td>{{ $opnam->ship?->name }}</td>
-                        <td>{{ $opnam->creator?->name }}</td>
-                        <td>{{ $opnam->tanggal_opnam?->format('d M Y') }}</td>
-                        <td>Rp {{ number_format((float) $opnam->total_biaya, 0, ',', '.') }}</td>
-                        <td><span class="badge badge-{{ $opnam->status }}">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</span></td>
-                        <td>
-                            <span class="btn btn-light" style="padding:5px 8px;" title="Detail belum tersedia">👁</span>
-=======
                         <td class="angka"><strong style="color:#1d4ed8;">{{ $opnam->opnam_number }}</strong></td>
                         <td>{{ $opnam->ship?->name }}</td>
                         <td>{{ $opnam->creator?->name }}</td>
@@ -102,9 +77,7 @@
                         <td><span class="badge badge-{{ $opnam->status }}">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</span></td>
                         <td>
                             <a href="{{ route('admin.opnams.show', $opnam) }}" class="btn btn-light" style="padding:5px 8px;" title="Detail opnam">👁</a>
->>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
-                            <span class="btn btn-light" style="padding:5px 8px;" title="Riwayat belum tersedia">◷</span>
-                            <span class="btn btn-light" style="padding:5px 8px; opacity:.5;">Buka Review</span>
+                            <a href="{{ route('admin.review-opnams.show', $opnam) }}" class="btn btn-light" style="padding:5px 8px;" title="Buka review">Buka Review</a>
                         </td>
                     </tr>
                 @empty

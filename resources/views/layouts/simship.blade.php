@@ -141,19 +141,22 @@
             ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'active' => 'admin.dashboard'],
             ['label' => 'Data Pemilik Kapal', 'url' => route('admin.owners.index'), 'active' => 'admin.owners.*'],
             ['label' => 'Data Kapal', 'url' => route('admin.ships.index'), 'active' => 'admin.ships.*'],
-            ['label' => 'Master Pekerjaan', 'url' => null, 'active' => null],
-            ['label' => 'Master Tarif', 'url' => null, 'active' => null],
+            ['label' => 'Kategori Pekerjaan', 'url' => route('admin.work-categories.index'), 'active' => 'admin.work-categories.*'],
+            ['label' => 'Jenis Pekerjaan', 'url' => route('admin.work-types.index'), 'active' => 'admin.work-types.*'],
+            ['label' => 'Material/Spesifikasi', 'url' => route('admin.material-specs.index'), 'active' => 'admin.material-specs.*'],
+            ['label' => 'Satuan', 'url' => route('admin.units.index'), 'active' => 'admin.units.*'],
             ['label' => 'Data Opname', 'url' => route('admin.opnams.index'), 'active' => 'admin.opnams.*'],
-            ['label' => 'Review Opname', 'url' => null, 'active' => null],
+            ['label' => 'Review Opname', 'url' => route('admin.review-opnams.index'), 'active' => 'admin.review-opnams.*'],
             ['label' => 'Laporan Rekapitulasi', 'url' => route('reports.recapitulation.index'), 'active' => 'reports.recapitulation.*'],
             ['label' => 'Riwayat Perbaikan', 'url' => route('repair-history.index'), 'active' => 'repair-history.*'],
-            ['label' => 'Riwayat Revisi', 'url' => null, 'active' => null],
             ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
             ['label' => 'Manajemen Pengguna', 'url' => null, 'active' => null],
             ['label' => 'Profil', 'url' => null, 'active' => null],
         ],
         'direksi' => [
             ['label' => 'Dashboard', 'url' => route('direksi.dashboard'), 'active' => 'direksi.dashboard'],
+            ['label' => 'Tagihan', 'url' => route('direksi.tagihans.index'), 'active' => 'direksi.tagihans.*'],
+            ['label' => 'Dokumen', 'url' => route('direksi.dokumen.index'), 'active' => 'direksi.dokumen.*'],
             ['label' => 'Transaksi Disetujui', 'url' => route('direksi.approved.index'), 'active' => 'direksi.approved.*'],
             ['label' => 'Riwayat Perbaikan', 'url' => route('repair-history.index'), 'active' => 'repair-history.*'],
             ['label' => 'Laporan Rekapitulasi', 'url' => route('reports.recapitulation.index'), 'active' => 'reports.recapitulation.*'],
@@ -162,18 +165,6 @@
         ],
     ];
     $menu = $menus[auth()->user()->role] ?? $menus['petugas'];
-    $direksiMenu = [
-        'Dashboard' => route('direksi.dashboard'),
-        'Tagihan' => route('direksi.tagihans.index'),
-        'Dokumen' => route('direksi.dokumen.index'),
-        'Riwayat Aktivitas' => null,
-        'Profil' => null,
-    ];
-    $menu = match (auth()->user()->role) {
-        'admin' => $supervisorMenu,
-        'direksi' => $direksiMenu,
-        default => $operatorMenu,
-    };
     $initials = collect(explode(' ', auth()->user()->name))->map(fn ($p) => mb_substr($p, 0, 1))->join('');
 @endphp
 <div class="app">
@@ -193,13 +184,9 @@
             <p class="nav-label">Menu {{ $roleLabel }}</p>
             @foreach ($menu as $item)
                 @if ($item['url'])
-                    <a href="{{ $item['url'] }}" class="{{ request()->routeIs($item['active']) ? 'active' : '' }}">{{ $item['label'] }}</a>
+                    <a href="{{ $item['url'] }}" class="{{ request()->routeIs($item['active'] ?? 'none') ? 'active' : '' }}">{{ $item['label'] }}</a>
                 @else
                     <span class="item">{{ $item['label'] }}</span>
-                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
-                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Master Satuan' => 'admin.units.*', 'Master Material' => 'admin.material-specs.*', 'Master Pekerjaan' => 'admin.work-categories.*', 'Jenis Pekerjaan' => 'admin.work-types.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
-                @else
-                    <span class="item">{{ $label }}</span>
                 @endif
             @endforeach
         </nav>

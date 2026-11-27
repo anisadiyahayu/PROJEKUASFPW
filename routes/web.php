@@ -13,8 +13,6 @@ use App\Http\Controllers\Direksi\ApprovedTransactionController;
 use App\Http\Controllers\OpnamController;
 use App\Http\Controllers\Reports\ShipRepairHistoryController;
 use App\Http\Controllers\Reports\WorkRecapitulationController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WorkCategoryController;
 use App\Http\Controllers\WorkTypeController;
@@ -30,38 +28,14 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', fn () => view('auth.login'))->name('login');
-
-    Route::post('/login', function (Request $request) {
-        $data = $request->validate([
-            'username' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', 'max:255'],
-        ]);
-
-        $credentials = [
-            'username' => strtolower(trim($data['username'])),
-            'password' => $data['password'],
-            'is_active' => true,
-        ];
-
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors(['username' => 'Username atau password salah, atau akun tidak aktif.'])
-                ->onlyInput('username');
-        }
-
-        $request->session()->regenerate();
-
-        return redirect()->route($request->user()->dashboardRoute());
-    })->middleware('throttle:5,1')->name('login.store');
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:5,1')
+        ->name('login.store');
 });
 
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return redirect()->route('login');
-})->middleware('auth')->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
 
 /*
 |--------------------------------------------------------------------------
@@ -96,10 +70,23 @@ Route::middleware(['auth', 'role:admin'])
         Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
         Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
         Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
 
         // AD-02: data pemilik dan kapal.
         Route::resource('owners', OwnerController::class)->except(['show']);
         Route::resource('ships', ShipController::class)->except(['show']);
+
+        // Anisa: master kategori, jenis, material, dan satuan.
+        Route::resource('work-categories', WorkCategoryController::class)
+            ->except(['show'])
+            ->parameters(['work-categories' => 'workCategory']);
+        Route::resource('work-types', WorkTypeController::class)
+            ->except(['show'])
+            ->parameters(['work-types' => 'workType']);
+        Route::resource('material-specs', MaterialSpecController::class)
+            ->except(['show'])
+            ->parameters(['material-specs' => 'materialSpec']);
+        Route::resource('units', UnitController::class)->except(['show']);
     });
 
 /*
@@ -125,17 +112,6 @@ Route::middleware(['auth', 'role:direksi'])
         Route::get('/dokumen/invoices/{invoice}/download', [DokumenController::class, 'downloadInvoice'])->name('dokumen.download-invoice');
         Route::post('/dokumen/unduh', [DokumenController::class, 'unduh'])->name('dokumen.unduh');
         Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
-        Route::resource('work-categories', WorkCategoryController::class)
-            ->except('show')
-            ->parameters(['work-categories' => 'workCategory']);
-        Route::resource('work-types', WorkTypeController::class)
-            ->except('show')
-            ->parameters(['work-types' => 'workType']);
-        Route::resource('units', UnitController::class)
-            ->except('show');
-        Route::resource('material-specs', MaterialSpecController::class)
-            ->except('show')
-            ->parameters(['material-specs' => 'materialSpec']);
 
         Route::get('/transaksi-disetujui', [ApprovedTransactionController::class, 'index'])->name('approved.index');
     });
