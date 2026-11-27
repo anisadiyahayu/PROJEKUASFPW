@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Audit;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\Audit\ActivityLogPdfExporter;
+use App\Services\Audit\ActivityLogQuery;
 use App\Support\Audit\ActivitySubject;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Throwable;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * PT-10, AD-14, dan DR-16: riwayat perubahan dan audit log.
@@ -21,44 +20,20 @@ use Throwable;
  */
 class ActivityLogController extends Controller
 {
-    private const EVENTS = ['created', 'updated', 'deleted', 'restored'];
+    private const EVENTS = ActivityLogQuery::EVENTS;
+
+    public function __construct(
+        private readonly ActivityLogQuery $query,
+        private readonly ActivityLogPdfExporter $exporter,
+    ) {}
 
     public function index(Request $request): View
     {
         $user = $request->user();
         $isPetugas = $user->hasRole(User::ROLE_PETUGAS);
+        $filters = $this->query->filters($request);
 
-        $q = $request->query('q');
-        $userId = $request->query('user_id');
-
-        $filters = [
-            'q' => is_string($q) ? trim($q) : '',
-            'event' => $this->allowed($request->query('event'), self::EVENTS),
-            'subject_type' => $this->allowed($request->query('subject_type'), ActivitySubject::all()),
-            'user_id' => $isPetugas
-                ? $user->id
-                : (is_numeric($userId) ? (int) $userId : null),
-            'dari' => $this->date($request->query('dari')),
-            'sampai' => $this->date($request->query('sampai')),
-        ];
-
-        $logs = ActivityLog::query()
-            ->with('user')
-            ->when($isPetugas, fn (Builder $query) => $query->where('user_id', $user->id))
-            ->when(! $isPetugas && $filters['user_id'] !== null, fn (Builder $query) => $query->where('user_id', $filters['user_id']))
-            ->when($filters['event'] !== '', fn (Builder $query) => $query->where('event', $filters['event']))
-            ->when($filters['subject_type'] !== '', fn (Builder $query) => $query->where('subject_type', $filters['subject_type']))
-            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
-                $q = $filters['q'];
-                $query->where(function (Builder $builder) use ($q) {
-                    $builder->where('description', 'like', "%{$q}%")
-                        ->orWhere('event', 'like', "%{$q}%");
-                });
-            })
-            ->when($filters['dari'] !== null, fn (Builder $query) => $query->whereDate('created_at', '>=', $filters['dari']))
-            ->when($filters['sampai'] !== null, fn (Builder $query) => $query->whereDate('created_at', '<=', $filters['sampai']))
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
+        $logs = $this->query->builder($filters, $user)
             ->paginate(25)
             ->withQueryString();
 
@@ -73,25 +48,14 @@ class ActivityLogController extends Controller
     }
 
     /**
-     * @param  list<string>  $allowed
+     * PT-11, AD-15, dan DR-18: unduh PDF sesuai filter aktif.
      */
-    private function allowed(mixed $value, array $allowed): string
+    public function exportPdf(Request $request): Response
     {
-        return is_string($value) && in_array($value, $allowed, true) ? $value : '';
-    }
+        $user = $request->user();
+        $filters = $this->query->filters($request);
+        $logs = $this->query->builder($filters, $user)->get();
 
-    private function date(mixed $value): ?string
-    {
-        if (! is_string($value) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
-            return null;
-        }
-
-        try {
-            $date = Carbon::createFromFormat('!Y-m-d', $value);
-        } catch (Throwable) {
-            return null;
-        }
-
-        return $date->format('Y-m-d') === $value ? $value : null;
+        return $this->exporter->pdf($logs, $filters, $user);
     }
 }

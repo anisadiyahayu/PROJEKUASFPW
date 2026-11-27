@@ -596,6 +596,26 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Manual modifications:** -
 **Notes / follow-up:** Urutan kronologis dipertahankan dengan menyisipkan blok lama sebelum entri 15:41. `tasklist.md`, `prd.md`, dan kode aplikasi tidak diubah.
 
+## 2026-11-26 18:33 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Hazel
+**AI:** opencode/big-pickle (Big Pickle)
+**Prompt:** "jalankan rencanamnya"
+**Output summary:** Membuat dua controller Hazel sesuai rencana: `Admin\ReviewOpnamController` (AD-06, AD-08, AD-09) dan `Direksi\TagihanController` (DR-01, DR-02). DB-12 `STATUS_HISTORIES` dicatat sebagai milik Hazel di `tasklist.md` dan `tupoksi.md`, lima use case ditandai `Dikerjakan`.
+**Files:** `app/Http/Controllers/Admin/ReviewOpnamController.php` (baru), `app/Http/Controllers/Direksi/TagihanController.php` (baru), `tasklist.md`, `tupoksi.md`, `PROMPT_LOG.md`
+**Commands:** `Get-Date` (2026-11-26 18:33 SE Asia Standard Time), `C:\php\php.exe -l` pada kedua controller, `git status --short`
+**Manual modifications:** -
+**Notes / follow-up:** Blok dipulihkan sebagai `retroactive` setelah `PROMPT_LOG.md` dikembalikan dari HEAD oleh agen lain. Saat itu rute dan view belum dibuat, AD-08 belum membuat `BILLINGS`, dan item lanjutan masih tertahan keputusan.
+
+## 2026-11-26 18:45 WIB (retroactive, jam tidak tercatat)
+**Pemilik:** Hazel
+**AI:** opencode/big-pickle (Big Pickle)
+**Prompt:** "jalankan rencananya"
+**Output summary:** Mengerjakan sisa item Hazel: ST-08 dibuat otomatis dari AD-08; DR-04/05, DR-06/07, DR-08/09/11/12, AD-12/13, dan DR-10 diimplementasikan. Menambah `INVOICES.status` (`draft`/`terbit`), service penerbitan dokumen, template PDF invoice dan technical report, serta menyelaraskan dokumen progres dengan keputusan pemilik.
+**Files:** `app/Http/Controllers/Admin/ReviewOpnamController.php`, `app/Http/Controllers/Direksi/TagihanController.php`, `app/Http/Controllers/Admin/InvoiceController.php` (baru), `app/Http/Controllers/Direksi/DokumenController.php` (baru), `app/Services/DokumenTagihanService.php` (baru), `app/Models/Invoice.php`, `app/Models/BillingAdjusment.php` menjadi `app/Models/BillingAdjustment.php`, `database/migrations/2026_11_26_190000_add_status_to_invoices_table.php` (baru), `resources/views/pdf/invoice.blade.php` (baru), `resources/views/pdf/technical-report.blade.php` (baru), `composer.json`/`composer.lock`, `tasklist.md`, `tupoksi.md`, `taskinstruction.md`, `AGENTS.md`, `PROMPT_LOG.md`
+**Commands:** `Get-Date` (2026-11-26 18:45 SE Asia Standard Time), `composer require barryvdh/laravel-dompdf --no-interaction`, `C:\php\php.exe -l`, `php artisan migrate --force`, `php artisan test`, `php artisan db:table invoices`, `git status --short`
+**Manual modifications:** -
+**Notes / follow-up:** Blok dipulihkan sebagai `retroactive` setelah `PROMPT_LOG.md` dikembalikan dari HEAD oleh agen lain. Revisi invoice dibatasi pada field snapshot teks dan tanggal, nominal tetap dari `BILLINGS`. Rute dan view aplikasi belum dibuat saat itu.
+
 ## 2026-11-26 20:56 WIB (retroactive, jam tidak tercatat)
 **Pemilik:** Regina
 **AI:** opencode/hy4-flash-free (Hy4 flash Free)
@@ -975,3 +995,12 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** composer update; artisan migrate:fresh --seed; artisan db:table ships; artisan tinker; artisan test; artisan test tests/Feature/ShipManagementTest.php tests/Feature/OwnerManagementTest.php; git grep (conflict scan); git status
 **Manual modifications:** -
 **Notes / follow-up:** Resolusi conflict di ship-management; pilihan sementara perlu konfirmasi pemilik (terutama Regina opnam-kalkulasi, Halvina login, Hazel invoice status, Anisa master tarif) + PRD 9 open + taskinstruction Bagian 6 parkir. Belum `Selesai`. Tidak push/merge main.
+## 2026-11-27 10:20 WIB
+**Pemilik:** Hazel
+**AI:** opencode/big-pickle (Big Pickle)
+**Prompt:** "okey mari kita lanjutkan pekerjaan nya" + pilihan: Peminta Hazel, dokumen dulu lalu UI dan test, UI lengkap untuk semua use case Hazel, file progres/log bersama boleh disentuh tetapi `prompt_history.md` tidak dihapus, antislop mode DURING.
+**Output summary:** Menyelesaikan modul Hazel sampai UI dan test. Dokumen progres diselaraskan, dua blok log Hazel yang hilang dipulihkan sebagai `retroactive`, duplikat model dibersihkan, rute dan delapan view Hazel dibuat, serta 11 feature test ditambahkan. Semua 99 test lolos dengan 507 assertions.
+**Files:** `AGENTS.md`, `PROMPT_LOG.md`, `prd.md`, `taskinstruction.md`, `tasklist.md`, `tupoksi.md`, `app/Models/BillingAdjusment.php` (dihapus), `app/Http/Controllers/Admin/InvoiceController.php`, `app/Http/Controllers/Direksi/DokumenController.php`, `routes/web.php`, `resources/views/layouts/simship.blade.php`, `resources/views/dashboard/admin.blade.php`, `resources/views/dashboard/direksi.blade.php`, `resources/views/admin/review-opnams/index.blade.php` (baru), `resources/views/admin/review-opnams/show.blade.php` (baru), `resources/views/admin/invoices/index.blade.php` (baru), `resources/views/admin/invoices/edit.blade.php` (baru), `resources/views/direksi/tagihans/index.blade.php` (baru), `resources/views/direksi/tagihans/show.blade.php` (baru), `resources/views/direksi/dokumen/index.blade.php` (baru), `resources/views/direksi/dokumen/edit-invoice.blade.php` (baru), `tests/Feature/HazelReviewOpnamTest.php` (baru), `tests/Feature/HazelDokumenInvoiceTest.php` (baru)
+**Commands:** `Get-Date` (2026-11-27 10:20 SE Asia Standard Time), `git status --short`, `git diff --stat`, `composer dump-autoload --no-interaction`, `C:\php\php.exe -l` pada controller, rute, dan test, `C:\php\php.exe artisan route:list --except-vendor`, `C:\php\php.exe -d extension=pdo_sqlite vendor\bin\pest` (99/99 lolos), `C:\php\php.exe -d extension=pdo_sqlite artisan test` (driver sqlite tidak terbawa ke subprocess, diganti pest langsung)
+**Manual modifications:** -
+**Notes / follow-up:** `prompt_history.md` sengaja dipertahankan sesuai instruksi Pemilik, sehingga menjadi pengecualian dari aturan `AGENTS.md`. Blok 18:33 dan 18:45 WIB dipulihkan sebagai `retroactive`. Narasi desain mengikuti `layouts/simship.blade.php` dengan dial ENERGY 1 / RHYTHM 1 / MOTION 1, bukan desain baru. `pdo_sqlite` tersedia sebagai DLL tetapi tidak aktif di `C:\php\php.ini`, sehingga test dijalankan dengan `-d extension=pdo_sqlite`.

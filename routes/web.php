@@ -160,8 +160,9 @@ Route::middleware(['auth', 'role:admin,direksi'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
-    // UC-U3: halaman profil (saat ini hanya bagian ubah password).
+    // UC-U3/UC-U5: halaman profil (data diri dan ubah password).
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profil.update');
     Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profil.password.update');
 
     Route::get('/riwayat-aktivitas', [ActivityLogController::class, 'index'])->name('activity-logs.index');

@@ -8,7 +8,8 @@ use App\Models\Invoice;
 use App\Models\Opnam;
 use App\Models\TechnicalReport;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -142,13 +143,35 @@ class DokumenTagihanService
             'Invoice belum terbit.',
         );
 
-        return Pdf::loadView('pdf.invoice', ['invoice' => $invoice])
-            ->download($namaFile.'.pdf');
+        return $this->pdfResponse(
+            view('pdf.invoice', ['invoice' => $invoice])->render(),
+            $namaFile.'.pdf',
+        );
     }
 
     public function unduhTechnicalReport(TechnicalReport $report, string $namaFile): Response
     {
-        return Pdf::loadView('pdf.technical-report', ['report' => $report])
-            ->download($namaFile.'.pdf');
+        return $this->pdfResponse(
+            view('pdf.technical-report', ['report' => $report])->render(),
+            $namaFile.'.pdf',
+        );
+    }
+
+    private function pdfResponse(string $html, string $namaFile): Response
+    {
+        $options = new Options;
+        $options->set('isRemoteEnabled', false);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$namaFile.'"',
+        ]);
     }
 }
