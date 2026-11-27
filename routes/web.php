@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ReviewOpnamController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Direksi\DokumenController;
 use App\Http\Controllers\Direksi\TagihanController;
@@ -80,6 +81,11 @@ Route::middleware(['auth', 'role:admin'])
         // AD-02: data pemilik dan kapal.
         Route::resource('owners', OwnerController::class)->except(['show']);
         Route::resource('ships', ShipController::class)->except(['show']);
+
+        // AD-01: manajemen pengguna. Akun tidak dihapus, hanya dinonaktifkan.
+        Route::resource('users', UserController::class)->except(['show', 'destroy']);
+        Route::patch('users/{user}/deactivate', [UserController::class, 'deactivate'])
+            ->name('users.deactivate');
 
         // Anisa: master kategori, jenis, material, dan satuan.
         Route::resource('work-categories', WorkCategoryController::class)
