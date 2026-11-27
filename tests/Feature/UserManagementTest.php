@@ -147,3 +147,32 @@ test('admin tidak dapat menonaktifkan akunnya sendiri', function () {
     $this->assertDatabaseHas('users', ['id' => $admin->id, 'is_active' => true]);
     expect($admin->fresh()->is_active)->toBeTrue();
 });
+
+test('username dinormalisasi saat menambah pengguna', function () {
+    $admin = penggunaManajemen();
+
+    $this->actingAs($admin)->post(route('admin.users.store'), [
+        'name' => 'Budi',
+        'username' => '  Budi  ',
+        'email' => 'budi-normal@example.com',
+        'password' => 'rahasia123',
+        'role' => User::ROLE_PETUGAS,
+    ])->assertRedirect(route('admin.users.index'));
+
+    $this->assertDatabaseHas('users', ['username' => 'budi']);
+    $this->assertDatabaseMissing('users', ['username' => '  Budi  ']);
+});
+
+test('username lowercase tanpa spasi tersimpan apa adanya', function () {
+    $admin = penggunaManajemen();
+
+    $this->actingAs($admin)->post(route('admin.users.store'), [
+        'name' => 'Budi Polos',
+        'username' => 'budi',
+        'email' => 'budi-polos@example.com',
+        'password' => 'rahasia123',
+        'role' => User::ROLE_PETUGAS,
+    ])->assertRedirect(route('admin.users.index'));
+
+    $this->assertDatabaseHas('users', ['username' => 'budi']);
+});

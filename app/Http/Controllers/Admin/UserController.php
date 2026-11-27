@@ -29,6 +29,10 @@ class UserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'username' => strtolower(trim((string) $request->input('username'))),
+        ]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
@@ -54,6 +58,10 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $request->merge([
+            'username' => strtolower(trim((string) $request->input('username'))),
+        ]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => [
