@@ -20,9 +20,15 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | DB-06 | WORK_TYPES | Anisa | Belum | |
 | DB-07 | MATERIAL_SPECS | Anisa | Belum | |
 | DB-08 | TARIFFS | Anisa | Belum | |
+<<<<<<< HEAD
 | DB-09 | OPNAMS | Regina | Belum | |
 | DB-10 | OPNAM_ITEMS | Regina | Belum | |
 | DB-11 | OPNAM_ATTACHMENTS | Regina | Belum | |
+=======
+| DB-09 | OPNAMS | Regina | Selesai | `jenis_kapal` ditulis sebagai salinan dari `SHIPS` lewat migrasi aditif (rekomendasi default, masih menunggu konfirmasi tim). Tetap tidak menulis `lokasi`/`adjustment_amount`. |
+| DB-10 | OPNAM_ITEMS | Regina | Selesai | Snapshot `unit_price`/`subtotal` diuji kebal perubahan tarif; `faktor`, `ketebalan`, `kompleksitas`, dan `catatan_tambahan` ikut tersimpan. `faktor_ketebalan` dan `faktor_kompleksitas` ditambah lewat migrasi aditif default 1 (rekomendasi default, nilai faktor masih menunggu konfirmasi); kolom `faktor` lama dipertahankan. |
+| DB-11 | OPNAM_ATTACHMENTS | Regina | Selesai | Migrasi/model sesuai ERD; `file_size` dalam byte. |
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 | DB-12 | STATUS_HISTORIES | Di luar tupoksi | Belum | Dipakai Regina dan Hazel, lihat Tupoksi bagian 3 |
 | DB-13 | BILLINGS | Hazel | Belum | |
 | DB-14 | BILLING_ADJUSTMENTS | Hazel | Belum | |
@@ -39,12 +45,21 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | UC-U3 | Mengubah Password | Halvina | Belum | |
 | UC-U4 | Melihat Dashboard | Halvina | Belum | |
 | UC-U5 | Melihat dan Mengubah Profil | Halvina | Belum | Profil untuk ketiga role |
+<<<<<<< HEAD
 | PT-01 | Mencatat Opnam Pekerjaan | Regina | Belum | |
 | PT-02 | Memilih Data Kapal | Regina | Belum | |
 | PT-03 | Menambahkan Detail Pekerjaan | Regina | Belum | |
 | PT-04 | Mengunggah Foto/Bukti Pekerjaan | Regina | Belum | Batas file belum ditetapkan |
 | PT-05 | Melihat Perhitungan Biaya | Regina | Belum | |
 | PT-06 | Menyimpan Draft Opnam | Regina | Belum | Sudah diputuskan: tersedia di tahapan pencatatan |
+=======
+| PT-01 | Mencatat Opnam Pekerjaan | Regina | Dikerjakan | Wizard 5 langkah berjalan (langkah 4 "Bukti Pekerjaan", langkah 5 "Final Review"). Input `catatan` opsional tersedia dan `jenis_kapal` tersalin sebagai snapshot. Penamaan tahapan akhir & daftar jenis kapal masih menunggu PRD 9 no. 16, 18. |
+| PT-02 | Memilih Data Kapal | Regina | Selesai | Kapal wajib, pemilik & nomor lambung tampil otomatis (BR-11). |
+| PT-03 | Menambahkan Detail Pekerjaan | Regina | Selesai | Item pada draft tersimpan dapat ditambah, diubah, dan dihapus hanya oleh pemiliknya (PRD 4.6). `total_biaya` dihitung ulang lewat `OpnamCostCalculator`; `unit_price` hanya dicari ulang bila material/satuan diubah (BR-35). Status `perlu_revisi` tidak disentuh (PT-09 parkir). Seluruh satuan dikirim ke wizard dan disaring di JS berdasarkan material/tarif, termasuk satuan duplikat agar opsi tidak kosong. |
+| PT-04 | Mengunggah Foto/Bukti Pekerjaan | Regina | Perlu konfirmasi | Validasi format/ukuran dan disk/path kini dibaca dari `config/opnam.php` (default JPG/PNG/PDF, 10 MB, disk public). Format final menunggu PRD 9 no. 5. |
+| PT-05 | Melihat Perhitungan Biaya | Regina | Perlu konfirmasi | `OpnamCostCalculator` terpasang di form dan halaman edit draft; kedua faktor tersimpan terpisah sebagai snapshot di `OPNAM_ITEMS`. Kompleksitas mengikuti keputusan Regina: low 1x, medium 1,10x, high 1,15x. Faktor ketebalan tetap 1x karena aturan rentang belum diberikan. Satuan di wizard dibatasi m²/m dan mengikuti tarif material. Aturan pembulatan masih menunggu PRD 9 no. 19, 21. |
+| PT-06 | Menyimpan Draft Opnam | Regina | Dikerjakan | Tombol Simpan Draft berjalan; nomor dibuat `OpnamNumberGenerator` dalam transaksi dengan kunci baris (tidak ada duplikat). Prefix/panjang seq dari `config/opnam.php`; format final menunggu PRD 9 no. 8. |
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 | PT-07 | Mengajukan Opnam untuk Review | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
 | PT-08 | Melihat Status Pengajuan | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
 | PT-09 | Memperbaiki Opnam yang Dikembalikan | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
@@ -54,7 +69,11 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
 | AD-03 | Mengelola Kategori Pekerjaan | Anisa | Belum | |
 | AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Belum | |
+<<<<<<< HEAD
 | AD-05 | Melihat Daftar Opnam | Regina | Belum | Halaman daftar opnam |
+=======
+| AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status, operator (dari `USERS.role=petugas`), tanggal satu input (Tanggal Opname), dan paginasi berjalan (BR-27). Tombol mata membuka halaman detail baca-saja (bukan review/approval). |
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
 | AD-06 | Memeriksa Opnam | Hazel | Belum | Halaman review opnam |
 | AD-07 | Merevisi Data Opnam | Di luar tupoksi | Belum | Lihat Tupoksi bagian 3 |
 | AD-08 | Menyetujui Hasil Review | Hazel | Belum | |

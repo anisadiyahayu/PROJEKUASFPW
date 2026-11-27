@@ -69,6 +69,7 @@
         .pagination .current { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
         .dropzone { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 34px; text-align: center; color: #64748b; }
         .dropzone.dragover { background: #eff6ff; border-color: #1d4ed8; color: #1d4ed8; }
+<<<<<<< HEAD
         .btn-danger { background: #b91c1c; color: #fff; }
         .btn-sm { padding: 5px 9px; font-size: 12px; }
         .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
@@ -87,6 +88,8 @@
         .filters > div { min-width: 150px; }
         details.changes summary { cursor: pointer; color: #1d4ed8; font-size: 12px; }
         details.changes pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 11px; overflow-x: auto; }
+=======
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     </style>
     @stack('styles')
 </head>
@@ -98,6 +101,7 @@
         'direksi' => 'Direksi',
         default => ucfirst(auth()->user()->role),
     };
+<<<<<<< HEAD
     $menus = [
         'petugas' => [
             ['label' => 'Dashboard', 'url' => route('petugas.dashboard'), 'active' => 'petugas.dashboard'],
@@ -133,6 +137,35 @@
         ],
     ];
     $menu = $menus[auth()->user()->role] ?? $menus['petugas'];
+=======
+    $operatorMenu = [
+        'Dashboard' => route('petugas.dashboard'),
+        'Data Kapal' => null,
+        'Buat Opname' => route('petugas.opnams.create'),
+        'Opname Saya' => route('petugas.opnams.index'),
+        'Status Pengajuan' => null,
+        'Riwayat Aktivitas' => null,
+        'Profil' => null,
+    ];
+    $supervisorMenu = [
+        'Dashboard' => route('admin.dashboard'),
+        'Data Pemilik Kapal' => null,
+        'Data Kapal' => null,
+        'Master Satuan' => route('admin.units.index'),
+        'Master Material' => route('admin.material-specs.index'),
+        'Master Pekerjaan' => route('admin.work-categories.index'),
+        'Jenis Pekerjaan' => route('admin.work-types.index'),
+        'Master Tarif' => null,
+        'Data Opname' => route('admin.opnams.index'),
+        'Review Opname' => null,
+        'Laporan' => null,
+        'Riwayat Revisi' => null,
+        'Riwayat Aktivitas' => null,
+        'Manajemen Pengguna' => null,
+        'Profil' => null,
+    ];
+    $menu = auth()->user()->role === 'admin' ? $supervisorMenu : $operatorMenu;
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
     $initials = collect(explode(' ', auth()->user()->name))->map(fn ($p) => mb_substr($p, 0, 1))->join('');
 @endphp
 <div class="app">
@@ -150,11 +183,19 @@
         </div>
         <nav class="nav">
             <p class="nav-label">Menu {{ $roleLabel }}</p>
+<<<<<<< HEAD
             @foreach ($menu as $item)
                 @if ($item['url'])
                     <a href="{{ $item['url'] }}" class="{{ request()->routeIs($item['active']) ? 'active' : '' }}">{{ $item['label'] }}</a>
                 @else
                     <span class="item">{{ $item['label'] }}</span>
+=======
+            @foreach ($menu as $label => $url)
+                @if ($url)
+                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Master Satuan' => 'admin.units.*', 'Master Material' => 'admin.material-specs.*', 'Master Pekerjaan' => 'admin.work-categories.*', 'Jenis Pekerjaan' => 'admin.work-types.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
+                @else
+                    <span class="item">{{ $label }}</span>
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
                 @endif
             @endforeach
         </nav>
@@ -176,6 +217,7 @@
             @if (session('status'))
                 <div class="info" style="margin-bottom:16px;">{{ session('status') }}</div>
             @endif
+<<<<<<< HEAD
             @if ($errors->any())
                 <div class="alert-error">
                     <strong>Periksa kembali data berikut:</strong>
@@ -186,6 +228,8 @@
                     </ul>
                 </div>
             @endif
+=======
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
             @yield('content')
         </main>
     </div>

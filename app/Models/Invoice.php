@@ -7,8 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Invoice extends Model
 {
+<<<<<<< HEAD
     protected $fillable = [
         'billing_id', 'issued_by', 'invoice_number', 'issue_date',
+=======
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_TERBIT = 'terbit';
+
+    protected $fillable = [
+        'billing_id', 'issued_by', 'invoice_number', 'issue_date', 'status',
+>>>>>>> d84cf2129cb7286d690c39c169d2bc78fcf194c3
         'ship_name', 'hull_number', 'owner_name', 'owner_address',
         'subtotal_amount', 'adjustment_amount', 'total_amount', 'revision_count',
     ];
