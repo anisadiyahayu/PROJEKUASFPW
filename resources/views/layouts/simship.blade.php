@@ -135,7 +135,7 @@
             ['label' => 'Opname Saya', 'url' => route('petugas.opnams.index'), 'active' => 'petugas.opnams.index'],
             ['label' => 'Status Pengajuan', 'url' => null, 'active' => null],
             ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
-            ['label' => 'Profil', 'url' => null, 'active' => null],
+            ['label' => 'Profil', 'url' => route('profil.edit'), 'active' => 'profil.*'],
         ],
         'admin' => [
             ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'active' => 'admin.dashboard'],
@@ -151,7 +151,7 @@
             ['label' => 'Riwayat Perbaikan', 'url' => route('repair-history.index'), 'active' => 'repair-history.*'],
             ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
             ['label' => 'Manajemen Pengguna', 'url' => route('admin.users.index'), 'active' => 'admin.users.*'],
-            ['label' => 'Profil', 'url' => null, 'active' => null],
+            ['label' => 'Profil', 'url' => route('profil.edit'), 'active' => 'profil.*'],
         ],
         'direksi' => [
             ['label' => 'Dashboard', 'url' => route('direksi.dashboard'), 'active' => 'direksi.dashboard'],
@@ -161,7 +161,7 @@
             ['label' => 'Riwayat Perbaikan', 'url' => route('repair-history.index'), 'active' => 'repair-history.*'],
             ['label' => 'Laporan Rekapitulasi', 'url' => route('reports.recapitulation.index'), 'active' => 'reports.recapitulation.*'],
             ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
-            ['label' => 'Profil', 'url' => null, 'active' => null],
+            ['label' => 'Profil', 'url' => route('profil.edit'), 'active' => 'profil.*'],
         ],
     ];
     $menu = $menus[auth()->user()->role] ?? $menus['petugas'];
