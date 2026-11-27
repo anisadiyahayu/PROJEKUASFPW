@@ -150,7 +150,7 @@
             ['label' => 'Laporan Rekapitulasi', 'url' => route('reports.recapitulation.index'), 'active' => 'reports.recapitulation.*'],
             ['label' => 'Riwayat Perbaikan', 'url' => route('repair-history.index'), 'active' => 'repair-history.*'],
             ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
-            ['label' => 'Manajemen Pengguna', 'url' => null, 'active' => null],
+            ['label' => 'Manajemen Pengguna', 'url' => route('admin.users.index'), 'active' => 'admin.users.*'],
             ['label' => 'Profil', 'url' => null, 'active' => null],
         ],
         'direksi' => [

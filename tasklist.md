@@ -58,7 +58,7 @@ Urutan pengerjaan:
 | PT-09 | Memperbaiki Opnam yang Dikembalikan | Di luar tupoksi | Belum | Lihat `tupoksi.md` bagian 3 |
 | PT-10 | Melihat Riwayat Aktivitas | Rifqy | Belum | Cakupan: seluruh aktivitas (PRD 3.3) |
 | PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Hazel | Selesai | Ekspor PDF mengikuti filter aktif dan cakupan role; `ActivityLogPdfExporter` memakai `Dompdf\Dompdf`. |
-| AD-01 | Mengelola Pengguna | Halvina | Belum | |
+| AD-01 | Mengelola Pengguna | Halvina | Belum | Password minimal 8 karakter, tanpa aturan lain (keputusan tim). |
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
 | AD-03 | Mengelola Kategori Pekerjaan | Anisa | Selesai | CRUD + soft delete di `admin.work-categories.*`; WorkCategoryTest lulus. |
 | AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Selesai | CRUD + soft delete di `admin.work-types.*`, `admin.material-specs.*`, `admin.units.*`; test terkait lulus. |
