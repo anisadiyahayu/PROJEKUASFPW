@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\MaterialSpecController;
 use App\Http\Controllers\OpnamController;
+use App\Http\Controllers\TariffController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WorkCategoryController;
 use App\Http\Controllers\WorkTypeController;
@@ -58,6 +59,10 @@ Route::middleware(['auth', 'role:admin'])
             ->parameters(['work-types' => 'workType']);
         Route::resource('units', UnitController::class)
             ->except('show');
+        Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');
+        Route::get('/tariffs/create', [TariffController::class, 'create'])->name('tariffs.create');
+        Route::post('/tariffs', [TariffController::class, 'store'])->name('tariffs.store');
+        Route::delete('/tariffs/{tariff}', [TariffController::class, 'destroy'])->name('tariffs.destroy');
         Route::resource('material-specs', MaterialSpecController::class)
             ->except('show')
             ->parameters(['material-specs' => 'materialSpec']);
