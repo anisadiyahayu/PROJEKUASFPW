@@ -595,8 +595,6 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `Get-Date`, skrip PowerShell migrasi (57 blok), `git status`
 **Manual modifications:** -
 **Notes / follow-up:** Urutan kronologis dipertahankan dengan menyisipkan blok lama sebelum entri 15:41. `tasklist.md`, `prd.md`, dan kode aplikasi tidak diubah.
-<<<<<<< Updated upstream
-=======
 
 ## 2026-11-26 18:33 WIB (retroactive, jam tidak tercatat)
 **Pemilik:** Hazel
@@ -967,4 +965,3 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `Get-Date` (2026-11-27 10:20 SE Asia Standard Time), `git status --short`, `git diff --stat`, `composer dump-autoload --no-interaction`, `C:\php\php.exe -l` pada controller, rute, dan test, `C:\php\php.exe artisan route:list --except-vendor`, `C:\php\php.exe -d extension=pdo_sqlite vendor\bin\pest` (99/99 lolos), `C:\php\php.exe -d extension=pdo_sqlite artisan test` (driver sqlite tidak terbawa ke subprocess, diganti pest langsung)
 **Manual modifications:** -
 **Notes / follow-up:** `prompt_history.md` sengaja dipertahankan sesuai instruksi Pemilik, sehingga menjadi pengecualian dari aturan `AGENTS.md`. Blok 18:33 dan 18:45 WIB dipulihkan sebagai `retroactive`. Narasi desain mengikuti `layouts/simship.blade.php` dengan dial ENERGY 1 / RHYTHM 1 / MOTION 1, bukan desain baru. `pdo_sqlite` tersedia sebagai DLL tetapi tidak aktif di `C:\php\php.ini`, sehingga test dijalankan dengan `-d extension=pdo_sqlite`.
->>>>>>> Stashed changes

@@ -98,6 +98,24 @@
         @media (prefers-reduced-motion: reduce) {
             .btn { transition: none; }
         }
+        .btn-danger { background: #b91c1c; color: #fff; }
+        .btn-sm { padding: 5px 9px; font-size: 12px; }
+        .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
+        .muted { color: #64748b; }
+        .table-wrap { overflow-x: auto; }
+        .empty { text-align: center; color: #94a3b8; padding: 28px 12px; }
+        .form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .field-error { color: #b91c1c; font-size: 12px; margin-top: 4px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+        .stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+        .stat small { color: #64748b; font-size: 12px; }
+        .stat strong { display: block; font-size: 22px; color: #1e3a8a; margin-top: 4px; }
+        .actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .actions form { display: inline; }
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        .filters > div { min-width: 150px; }
+        details.changes summary { cursor: pointer; color: #1d4ed8; font-size: 12px; }
+        details.changes pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 11px; overflow-x: auto; }
     </style>
     @stack('styles')
 </head>
@@ -109,30 +127,41 @@
         'direksi' => 'Direksi',
         default => ucfirst(auth()->user()->role),
     };
-    $operatorMenu = [
-        'Dashboard' => route('petugas.dashboard'),
-        'Data Kapal' => null,
-        'Buat Opname' => route('petugas.opnams.create'),
-        'Opname Saya' => route('petugas.opnams.index'),
-        'Status Pengajuan' => null,
-        'Riwayat Aktivitas' => null,
-        'Profil' => null,
+    $menus = [
+        'petugas' => [
+            ['label' => 'Dashboard', 'url' => route('petugas.dashboard'), 'active' => 'petugas.dashboard'],
+            ['label' => 'Data Kapal', 'url' => null, 'active' => null],
+            ['label' => 'Buat Opname', 'url' => route('petugas.opnams.create'), 'active' => 'petugas.opnams.create'],
+            ['label' => 'Opname Saya', 'url' => route('petugas.opnams.index'), 'active' => 'petugas.opnams.index'],
+            ['label' => 'Status Pengajuan', 'url' => null, 'active' => null],
+            ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
+            ['label' => 'Profil', 'url' => null, 'active' => null],
+        ],
+        'admin' => [
+            ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'active' => 'admin.dashboard'],
+            ['label' => 'Data Pemilik Kapal', 'url' => route('admin.owners.index'), 'active' => 'admin.owners.*'],
+            ['label' => 'Data Kapal', 'url' => route('admin.ships.index'), 'active' => 'admin.ships.*'],
+            ['label' => 'Master Pekerjaan', 'url' => null, 'active' => null],
+            ['label' => 'Master Tarif', 'url' => null, 'active' => null],
+            ['label' => 'Data Opname', 'url' => route('admin.opnams.index'), 'active' => 'admin.opnams.*'],
+            ['label' => 'Review Opname', 'url' => null, 'active' => null],
+            ['label' => 'Laporan Rekapitulasi', 'url' => route('reports.recapitulation.index'), 'active' => 'reports.recapitulation.*'],
+            ['label' => 'Riwayat Perbaikan', 'url' => route('repair-history.index'), 'active' => 'repair-history.*'],
+            ['label' => 'Riwayat Revisi', 'url' => null, 'active' => null],
+            ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
+            ['label' => 'Manajemen Pengguna', 'url' => null, 'active' => null],
+            ['label' => 'Profil', 'url' => null, 'active' => null],
+        ],
+        'direksi' => [
+            ['label' => 'Dashboard', 'url' => route('direksi.dashboard'), 'active' => 'direksi.dashboard'],
+            ['label' => 'Transaksi Disetujui', 'url' => route('direksi.approved.index'), 'active' => 'direksi.approved.*'],
+            ['label' => 'Riwayat Perbaikan', 'url' => route('repair-history.index'), 'active' => 'repair-history.*'],
+            ['label' => 'Laporan Rekapitulasi', 'url' => route('reports.recapitulation.index'), 'active' => 'reports.recapitulation.*'],
+            ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
+            ['label' => 'Profil', 'url' => null, 'active' => null],
+        ],
     ];
-    $supervisorMenu = [
-        'Dashboard' => route('admin.dashboard'),
-        'Data Pemilik Kapal' => null,
-        'Data Kapal' => null,
-        'Master Pekerjaan' => null,
-        'Master Tarif' => null,
-        'Data Opname' => route('admin.opnams.index'),
-        'Review Opname' => route('admin.review-opnams.index'),
-        'Invoice' => route('admin.invoices.index'),
-        'Laporan' => null,
-        'Riwayat Revisi' => null,
-        'Riwayat Aktivitas' => null,
-        'Manajemen Pengguna' => null,
-        'Profil' => null,
-    ];
+    $menu = $menus[auth()->user()->role] ?? $menus['petugas'];
     $direksiMenu = [
         'Dashboard' => route('direksi.dashboard'),
         'Tagihan' => route('direksi.tagihans.index'),
@@ -162,13 +191,13 @@
         </div>
         <nav class="nav">
             <p class="nav-label">Menu {{ $roleLabel }}</p>
-            @foreach ($menu as $label => $url)
-                @if ($url)
-<<<<<<< Updated upstream
+            @foreach ($menu as $item)
+                @if ($item['url'])
+                    <a href="{{ $item['url'] }}" class="{{ request()->routeIs($item['active']) ? 'active' : '' }}">{{ $item['label'] }}</a>
+                @else
+                    <span class="item">{{ $item['label'] }}</span>
                     <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
-=======
-                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Review Opname' => 'admin.review-opnams.*', 'Invoice' => 'admin.invoices.*', 'Tagihan' => 'direksi.tagihans.*', 'Dokumen' => 'direksi.dokumen.*', 'Master Satuan' => 'admin.units.*', 'Master Material' => 'admin.material-specs.*', 'Master Pekerjaan' => 'admin.work-categories.*', 'Jenis Pekerjaan' => 'admin.work-types.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
->>>>>>> Stashed changes
+                    <a href="{{ $url }}" class="{{ request()->routeIs(match ($label) { 'Data Opname' => 'admin.opnams.*', 'Master Satuan' => 'admin.units.*', 'Master Material' => 'admin.material-specs.*', 'Master Pekerjaan' => 'admin.work-categories.*', 'Jenis Pekerjaan' => 'admin.work-types.*', 'Buat Opname' => 'petugas.opnams.create', 'Opname Saya' => 'petugas.opnams.index', default => 'none' }) ? 'active' : '' }}">{{ $label }}</a>
                 @else
                     <span class="item">{{ $label }}</span>
                 @endif
@@ -191,6 +220,16 @@
         <main class="content">
             @if (session('status'))
                 <div class="info" style="margin-bottom:16px;">{{ session('status') }}</div>
+            @endif
+            @if ($errors->any())
+                <div class="alert-error">
+                    <strong>Periksa kembali data berikut:</strong>
+                    <ul style="margin: 6px 0 0; padding-left: 18px;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
             @yield('content')
         </main>

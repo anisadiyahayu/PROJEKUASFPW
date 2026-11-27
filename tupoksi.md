@@ -14,7 +14,7 @@ Pembagian tugas dan tanggung jawab anggota tim. Acuan persyaratan produk ada di 
 
 ## 2. Aturan khusus
 - Middleware dan policy dipakai oleh semua modul, jadi perubahannya hanya dilakukan oleh Halvina.
-- Tugas Rifqy untuk ekspor laporan berstatus membantu. Mesin PDF sudah diputuskan menjadi milik Hazel (dompdf), ekspor Excel masih menunggu keputusan (lihat bagian 3 no. 8).
+- Tugas Rifqy untuk ekspor laporan berstatus membantu, sehingga pemilik mesin ekspor bersama perlu dikonfirmasi (lihat bagian 3 no. 8).
 - Modul yang dipakai sebagai dasar pembagian: Umum (UC-U), Petugas (PT), Admin (AD), Direksi (DR), dan Basis data (17 tabel).
 
 ## 3. Item yang belum punya pemilik (parkir)

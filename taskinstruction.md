@@ -250,7 +250,7 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 
 **Tabel:** `OPNAMS` (DB-09), `OPNAM_ITEMS` (DB-10), `OPNAM_ATTACHMENTS` (DB-11).
 
-**Use case:** PT-01, PT-02, PT-03, PT-04, PT-05, PT-06, PT-08, AD-05.
+**Use case:** PT-01, PT-02, PT-03, PT-04, PT-05, PT-06, AD-05.
 
 **Aturan bisnis:** BR-11, BR-12, BR-13, BR-14, BR-26, BR-27.
 
@@ -265,7 +265,6 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 - [ ] Unggah foto atau bukti per item, simpan `file_path`, `original_name`, `mime_type`, `file_size` (byte), `uploaded_by` (PT-04). Unggah opsional (BR-13). Validasi format dan ukuran wajib (BR-26).
 - [ ] Simpan draft dengan status `draft` (PT-06).
 - [ ] Halaman daftar opnam untuk Admin dengan pencarian, filter status dan tanggal, paginasi (AD-05, BR-27).
-- [ ] Halaman **Opname Saya** untuk Petugas: daftar opnam yang `created_by = user login`, pencarian, filter status dan tanggal, paginasi (PT-08, BR-27). Status ditampilkan dengan nilai badge ERD.
 - [ ] Item dapat ditambah, diubah, dan dihapus hanya sesuai status transaksi.
 
 **Yang harus ditanyakan dulu**
@@ -283,7 +282,7 @@ Migrasi harus mengikuti urutan FK. Jangan membuat migrasi yang merujuk tabel yan
 
 **Jangan**
 
-- Jangan mengerjakan PT-07, PT-09 (Bagian 6). PT-08 telah ditetapkan menjadi milik Regina.
+- Jangan mengerjakan PT-07, PT-08, PT-09 (Bagian 6).
 - Jangan menghitung ulang `unit_price`, `subtotal`, atau `total_biaya` dari tarif master setelah tersimpan.
 
 ---
@@ -336,7 +335,7 @@ ST-08, tempat alasan penolakan, alur setelah penolakan, otoritas status opnam da
 
 | No | Item | Keputusan yang dibutuhkan |
 |---|---|---|
-| 1 | PT-07, PT-09, ST-01, ST-04 (alur pengajuan dan perbaikan opnam oleh Petugas) | Tentukan pemilik. PT-08 (Opname Saya) sudah menjadi milik Regina. |
+| 1 | PT-07, PT-08, PT-09, ST-01, ST-04 (alur pengajuan dan perbaikan opnam oleh Petugas) | Tentukan pemilik |
 | 2 | AD-07, DR-03 (revisi data opnam oleh Admin dan Direksi) | Tentukan pemilik |
 | 3 | AD-12, DR-10 (revisi invoice) | Sudah diputuskan 2026-11-26: Hazel, hanya sebelum terbit |
 | 4 | PT-11, AD-15, DR-17 (ekspor riwayat aktivitas ke PDF) | Tentukan pemilik |

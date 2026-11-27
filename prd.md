@@ -1,788 +1,567 @@
-# PRD SIMSHIP (Versi Bahasa Indonesia)
+# PRD SIMSHIP (Versi Bahasa Indonesia, Revisi 2)
 
-## Panduan untuk AI Agent (baca dahulu)
+Sistem Pencatatan Opnam Pekerjaan Kapal.
+
+Dokumen ini hanya berisi persyaratan produk. Tasklist, pembagian tugas, dan status pengerjaan ada di `tasklist.md` dan `tupoksi.md`.
+
+**Perubahan dari versi sebelumnya**
+- Bagian Checklist Progres dan Kepemilikan dipindah ke file terpisah.
+- Keputusan yang sudah disepakati di Analisis Fitur v3 dimasukkan ke PRD. Daftarnya ada di Bagian 10.
+- Penomoran use case mengikuti Analisis Fitur v3 (DR-16 Riwayat Perubahan, DR-17 Riwayat Aktivitas, DR-18 Ekspor Riwayat Aktivitas). Total use case jadi 50.
+- Hal yang ada di PRD tetapi belum ada di ERD ditambahkan sebagai penambahan resmi (Bagian 6.7).
+
+---
+
+## 0. Panduan untuk AI Agent (baca dahulu)
 
 ### Urutan sumber
+1. **PRD ini** adalah sumber utama. Jika PRD lebih lengkap dari ERD, ikuti PRD.
+2. **ERD revisi** (`Perancangan_database_Laravel_rev.pdf`) adalah dasar struktur basis data. Penambahan di atas ERD hanya yang tercantum di Bagian 6.7.
+3. **Use case dan diagram** (`Usecase.pdf`) dan **Analisis Fitur v3** adalah acuan perilaku. Jika bertentangan dengan PRD ini, PRD ini yang berlaku, dan pertentangannya dicatat di Bagian 9 atau 10.
+4. **Mockup UI** bukan acuan. Jangan membangun layar dari mockup.
 
-1. **Basis data** (nama, tipe, kolom, kunci, nilai enum): ERD revisi, `Perancangan_database_Laravel_rev.pdf`. Jika dokumen lain bertentangan dengan ERD, ikuti ERD.
-2. **Perilaku** (use case, alur kerja, aturan bisnis): `Daftar_Use_Case_SIMSHIP.docx` dan `Usecase.pdf`. Analisis fitur hanya gambaran umum, bukan spesifikasi yang mengikat.
-3. **Mockup UI** (`UI_Project_FPW.pdf`): bukan acuan. Jangan membangun layar dari mockup ini.
-
-### Aturan wajib bagi agent implementasi
-
-- Jangan membuat tabel, kolom, nilai enum, role, atau status yang tidak ada di ERD.
+### Aturan wajib
+- Jangan membuat tabel, kolom, nilai enum, role, atau status di luar ERD dan Bagian 6.7.
 - Jangan menambah fitur, validasi, atau hak akses di luar Bagian 2 sampai 5.
-- Jika nilai ditandai "Tidak dispesifikasikan" atau tercantum di Bagian 9, **berhenti dan tanyakan**. Jangan menebak.
-- Gunakan nilai ERD yang persis untuk status dan role (misalnya `menunggu_review`, bukan terjemahan).
+- Item bertanda **[TERBUKA]** atau tercantum di Bagian 9: berhenti dan tanyakan. Item bertanda **[REKOMENDASI]** boleh diimplementasikan sebagai default, tetapi harus mudah diubah.
+- Gunakan nilai enum persis seperti di ERD (misalnya `menunggu_review`).
 - Kolom snapshot (`unit_price`, `subtotal`, `total_biaya`, `ship_name`, `hull_number`, `owner_name`, `owner_address`, `subtotal_amount`, `adjustment_amount`, `total_amount`) ditulis sekali saat transaksi terjadi dan tidak dihitung ulang dari data master setelahnya.
-- Data master yang dihapus memakai `deleted_at` hanya jika ERD mendefinisikannya. Jangan berasumsi soft delete di tempat lain.
-
-
-### Transisi status opnam
-
-| Dari | Ke | Pemicu | Dasar |
-|---|---|---|---|
-| (baru) | `draft` | PT-06 simpan draft | Use case |
-| `draft` | `menunggu_review` | PT-07 ajukan (mengisi `submitted_at`) | Use case, BR-15 |
-| `menunggu_review` | `perlu_revisi` | AD-09 kembalikan dengan catatan | Use case |
-| `menunggu_review` | `menunggu_approval_direksi` | AD-08 setujui review dan teruskan (mengisi `forwarded_at`) | Use case; nilai ERD mengganti `diteruskan_ke_direksi`, perlu konfirmasi |
-| `perlu_revisi` | `menunggu_review` | PT-09 perbaiki dan ajukan ulang | Tersirat, tidak dinyatakan. Konfirmasi |
-| `menunggu_approval_direksi` | `disetujui` | Tagihan disetujui (DR-06) | Tersirat, konfirmasi |
-| `menunggu_approval_direksi` | `ditolak` | Tagihan ditolak (DR-07) | Tersirat, konfirmasi |
-| `disetujui` | `dokumen_terbit` | Invoice atau technical report diterbitkan (DR-08, DR-09) | Tersirat, konfirmasi |
-
-### Transisi status tagihan
-
-Transisi yang tidak ada di tabel ini tidak diizinkan sampai pengguna mengonfirmasinya.
-
-| Dari | Ke | Pemicu | Dasar |
-|---|---|---|---|
-| (dibuat) | `menunggu_approval` | Pembuatan tagihan dari opnam yang diteruskan | Langkah pembuatan tidak dispesifikasikan (Bagian 9) |
-| `menunggu_approval` | `disetujui` | DR-06 setujui | Use case |
-| `menunggu_approval` | `ditolak` | DR-07 tolak | Use case |
+- Soft delete (`deleted_at`) hanya pada tabel yang mendefinisikannya di ERD.
 
 ---
 
 ## 1. Ringkasan Produk
 
-SIMSHIP (Sistem Pencatatan Opnam Pekerjaan Kapal) mencatat opnam atau inspeksi pekerjaan kapal yang dilakukan di lapangan, memeriksanya, lalu mengubah pekerjaan yang disetujui menjadi tagihan, invoice, dan technical report.
+SIMSHIP mencatat opnam (inspeksi pekerjaan kapal) di lapangan, memeriksanya, lalu mengubah pekerjaan yang disetujui menjadi tagihan, invoice, dan technical report.
 
-- **Tujuan:** Mencatat pekerjaan kapal beserta estimasi biayanya, memeriksa catatan tersebut, dan menyelesaikannya melalui keputusan Direksi.
-- **Latar belakang:** Tidak dispesifikasikan dalam dokumen sumber.
-- **Sasaran:** Tidak dinyatakan sebagai pernyataan tersendiri. Lingkup fungsional di bawah ini adalah satu-satunya uraian maksud dalam dokumen sumber.
-- **Pengguna:** Petugas (pencatat lapangan), Admin (pengelola data dan pemeriksa), dan Direksi (pengambil keputusan akhir). Lihat Bagian 2.
+**Tujuan:** mencatat pekerjaan kapal beserta estimasi biayanya, memeriksa catatan tersebut, dan menyelesaikannya lewat keputusan Direksi.
 
-### Lingkup dalam dokumen sumber
+**Pengguna:** Petugas (pencatat lapangan), Admin (pengelola data dan pemeriksa), Direksi (pengambil keputusan akhir).
 
-- 49 use case: 5 umum (UC-U1 sampai UC-U5), 11 Petugas (PT-01 sampai PT-11), 16 Admin (AD-01 sampai AD-16), dan 17 Direksi (DR-01 sampai DR-17).
-- 17 tabel basis data dan 24 relasi dalam ERD.
-- Pencarian, filter, dan paginasi dijelaskan di dalam use case yang memuatnya, bukan sebagai use case tersendiri.
+**Lingkup:**
+- 50 use case: 5 umum (UC-U1 sampai UC-U5), 11 Petugas (PT-01 sampai PT-11), 16 Admin (AD-01 sampai AD-16), 18 Direksi (DR-01 sampai DR-18).
+- 17 tabel dan 24 relasi dari ERD, ditambah penambahan di Bagian 6.7.
+- Pencarian, filter, dan paginasi adalah fitur pendukung di dalam use case, bukan use case tersendiri.
 
-### Di luar cakupan PRD ini
+**Di luar cakupan:** desain antarmuka (sedang direvisi).
 
-Antarmuka pengguna. Dokumen use case sumber menyatakan bahwa antarmuka sedang direvisi dan belum menjadi acuan. Mockup `UI_Project_FPW.pdf` hanya dicatat sebagai konteks (lihat Bagian 9).
-
-### Dokumen sumber
-
-- `Daftar_Use_Case_SIMSHIP.docx` (daftar use case dan fitur utama)
-- `Usecase.pdf` (diagram use case untuk Petugas, Admin, dan Direksi)
-- `Perancangan_database_Laravel_rev.pdf` (ERD revisi)
+**Istilah:** Operator menjadi Petugas, Supervisor menjadi Admin. Rekap Aktivitas dan Audit Log menjadi Riwayat Aktivitas. Riwayat Revisi (Admin) digabung ke Riwayat Perubahan.
 
 ---
 
 ## 2. Aktor dan Hak Akses
 
-SIMSHIP memiliki tiga aktor. Fitur umum (login, logout, ubah password, dashboard, profil) tersedia untuk ketiganya.
+Fitur umum (login, logout, ubah password, dashboard, profil) tersedia untuk ketiga aktor. Akun nonaktif tidak dapat masuk.
 
-| Aktor | Peran (sumber) | Tanggung jawab utama (sumber) |
+| Fitur | Petugas | Admin | Direksi |
+|---|:-:|:-:|:-:|
+| Akun dan akses (UC-U1 sampai UC-U5) | Ya | Ya | Ya |
+| Mencatat, menyimpan draft, mengajukan, memantau, memperbaiki opnam (PT-01 sampai PT-09) | Ya | - | - |
+| Melihat daftar, memeriksa, meneruskan atau mengembalikan opnam (AD-05, AD-06, AD-08, AD-09) | - | Ya | - |
+| Kelola pengguna dan master data (AD-01 sampai AD-04) | - | Ya | - |
+| Memeriksa dan memutuskan tagihan, diskon atau markup, disposisi (DR-01, DR-02, DR-04 sampai DR-07) | - | - | Ya |
+| Revisi data opnam (AD-07, DR-03) | - | Ya | Ya |
+| Revisi invoice (AD-12, DR-10) | - | Ya | Ya |
+| Ekspor invoice ke PDF (AD-13, DR-11) | - | Ya | Ya |
+| Unduh atau cetak dokumen terbit (DR-12) | - | - | Ya |
+| Riwayat Aktivitas dan ekspor PDF (PT-10, PT-11, AD-14, AD-15, DR-17, DR-18) | Ya | Ya | Ya |
+| Riwayat Perubahan (AD-10, DR-16) | - | Ya | Ya |
+| Riwayat Pekerjaan Kapal (AD-11, DR-15) | - | Ya | Ya |
+| Laporan rekapitulasi dan rekap tagihan (AD-16, DR-13, DR-14) | - | Ya | Ya |
+
+Batasan eksplisit Petugas: tidak boleh mengubah tarif dasar, memberi diskon atau markup, memberi persetujuan akhir, atau mengekspor invoice.
+
+---
+
+## 3. Persyaratan Fungsional
+
+Kolom **Tabel** merujuk ke ERD.
+
+### 3.1 Modul Akun dan Akses (semua aktor)
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| UC-U1 | Login | Masuk dengan username atau email dan password. Setelah berhasil, diarahkan ke dashboard sesuai role. Mengisi `last_login_at`. | BR-01 | USERS |
+| UC-U2 | Logout | Mengakhiri sesi, kembali ke halaman login. | - | USERS |
+| UC-U3 | Ubah Password | Mengganti password akun yang sedang login. | Aturan password **[TERBUKA]** | USERS |
+| UC-U4 | Dashboard | Ringkasan sesuai role. | Isi per role **[TERBUKA]** | - |
+| UC-U5 | Lihat dan Ubah Profil | Melihat dan mengubah data diri. Halaman Profil harus ada untuk ketiga role. | Field yang boleh diubah **[TERBUKA]** | USERS |
+
+### 3.2 Modul Pencatatan Opnam (Petugas)
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| PT-01 | Mencatat Opnam | Membuat opnam melalui tahapan berurutan: informasi kapal, detail pekerjaan, estimasi biaya, dan bukti pekerjaan. Dapat disimpan sebagai draft atau dikirim. Menyertakan PT-02. PT-03 dan PT-04 opsional. | BR-11, BR-14 | OPNAMS, OPNAM_ITEMS, SHIPS, TARIFFS, STATUS_HISTORIES |
+| PT-02 | Pilih Data Kapal | Memilih kapal dari daftar. Pemilik dan nomor lambung ditampilkan. | BR-11: wajib sebelum tahapan berikutnya | SHIPS, OWNERS |
+| PT-03 | Tambah Detail Pekerjaan | Menambah satu atau lebih item: kategori, jenis pekerjaan, material, volume, keterangan, lokasi. Item bisa ditambah, diubah, dan dihapus selama status opnam `draft` atau `perlu_revisi`. | BR-12, BR-28 | OPNAM_ITEMS, TARIFFS, MATERIAL_SPECS, WORK_TYPES, UNITS |
+| PT-04 | Unggah Foto/Bukti | Mengunggah file bukti pada item pekerjaan, dengan validasi format dan ukuran. | BR-13, BR-26. Batas format dan ukuran **[TERBUKA]** | OPNAM_ATTACHMENTS |
+| PT-05 | Lihat Perhitungan Biaya | Menampilkan estimasi biaya otomatis dari item dan tarif berlaku. Hanya tampilan. | BR-14 | OPNAM_ITEMS, TARIFFS |
+| PT-06 | Simpan Draft | Menyimpan opnam yang belum dikirim agar bisa dilanjutkan. Tersedia di tahapan pencatatan. Status `draft`. | - | OPNAMS |
+| PT-07 | Ajukan untuk Review | Tombol "Kirim Opnam" di akhir pencatatan. Status menjadi `menunggu_review`, `submitted_at` terisi, opnam masuk ke Status Pengajuan. | BR-15 | OPNAMS, STATUS_HISTORIES |
+| PT-08 | Lihat Status Pengajuan | Daftar opnam beserta status dan riwayat prosesnya. | - | OPNAMS, STATUS_HISTORIES |
+| PT-09 | Perbaiki Opnam yang Dikembalikan | Membuka opnam `perlu_revisi`, memperbaiki kesalahan input, lalu mengajukan ulang. Status kembali ke `menunggu_review`. Berbeda dari revisi oleh Admin dan Direksi. | BR-21 | OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS, STATUS_HISTORIES |
+
+### 3.3 Modul Riwayat dan Ekspor
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| PT-10, AD-14, DR-17 | Riwayat Aktivitas | Menampilkan seluruh aktivitas di sistem dengan kolom: pengguna, role, aktivitas, modul, deskripsi, waktu. Dilengkapi pencarian dan filter pengguna, role, modul, tanggal. | Semua role melihat seluruh aktivitas | ACTIVITY_LOGS |
+| PT-11, AD-15, DR-18 | Ekspor Riwayat Aktivitas ke PDF | Mengunduh PDF sesuai filter yang sedang aktif. | Semua role | ACTIVITY_LOGS |
+| AD-10, DR-16 | Riwayat Perubahan | Menampilkan perubahan data opnam dan invoice: nilai sebelum dan sesudah, pelaku, waktu. Wajib mencakup perubahan harga dan diskon. Menggantikan Riwayat Revisi (Admin). | Hanya Admin dan Direksi | ACTIVITY_LOGS (`old_values`, `new_values`), STATUS_HISTORIES |
+| AD-11, DR-15 | Riwayat Pekerjaan Kapal | Mencari dan melihat riwayat pekerjaan dan perbaikan kapal berdasarkan nama atau nomor lambung. Direksi menjangkaunya lewat halaman Transaksi Disetujui. Satu fitur yang sama. | BR-25 | SHIPS, OPNAMS, OPNAM_ITEMS |
+
+### 3.4 Modul Master Data (Admin)
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| AD-01 | Kelola Pengguna | Tambah akun, ubah data, tentukan role (petugas, admin, direksi), nonaktifkan akun. Pengguna tidak dihapus, hanya dinonaktifkan. | BR-01 | USERS |
+| AD-02 | Kelola Owner dan Kapal | Tambah, ubah, hapus. Hapus memakai soft delete. Nomor lambung unik. | - | OWNERS, SHIPS |
+| AD-03 | Kelola Kategori Pekerjaan | Tambah, ubah, hapus (soft delete), beserta status aktif. Nama kategori unik. | Penambahan `is_active`, lihat 6.7 | WORK_CATEGORIES |
+| AD-04 | Kelola Jenis Pekerjaan, Material/Spesifikasi, Satuan, Tarif | Mengelola keempat master. Tarif dicatat dengan tanggal berlaku (`effective_from`). Hapus jenis pekerjaan dan material memakai soft delete. | BR-02, BR-06, BR-10 | WORK_TYPES, MATERIAL_SPECS, UNITS, TARIFFS |
+
+### 3.5 Modul Pemeriksaan Opnam (Admin)
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| AD-05 | Daftar Opnam | Seluruh opnam dengan pencarian, filter status, operator, tanggal, dan paginasi. | BR-27 | OPNAMS, SHIPS |
+| AD-06 | Periksa Opnam | Meninjau detail pekerjaan, bukti, dan estimasi biaya sebelum keputusan. Use case dasar untuk AD-07, AD-08, AD-09. | BR-16, BR-17 | OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS |
+| AD-07 | Revisi Data Opnam | Mengubah data opnam langsung saat pemeriksaan (status `menunggu_review`). Setiap perubahan tercatat di Riwayat Perubahan. | BR-19 | OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS, ACTIVITY_LOGS |
+| AD-08 | Setujui Hasil Review | Menyetujui dan meneruskan ke Direksi. Status `menunggu_approval_direksi`, `forwarded_at` terisi. Menyertakan AD-06. | BR-16 | OPNAMS, STATUS_HISTORIES |
+| AD-09 | Kembalikan untuk Revisi | Mengembalikan ke Petugas dengan status `perlu_revisi`. Catatan wajib dan disimpan di riwayat status. Menyertakan AD-06. | BR-17, BR-18 | OPNAMS, STATUS_HISTORIES |
+
+### 3.6 Modul Keputusan Tagihan (Direksi)
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| DR-01 | Daftar Draft Menunggu Approval | Menampilkan opnam atau tagihan yang diteruskan Admin dan menunggu keputusan. | Daftar dibaca dari `BILLINGS.status = menunggu_approval` **[REKOMENDASI]** | BILLINGS, OPNAMS |
+| DR-02 | Periksa Draft Tagihan | Meninjau rincian pekerjaan, subtotal, dan total. Use case dasar untuk DR-03, DR-04, DR-06, DR-07. | BR-22 | BILLINGS, BILLING_ADJUSTMENTS, OPNAM_ITEMS |
+| DR-03 | Revisi Data Opnam | Mengubah data opnam langsung saat pemeriksaan tagihan. Tercatat di Riwayat Perubahan. | BR-20 | OPNAMS, OPNAM_ITEMS, ACTIVITY_LOGS |
+| DR-04 | Diskon atau Markup | Menentukan jenis (diskon atau markup), nilai, dan total akhir. Opsional. Menyertakan DR-05. Perubahan harga dan diskon wajib tercatat di log. | BR-07, BR-08, BR-24 | BILLING_ADJUSTMENTS, BILLINGS |
+| DR-05 | Catat Disposisi | Alasan atas penyesuaian harga. Wajib untuk setiap diskon atau markup. | BR-08 | BILLING_ADJUSTMENTS (`disposition_note`) |
+| DR-06 | Setujui Tagihan | Persetujuan akhir. Mengisi `decided_by` dan `decided_at`. Menyertakan DR-02. | BR-07, BR-22, BR-23 | BILLINGS, STATUS_HISTORIES |
+| DR-07 | Tolak Tagihan | Menolak disertai alasan. Alasan disimpan di `STATUS_HISTORIES.note` **[REKOMENDASI]**. Tagihan yang ditolak dapat diajukan ulang. Menyertakan DR-02. | BR-22, BR-29 | BILLINGS, STATUS_HISTORIES |
+| DR-08 | Terbitkan Invoice PDF | Setelah tagihan disetujui, sistem menerbitkan invoice. Invoice menampilkan harga. Diterbitkan sistem, bukan dipicu manual. | BR-09, BR-23 | INVOICES |
+| DR-09 | Terbitkan Technical Report PDF | Setelah tagihan disetujui, sistem menerbitkan technical report tanpa harga. | BR-09, BR-23 | TECHNICAL_REPORTS |
+
+### 3.7 Modul Invoice dan Dokumen
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| AD-12, DR-10 | Revisi Invoice | Mengubah data invoice sebelum invoice diterbitkan. Menambah `revision_count`. Perubahan dicatat di log. Admin dan Direksi. | **[TERBUKA]** hubungan dengan penerbitan otomatis, lihat Bagian 9 no. 2 | INVOICES, ACTIVITY_LOGS |
+| AD-13, DR-11 | Ekspor Invoice ke PDF | Mengunduh invoice yang sudah terbit. Admin dan Direksi. Petugas tidak boleh. | BR-05, BR-09 | INVOICES |
+| DR-12 | Unduh atau Cetak Dokumen | Mengunduh atau mencetak dokumen terbit (invoice dan technical report). | Digabung dengan DR-11 atau tidak **[TERBUKA]** | INVOICES, TECHNICAL_REPORTS |
+
+### 3.8 Modul Laporan
+
+| ID | Fitur | Perilaku | Aturan | Tabel |
+|---|---|---|---|---|
+| AD-16 | Lihat dan Ekspor Laporan Rekapitulasi | Laporan rekap per periode, ekspor PDF atau Excel. Admin. | Terpisah dari Riwayat Aktivitas. Isi dan kolom **[TERBUKA]** | Agregasi dari tabel transaksi |
+| DR-13 | Lihat Rekap Tagihan | Rekap tagihan yang sudah diproses. Direksi. | - | BILLINGS |
+| DR-14 | Ekspor Laporan PDF/Excel | Ekspor laporan. Direksi. | Terpisah dari Riwayat Aktivitas | Agregasi |
+
+### 3.9 Fitur Pendukung (berlaku di dalam use case)
+
+| Fitur | Berlaku di | Keterangan |
 |---|---|---|
-| Petugas | Pencatat lapangan untuk inspeksi pekerjaan kapal | Mencatat dan mengajukan opnam, memperbaiki opnam yang dikembalikan untuk revisi. |
-| Admin | Pengelola data dan pemeriksa opnam | Mengelola pengguna dan master data, memeriksa opnam, merevisi data opnam, meneruskan opnam ke Direksi, serta merevisi dan mengekspor invoice. |
-| Direksi | Pengambil keputusan akhir | Memeriksa draft tagihan, memberikan diskon atau markup dengan catatan disposisi, menyetujui atau menolak tagihan, serta menerbitkan dan mengekspor dokumen. |
+| Pencarian, filter status dan tanggal, paginasi | Semua daftar transaksi dan riwayat | BR-27 |
+| Validasi format dan ukuran file | PT-04 | BR-26 |
+| Estimasi biaya otomatis | PT-01, PT-05 | BR-14 |
+| Pencatatan log aktivitas | Semua aksi ubah data | Lihat 4.5 |
 
-### Akses dan batasan per aktor (sesuai dokumen sumber)
+### 3.10 Rincian Modul Opnam dan Kalkulasi Biaya
 
-| Kemampuan | Petugas | Admin | Direksi |
+Bagian ini merinci PT-01 sampai PT-06 dan AD-05, melengkapi 3.2 dan 4.1 tanpa mengubahnya. Baris yang merujuk 6.7 berstatus perlu konfirmasi: agent mengimplementasikannya setelah tim mengonfirmasi.
+
+#### 3.10.1 Batas pekerjaan dan antarmuka dengan modul lain
+
+Modul Opnam hanya mengerjakan tabel `OPNAMS`, `OPNAM_ITEMS`, `OPNAM_ATTACHMENTS`, use case PT-01 sampai PT-06 dan AD-05, serta service kalkulasi biaya (3.10.4). Tidak ada perubahan yang diminta di modul lain.
+
+| Modul | Yang dibaca modul Opnam | Perubahan di modul itu | Antarmuka yang tetap |
 |---|---|---|---|
-| Fitur umum UC-U1 sampai UC-U5 | Ya | Ya | Ya |
-| Memilih kapal, mencatat, menyimpan draft, mengajukan opnam (PT-01, PT-02, PT-06, PT-07) | Ya | Tidak tercantum | Tidak tercantum |
-| Memperbaiki opnam yang dikembalikan (PT-09) | Ya | Tidak tercantum | Tidak tercantum |
-| Mengelola pengguna (AD-01) | Tidak | Ya | Tidak tercantum |
-| Mengelola owner dan kapal (AD-02) | Tidak tercantum | Ya | Tidak tercantum |
-| Mengelola kategori, jenis pekerjaan, material, satuan, tarif dasar (AD-03, AD-04) | Tidak (tidak boleh mengubah tarif dasar) | Ya | Tidak tercantum |
-| Melihat seluruh opnam (AD-05), memeriksa (AD-06), meneruskan atau mengembalikan (AD-08, AD-09) | Tidak tercantum | Ya | Tidak tercantum |
-| Merevisi data opnam (AD-07) | Tidak tercantum | Ya | Ya, sesuai kebutuhan saat pemeriksaan tagihan (DR-03) |
-| Diskon atau markup dengan disposisi (DR-04, DR-05) | Tidak | Tidak tercantum | Ya |
-| Menyetujui atau menolak tagihan (DR-06, DR-07) | Tidak (tidak dapat memberi persetujuan akhir) | Tidak tercantum | Ya |
-| Menerbitkan invoice PDF dan technical report PDF (DR-08, DR-09) | Tidak tercantum | Tidak tercantum | Ya |
-| Merevisi invoice (AD-12, DR-10) | Tidak tercantum | Ya (AD-12) | Ya (DR-10) |
-| Mengekspor invoice ke PDF (AD-13, DR-11) | Tidak (tidak dapat mengekspor invoice) | Ya | Ya |
-| Melihat rekap tagihan (DR-13) | Tidak tercantum | Tidak tercantum | Ya |
-| Laporan PDF atau Excel (AD-16, DR-14) | Tidak tercantum | Ya (AD-16) | Ya (DR-14) |
-| Melihat dan mengekspor riwayat aktivitas ke PDF (PT-10, PT-11, AD-14, AD-15, DR-16, DR-17) | Ya (cakupan masih terbuka, lihat Bagian 9) | Ya | Ya |
+| Owner, kapal, log aktivitas | `SHIPS.name`, `hull_number`, `OWNERS.name` | Tidak ada | `SHIPS` tetap sesuai ERD. Jenis kapal disimpan di `OPNAMS` |
+| Master pekerjaan dan tarif | `TARIFFS.price`, `unit_id`, `effective_from`, `MATERIAL_SPECS`, `WORK_TYPES`, `WORK_CATEGORIES`, `UNITS` | Tidak ada | `TARIFFS` tidak diberi kolom faktor. Faktor disimpan di item opnam |
+| Review, approval, dokumen tagihan | Modul tagihan membaca `OPNAMS.total_biaya` dan `OPNAM_ITEMS.volume`, `unit_price`, `subtotal`, `description`, `lokasi` | Tidak ada | Nama, tipe, dan arti kolom ini tidak berubah. `subtotal` tetap hasil akhir per item dan `total_biaya` tetap jumlah `subtotal` |
+| Autentikasi, pengguna, policy | Role dan policy yang sudah ada | Tidak ada | Aturan siapa mengubah apa di status apa tetap mengikuti 4.6 |
 
-"Tidak tercantum" berarti dokumen sumber tidak memberikan kemampuan tersebut kepada aktor itu. Hal ini tidak secara eksplisit melarangnya.
+Aturan pelaksanaan:
+- Modul lain dibaca saja. Jangan mengubah migrasi, model, atau policy milik modul lain, dan jangan mengubah struktur `STATUS_HISTORIES`.
+- Perubahan basis data hanya lewat migrasi baru yang aditif (kolom baru nullable atau punya default). Jangan mengubah nama, tipe, atau constraint kolom ERD. Migrasi memeriksa keberadaan kolom (`hasColumn`) sebelum menambah, supaya tidak ada kolom ganda.
+- Item yang belum punya pemilik di `tupoksi.md` (PT-07, PT-08, PT-09, AD-07, DR-03, ST-01, ST-04) tidak dikerjakan di sini. Modul Opnam hanya menyediakan service kalkulasi yang dapat dipakai pemiliknya kelak.
 
-**Peran akun:** Tabel `USERS` menyimpan nilai role `petugas`, `admin`, dan `direksi`. Akun memiliki penanda `is_active`. Akun yang tidak aktif tidak dapat masuk (UC-U1).
+#### 3.10.2 Informasi kapal dan opnam (langkah 1)
+
+| Field | Sumber | Aturan |
+|---|---|---|
+| Kapal | Pilih dari `SHIPS` | Wajib (BR-11) |
+| Pemilik | `OWNERS.name` lewat `SHIPS` | Tampil otomatis, tidak dapat diubah |
+| Nomor lambung | `SHIPS.hull_number` | Tampil otomatis, tidak dapat diubah |
+| Jenis kapal | Input Petugas, disimpan di `OPNAMS.jenis_kapal` | 6.7 no. 3. Daftar nilai **[TERBUKA]**, Bagian 9 no. 18 |
+| Tanggal opnam | `OPNAMS.tanggal_opnam` | Wajib. Menentukan tarif berlaku (3.10.3) |
+| Catatan | `OPNAMS.catatan` | Opsional |
+
+`jenis_kapal` disimpan di `OPNAMS` sebagai nilai pada saat opnam, mengikuti pola snapshot. Jika `SHIPS` kelak memiliki jenis kapal, form mengisinya otomatis dari sana dan `OPNAMS.jenis_kapal` tetap menjadi salinan. Opnam yang sudah ada tidak berubah.
+
+Kolom pekerjaan tambahan dari client (6.7 no. 5, **[TERBUKA]**, Bagian 9 no. 22) dicatat di tabel berikut setelah daftarnya diterima. Semua kolom nullable dan tidak ikut rumus kecuali 3.10.4 menyebutnya.
+
+| Nama kolom | Tipe | Tempat | Wajib | Dipakai di rumus |
+|---|---|---|---|---|
+| (diisi setelah client memberi daftar) | | | | |
+
+#### 3.10.3 Detail pekerjaan (langkah 2)
+
+Alur pengisian satu item:
+1. Petugas memilih kategori, lalu jenis pekerjaan, lalu material atau spesifikasi.
+2. Sistem mencari tarif: baris `TARIFFS` untuk material itu dengan `effective_from` terbaru yang tidak melewati `tanggal_opnam` (BR-31).
+3. Sistem menampilkan satuan dan harga dari tarif tersebut.
+4. Petugas mengisi volume, ketebalan, kompleksitas, lokasi, dan keterangan.
+5. Sistem menampilkan pratinjau faktor dan subtotal. Item disimpan dengan `tariff_id` dan snapshot harga.
+
+Aturan: BR-33, BR-34, BR-35 dan BR-28 berlaku. Jika satu material punya tarif berlaku dengan lebih dari satu satuan, Petugas memilih satuan **[REKOMENDASI]**. Mengubah tarif di master setelah item tersimpan tidak mengubah item tersebut (BR-10).
+
+#### 3.10.4 Rumus kalkulasi (PT-05)
+
+```
+subtotal_item = volume x unit_price x faktor_ketebalan x faktor_kompleksitas
+total_biaya   = jumlah subtotal_item semua item
+```
+
+- `faktor_ketebalan` dan `faktor_kompleksitas` bernilai 1 bila input terkait tidak diisi. Item lama dan item tanpa faktor menghasilkan `volume x unit_price`, sama seperti sebelum penambahan ini.
+- Pembulatan **[TERBUKA]**, Bagian 9 no. 21. Default sementara: `subtotal_item` dibulatkan 2 desimal dan `total_biaya` adalah jumlah dari nilai yang sudah dibulatkan.
+- Contoh (angka ilustrasi): volume 10, `unit_price` 100.000, faktor ketebalan 1,2, faktor kompleksitas 1,1 menghasilkan `subtotal` 1.320.000.
+- Sumber nilai faktor **[TERBUKA]**, Bagian 9 no. 14, 19, 20, 23. Sampai diputuskan, modul Opnam memakai konfigurasi milik sendiri (`config/opnam.php`) yang memetakan input ketebalan dan tingkat kompleksitas ke faktor. Isi awal konfigurasi kosong, sehingga semua faktor bernilai 1. Jika master faktor disediakan kemudian, sumber nilai berpindah ke master itu tanpa mengubah kolom di `OPNAM_ITEMS`.
+- Logika rumus berada di satu service (`OpnamCostCalculator`) yang tidak bergantung pada halaman. Form pencatatan memanggilnya. Pemilik AD-07 dan DR-03 memanggil service yang sama saat mengerjakan revisi opnam, supaya hasil hitung identik di semua jalur.
+- `total_biaya` dihitung ulang selama opnam masih boleh diubah dan dibekukan saat diteruskan ke Direksi **[REKOMENDASI]**, mengikuti 6.6.
+
+Kolom yang ditambahkan (6.7 no. 3 dan 4), lewat satu migrasi aditif:
+
+| Tabel | Kolom | Tipe | Aturan |
+|---|---|---|---|
+| `OPNAMS` | `jenis_kapal` | string, nullable | Nilai saat opnam dibuat |
+| `OPNAM_ITEMS` | `ketebalan` | decimal, nullable | Input Petugas, satuan **[TERBUKA]** |
+| `OPNAM_ITEMS` | `kompleksitas` | string, nullable | Tingkat pilihan Petugas, daftar **[TERBUKA]** |
+| `OPNAM_ITEMS` | `faktor_ketebalan` | decimal, default 1 | Snapshot, ditulis saat item disimpan |
+| `OPNAM_ITEMS` | `faktor_kompleksitas` | decimal, default 1 | Snapshot, ditulis saat item disimpan |
+
+Baris yang sudah ada mendapat default 1, sehingga `subtotal` lama tidak berubah.
+
+#### 3.10.5 Tampilan estimasi biaya (PT-05)
+
+Tabel per item menampilkan jenis pekerjaan, material, volume dan satuan, harga satuan, faktor ketebalan, faktor kompleksitas, dan subtotal. Di bawahnya tampil `total_biaya`. Tampilan hanya baca.
+
+#### 3.10.6 Kriteria penerimaan
+
+1. Item dengan semua faktor bernilai 1 menghasilkan `subtotal = volume x unit_price`.
+2. Item pada contoh 3.10.4 menghasilkan `subtotal` 1.320.000.
+3. `total_biaya` sama dengan jumlah `subtotal` semua item pada opnam.
+4. Mengubah harga di `TARIFFS` setelah item tersimpan tidak mengubah `unit_price` maupun `subtotal` item itu.
+5. Material tanpa tarif berlaku pada `tanggal_opnam` menolak penyimpanan item dengan pesan yang jelas.
+6. Migrasi berjalan pada basis data yang sudah berisi opnam tanpa error, dan `subtotal` serta `total_biaya` lama tidak berubah.
+7. Diff perubahan tidak memuat file milik modul lain.
+8. Halaman tagihan yang membaca `total_biaya` dan item opnam tetap menampilkan nilai yang benar setelah migrasi.
 
 ---
 
-## 3. Fitur dan Persyaratan Fungsional
-
-Semua 49 use case dari dokumen sumber tercantum di bawah ini, dikelompokkan per aktor. Setiap baris memuat deskripsi dan relasi dari sumber. Kolom aturan merujuk ke daftar bernomor di Bagian 5.
-
-Hal yang tidak dispesifikasikan untuk fitur mana pun dalam dokumen sumber: field input dan output, alur kerja langkah demi langkah yang detail, dan kriteria penerimaan. Satu-satunya poin penerimaan adalah pernyataan eksplisit pada kolom "Aturan dan poin penerimaan". Jika sumber tidak menyebutkan, sel tersebut menyatakannya. Tabel basis data terkait dipetakan berdasarkan nama dari ERD; pemetaan ini tidak dinyatakan langsung oleh dokumen sumber.
-
-### 3.1 Fitur umum (semua aktor)
-
-| ID | Use case | Deskripsi (sumber) | Relasi | Aturan dan poin penerimaan | Tabel DB terkait |
-|---|---|---|---|---|---|
-| UC-U1 | Login | Masuk menggunakan username atau email dan password. | Tidak ada | BR-01: Akun nonaktif tidak dapat masuk. | USERS |
-| UC-U2 | Logout | Keluar dari sistem dan mengakhiri sesi. | Tidak ada | Tidak dispesifikasikan selain deskripsi. | USERS |
-| UC-U3 | Mengubah Password | Mengganti password akun yang sedang digunakan. | Tidak ada | Tidak dispesifikasikan (misalnya pengecekan password lama atau aturan password). | USERS |
-| UC-U4 | Melihat Dashboard | Melihat ringkasan sesuai role yang login. | Tidak ada | Isi dashboard per role: tidak dispesifikasikan. | Tidak dispesifikasikan |
-| UC-U5 | Melihat dan Mengubah Profil | Melihat data profil dan mengubah data diri, lalu menyimpan perubahan. | Tidak ada | Field yang dapat diubah: tidak dispesifikasikan. | USERS |
-
-### 3.2 Use case Petugas
-
-| ID | Use case | Deskripsi (sumber) | Relasi | Aturan dan poin penerimaan | Tabel DB terkait |
-|---|---|---|---|---|---|
-| PT-01 | Mencatat Opnam Pekerjaan | Membuat transaksi opnam baru melalui langkah-langkah: informasi kapal, detail pekerjaan, estimasi biaya, dan tinjauan akhir. | Menyertakan PT-02 | BR-11, BR-14. Langkah-langkahnya ada di Bagian 4. | OPNAMS, OPNAM_ITEMS, SHIPS, TARIFFS, STATUS_HISTORIES |
-| PT-02 | Memilih Data Kapal | Memilih kapal yang akan diopnam sebagai langkah awal pencatatan. | Disertakan oleh PT-01 | BR-11: Pemilihan kapal selalu wajib sebelum transaksi dibuat. | SHIPS, OWNERS |
-| PT-03 | Menambahkan Detail Pekerjaan | Menambahkan satu atau beberapa item pekerjaan beserta material, volume, dan keterangan. | Memperluas PT-01 (opsional) | BR-12: Penambahan detail bersifat opsional. | OPNAM_ITEMS, TARIFFS, MATERIAL_SPECS, WORK_TYPES, UNITS |
-| PT-04 | Mengunggah Foto/Bukti Pekerjaan | Mengunggah foto atau dokumen bukti pekerjaan, dengan validasi format dan ukuran file. | Memperluas PT-03 (opsional) | BR-13: Unggah bersifat opsional. BR-26: Validasi format dan ukuran wajib. Batas format dan ukuran yang diizinkan: tidak dispesifikasikan. | OPNAM_ATTACHMENTS |
-| PT-05 | Melihat Perhitungan Biaya | Melihat estimasi biaya yang dihitung otomatis berdasarkan tarif yang berlaku. | Tidak ada | BR-14. | OPNAM_ITEMS, TARIFFS |
-| PT-06 | Menyimpan Draft Opnam | Menyimpan opnam yang belum diajukan agar dapat dilanjutkan nanti. | Tidak ada | Nilai status: `draft`. Apakah tombol Simpan Draft tersedia di proses pencatatan masih menjadi pertanyaan terbuka (Bagian 9). | OPNAMS |
-| PT-07 | Mengajukan Opnam untuk Review | Mengirim opnam ke Admin untuk diperiksa. Status berubah menjadi Menunggu Review. | Tidak ada | BR-15: Status berubah menjadi `menunggu_review`. | OPNAMS, STATUS_HISTORIES |
-| PT-08 | Melihat Status Pengajuan | Melihat status setiap opnam beserta riwayat prosesnya. | Tidak ada | Tidak dispesifikasikan selain deskripsi. | OPNAMS, STATUS_HISTORIES |
-| PT-09 | Memperbaiki Opnam yang Dikembalikan | Memperbaiki kesalahan input pada opnam berstatus Perlu Revisi, lalu mengajukannya kembali. Berbeda dari revisi oleh Admin dan Direksi. | Tidak ada | BR-21: Hanya opnam berstatus `perlu_revisi` yang dapat diperbaiki di sini. Transisi status saat pengajuan ulang tersirat tetapi tidak dinyatakan secara eksplisit (Bagian 9). | OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS, STATUS_HISTORIES |
-| PT-10 | Melihat Riwayat Aktivitas | Melihat catatan aktivitas dan perubahan data di sistem. | Tidak ada | Cakupan untuk Petugas (aktivitas sendiri atau seluruhnya): pertanyaan terbuka (Bagian 9). | ACTIVITY_LOGS |
-| PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Mengunduh riwayat aktivitas dalam format PDF. | Tidak ada | Pertanyaan cakupan yang sama dengan PT-10. | ACTIVITY_LOGS |
-
-### 3.3 Use case Admin
-
-| ID | Use case | Deskripsi (sumber) | Relasi | Aturan dan poin penerimaan | Tabel DB terkait |
-|---|---|---|---|---|---|
-| AD-01 | Mengelola Pengguna | Menambah akun, mengubah data, menentukan role, dan menonaktifkan akun. | Tidak ada | Aturan penonaktifan: BR-01 (akun nonaktif tidak dapat masuk). | USERS |
-| AD-02 | Mengelola Data Owner dan Kapal | Menambah, mengubah, dan menghapus data pemilik dan kapal. | Tidak ada | Perilaku hapus (soft atau hard): tidak dispesifikasikan; ERD memiliki `deleted_at` pada OWNERS dan SHIPS. | OWNERS, SHIPS |
-| AD-03 | Mengelola Kategori Pekerjaan | Menambah, mengubah, dan menghapus kategori pekerjaan. | Tidak ada | Perilaku hapus: tidak dispesifikasikan; `deleted_at` ada pada WORK_CATEGORIES. | WORK_CATEGORIES |
-| AD-04 | Mengelola Jenis Pekerjaan, Material/Spesifikasi, Satuan, dan Tarif | Mengelola jenis pekerjaan, material, satuan, dan tarif dasar. | Tidak ada | BR-06: Admin mengelola tarif dasar. BR-10: Perubahan tarif tidak mengubah transaksi yang sudah tercatat. | WORK_TYPES, MATERIAL_SPECS, UNITS, TARIFFS |
-| AD-05 | Melihat Daftar Opnam | Melihat seluruh opnam, dilengkapi pencarian, filter, dan paginasi. | Tidak ada | BR-27. | OPNAMS, SHIPS |
-| AD-06 | Memeriksa Opnam | Memeriksa detail pekerjaan dan estimasi biaya sebelum memberi keputusan. | Disertakan oleh AD-08 dan AD-09; diperluas oleh AD-07 | BR-06, BR-16, BR-17. | OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS |
-| AD-07 | Merevisi Data Opnam | Mengubah data opnam secara langsung saat pemeriksaan, jika diperlukan. | Memperluas AD-06 (bersyarat) | BR-19. | OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS |
-| AD-08 | Menyetujui Hasil Review | Menyetujui hasil pemeriksaan dan meneruskan opnam ke Direksi. | Menyertakan AD-06 | BR-16, BR-22: Status menjadi `menunggu_approval_direksi`, menggantikan `diteruskan_ke_direksi` pada ERD revisi (`forwarded_at` diisi). | OPNAMS, STATUS_HISTORIES |
-| AD-09 | Mengembalikan Opnam untuk Revisi | Mengembalikan opnam ke Petugas dengan status Perlu Revisi, disertai catatan. | Menyertakan AD-06 | BR-17, BR-18: Catatan wajib diisi. | OPNAMS, STATUS_HISTORIES |
-| AD-10 | Melihat Riwayat Revisi | Melihat riwayat perubahan pada opnam dan invoice. | Tidak ada | Tidak dispesifikasikan selain deskripsi. Apakah ini fitur yang sama dengan Riwayat Perubahan: pertanyaan terbuka (Bagian 9). | STATUS_HISTORIES, INVOICES, ACTIVITY_LOGS (pemetaan belum dikonfirmasi sumber) |
-| AD-11 | Melihat Riwayat Pekerjaan Kapal | Melihat riwayat pekerjaan yang pernah dilakukan pada suatu kapal. | Tidak ada | Hubungan dengan DR-15: pertanyaan terbuka (Bagian 9). | SHIPS, OPNAMS, OPNAM_ITEMS |
-| AD-12 | Merevisi Invoice | Mengubah data invoice. | Tidak ada | Waktu revisi (sebelum atau sesudah terbit): pertanyaan terbuka (Bagian 9). | INVOICES |
-| AD-13 | Mengekspor Invoice ke PDF | Mengunduh invoice dalam format PDF. Invoice menampilkan harga. | Tidak ada | BR-09: Invoice menampilkan harga. | INVOICES |
-| AD-14 | Melihat Riwayat Aktivitas | Melihat catatan aktivitas dan perubahan data di sistem. | Tidak ada | Penggabungan dengan Riwayat Perubahan dan Audit Log: pertanyaan terbuka (Bagian 9). | ACTIVITY_LOGS |
-| AD-15 | Mengekspor Riwayat Aktivitas ke PDF | Mengunduh riwayat aktivitas dalam format PDF. | Tidak ada | Sama dengan AD-14. | ACTIVITY_LOGS |
-| AD-16 | Melihat dan Mengekspor Laporan Rekapitulasi | Melihat laporan rekapitulasi per periode dan mengekspornya ke PDF atau Excel. | Tidak ada | Isi dan kolom laporan: tidak dispesifikasikan. Dipisahkan dari Riwayat Aktivitas (Bagian 10 sumber). | Tidak dispesifikasikan (tidak ada tabel laporan di ERD) |
-
-### 3.4 Use case Direksi
-
-| ID | Use case | Deskripsi (sumber) | Relasi | Aturan dan poin penerimaan | Tabel DB terkait |
-|---|---|---|---|---|---|
-| DR-01 | Melihat Draft Menunggu Approval | Melihat daftar opnam atau tagihan yang menunggu keputusan Direksi. | Tidak ada | Apakah daftar ini mencakup opnam atau hanya tagihan: tidak dispesifikasikan secara rinci. | BILLINGS (status `menunggu_approval`) |
-| DR-02 | Memeriksa Draft Tagihan | Memeriksa rincian pekerjaan dan total tagihan sebelum memberi keputusan. | Disertakan oleh DR-06 dan DR-07; diperluas oleh DR-03 dan DR-04 | BR-22. | BILLINGS, BILLING_ADJUSTMENTS, OPNAM_ITEMS |
-| DR-03 | Merevisi Data Opnam | Mengubah data opnam langsung di draft saat pemeriksaan, jika diperlukan. | Memperluas DR-02 (opsional) | BR-20. Apakah ini berlaku untuk Direksi juga masih terbuka (Bagian 9). | OPNAMS, OPNAM_ITEMS |
-| DR-04 | Memberikan Diskon atau Markup | Memberi penyesuaian harga berupa diskon atau markup, wajib disertai catatan disposisi. | Menyertakan DR-05; memperluas DR-02 (opsional) | BR-07, BR-08, BR-24. | BILLING_ADJUSTMENTS, BILLINGS |
-| DR-05 | Mencatat Disposisi | Mengisi alasan atau catatan atas penyesuaian harga yang diberikan. | Disertakan oleh DR-04 | BR-08. | BILLING_ADJUSTMENTS (`disposition_note`) |
-| DR-06 | Menyetujui Tagihan | Memberikan persetujuan akhir atas tagihan. | Menyertakan DR-02; diperluas oleh DR-08 dan DR-09 | BR-07, BR-22, BR-23. | BILLINGS (status `disetujui`, `decided_by`, `decided_at`) |
-| DR-07 | Menolak Tagihan | Menolak tagihan disertai alasan penolakan. | Menyertakan DR-02 | BR-22. Tempat penyimpanan alasan penolakan: tidak dispesifikasikan (Bagian 9). Apakah tagihan yang ditolak dapat direvisi: pertanyaan terbuka. | BILLINGS (status `ditolak`, `decided_by`, `decided_at`) |
-| DR-08 | Menerbitkan Invoice PDF | Menerbitkan invoice setelah tagihan disetujui. Invoice menampilkan harga. | Memperluas DR-06 | BR-09, BR-23. | INVOICES |
-| DR-09 | Menerbitkan Technical Report PDF | Menerbitkan technical report setelah tagihan disetujui. Technical report tidak menampilkan harga. | Memperluas DR-06 | BR-09, BR-23. | TECHNICAL_REPORTS |
-| DR-10 | Merevisi Invoice | Mengubah data invoice. | Tidak ada | Waktu dan apakah Direksi boleh merevisi: pertanyaan terbuka (Bagian 9). | INVOICES |
-| DR-11 | Mengekspor Invoice ke PDF | Mengunduh invoice dalam format PDF. | Tidak ada | Perbedaan dengan DR-08: pertanyaan terbuka (Bagian 9). | INVOICES |
-| DR-12 | Mengunduh atau Mencetak Dokumen | Mengunduh atau mencetak dokumen yang sudah terbit. | Tidak ada | Tidak dispesifikasikan selain deskripsi. | INVOICES, TECHNICAL_REPORTS |
-| DR-13 | Melihat Rekap Tagihan | Melihat rekap tagihan yang sudah diproses. | Tidak ada | Tidak dispesifikasikan selain deskripsi. | BILLINGS |
-| DR-14 | Mengekspor Laporan PDF/Excel | Mengekspor laporan ke format PDF atau Excel. | Tidak ada | Isi laporan: tidak dispesifikasikan. Tidak tampil di Usecase.pdf (Bagian 9). | Tidak dispesifikasikan |
-| DR-15 | Mencari dan Melihat Riwayat Perbaikan Kapal | Mencari riwayat perbaikan berdasarkan nama atau nomor lambung kapal, melalui halaman Transaksi Disetujui. | Tidak ada | BR-25. Apakah ini fitur yang sama dengan AD-11: pertanyaan terbuka (Bagian 9). | SHIPS, OPNAMS, OPNAM_ITEMS |
-| DR-16 | Melihat Riwayat Aktivitas | Melihat catatan aktivitas dan perubahan data, termasuk perubahan harga dan diskon. | Tidak ada | Wajib mencakup perubahan harga dan diskon (eksplisit dalam sumber). | ACTIVITY_LOGS |
-| DR-17 | Mengekspor Riwayat Aktivitas ke PDF | Mengunduh riwayat aktivitas dalam format PDF. | Tidak ada | Sama dengan DR-16. | ACTIVITY_LOGS |
-
-### 3.5 Fitur pendukung (bukan use case tersendiri)
-
-| Fitur | Berlaku di | Deskripsi (sumber) | Tabel DB terkait |
-|---|---|---|---|
-| Pencarian, filter status dan tanggal, paginasi | AD-05, DR-15, dan daftar transaksi lain | Pencarian, filter status dan tanggal, serta paginasi pada daftar transaksi. | OPNAMS, BILLINGS (pemetaan berdasarkan nama) |
-| Validasi file | PT-04 | Validasi format dan ukuran file. Aturan spesifik: tidak dispesifikasikan. | OPNAM_ATTACHMENTS |
-| Estimasi biaya otomatis | PT-01 | Pengisian otomatis estimasi biaya berdasarkan tarif. | OPNAM_ITEMS, TARIFFS |
-
----
-
-## 4. Alur Kerja Sistem
-
-Bagian ini memakai relasi include dan extend dari dokumen sumber. **Include** berarti use case yang disertakan selalu dijalankan. **Extend** berarti use case tambahan hanya dijalankan dalam kondisi tertentu. Urutan langkah diambil dari deskripsi sumber. Jika sumber tidak menyebutkan suatu langkah, hal itu dicatat.
+## 4. Alur Kerja
 
 ### 4.1 Mencatat opnam (Petugas)
+1. Login (UC-U1).
+2. Pilih kapal (PT-02, wajib).
+3. Isi informasi kapal dan tanggal opnam.
+4. Tambah item pekerjaan beserta material, volume, keterangan (PT-03, opsional).
+5. Unggah bukti pada item (PT-04, opsional, divalidasi).
+6. Sistem menghitung estimasi biaya dari tarif berlaku (PT-05).
+7. Simpan sebagai draft (PT-06) atau kirim (PT-07).
+8. Saat dikirim, status `menunggu_review` dan masuk ke Admin.
+9. Petugas memantau status dan riwayat (PT-08).
 
-1. Petugas masuk ke sistem (UC-U1).
-2. Petugas memilih kapal (PT-02). Langkah ini selalu wajib (include dari PT-01).
-3. Petugas mencatat opnam (PT-01), yang terdiri dari informasi kapal, detail pekerjaan, estimasi biaya, dan tinjauan akhir.
-4. Petugas dapat menambahkan satu atau beberapa item pekerjaan beserta material, volume, dan keterangan (PT-03, extend opsional dari PT-01).
-5. Petugas dapat mengunggah foto atau dokumen sebagai bukti (PT-04, extend opsional dari PT-03). Format dan ukuran file divalidasi.
-6. Estimasi biaya dihitung otomatis dari tarif yang berlaku (PT-05).
-7. Petugas menyimpan opnam sebagai draft (PT-06, status `draft`) atau mengajukannya (PT-07).
-8. Saat diajukan, status menjadi Menunggu Review (`menunggu_review`) dan opnam diteruskan ke Admin.
-9. Petugas dapat memantau status dan riwayat proses (PT-08).
+### 4.2 Pemeriksaan opnam (Admin)
+1. Periksa rincian (AD-06, selalu dijalankan sebelum keputusan).
+2. Jika perlu, revisi data (AD-07).
+3. Pilih salah satu:
+   - Setujui dan teruskan (AD-08). Status `menunggu_approval_direksi`. Sistem membuat draft tagihan **[REKOMENDASI, lihat 4.7]**.
+   - Kembalikan dengan catatan wajib (AD-09). Status `perlu_revisi`.
+4. Jika dikembalikan, Petugas memperbaiki (PT-09) dan mengajukan ulang. Status `menunggu_review`.
 
-### 4.2 Memeriksa opnam (Admin)
+### 4.3 Keputusan tagihan (Direksi)
+1. Lihat daftar draft menunggu approval (DR-01).
+2. Periksa draft tagihan (DR-02, selalu sebelum keputusan).
+3. Jika perlu, revisi data opnam (DR-03).
+4. Jika perlu, beri diskon atau markup dengan disposisi wajib (DR-04, DR-05).
+5. Pilih salah satu:
+   - Setujui (DR-06). Status `disetujui`.
+   - Tolak dengan alasan (DR-07). Status `ditolak`. Tagihan dapat diajukan ulang. Tujuan status setelah pengajuan ulang **[TERBUKA]**.
+6. Setelah disetujui, sistem menerbitkan invoice (DR-08) dan technical report (DR-09). Invoice menampilkan harga, technical report tidak.
 
-1. Admin memeriksa rincian pekerjaan dan estimasi biaya (AD-06). Langkah ini selalu dijalankan sebelum keputusan, karena AD-08 dan AD-09 menyertakan AD-06.
-2. Jika diperlukan, Admin mengubah data opnam secara langsung saat pemeriksaan (AD-07, extend bersyarat dari AD-06).
-3. Admin mengambil salah satu dari dua keputusan:
-   - a. Menyetujui hasil review dan meneruskan opnam ke Direksi (AD-08). Status menjadi `menunggu_approval_direksi`. Jalur alternatif: tidak ada yang dispesifikasikan.
-   - b. Mengembalikan opnam ke Petugas dengan status Perlu Revisi dan catatan (AD-09).
-4. Jika dikembalikan, Petugas memperbaiki kesalahan input (PT-09) dan mengajukan ulang. Sumber menyebutnya sebagai pengajuan ulang, tetapi tidak menyatakan perubahan status yang tepat. Lihat Bagian 9.
+### 4.4 Revisi dan ekspor dokumen
+Admin dan Direksi dapat merevisi invoice sebelum terbit (AD-12, DR-10) dan mengekspor invoice terbit (AD-13, DR-11). Direksi dapat mengunduh atau mencetak dokumen terbit (DR-12).
 
-### 4.3 Pemeriksaan dan keputusan tagihan (Direksi)
+### 4.5 Pencatatan log aktivitas
+Setiap aksi yang mengubah data harus menulis `ACTIVITY_LOGS` dengan `user_id`, `event`, subjek, `description`, `ip_address`. Aksi berikut wajib menyimpan `old_values` dan `new_values`:
+- revisi data opnam dan item (AD-07, DR-03)
+- perubahan tarif (AD-04)
+- diskon dan markup (DR-04)
+- revisi invoice (AD-12, DR-10)
 
-1. Direksi melihat draft yang menunggu keputusan (DR-01).
-2. Direksi memeriksa rincian pekerjaan dan total tagihan (DR-02). Langkah ini selalu dijalankan sebelum keputusan, karena DR-06 dan DR-07 menyertakan DR-02.
-3. Jika diperlukan, Direksi mengubah data opnam di draft (DR-03, extend bersyarat dari DR-02).
-4. Jika diperlukan, Direksi memberikan diskon atau markup (DR-04, extend opsional dari DR-02). Catatan disposisi wajib diisi (DR-05, selalu disertakan oleh DR-04).
-5. Direksi mengambil salah satu dari dua keputusan:
-   - a. Menyetujui tagihan (DR-06). Status menjadi `disetujui`.
-   - b. Menolak tagihan disertai alasan (DR-07). Status menjadi `ditolak`. Alur setelah penolakan: pertanyaan terbuka (Bagian 9).
-6. Hanya setelah disetujui, Direksi menerbitkan invoice PDF (DR-08, extend dari DR-06) dan/atau technical report PDF (DR-09, extend dari DR-06). Invoice menampilkan harga. Technical report tidak.
+Perubahan status ditulis ke `STATUS_HISTORIES` (`from_status`, `to_status`, `note`, `changed_by`).
 
-**Celah dalam sumber:** Sumber tidak menjelaskan bagaimana record tagihan dibuat dari opnam berstatus `menunggu_approval_direksi`. Tabel `BILLINGS` memiliki foreign key `opnam_id`, sehingga relasinya ada di basis data. Langkah pembuatannya tidak dispesifikasikan (Bagian 9).
+### 4.6 Transisi status
 
-### 4.4 Revisi dan ekspor dokumen (Admin dan Direksi)
+**Opnam (`OPNAMS.status`)**
 
-- Admin dapat merevisi invoice (AD-12) dan mengekspornya ke PDF (AD-13).
-- Direksi dapat merevisi invoice (DR-10) dan mengekspornya ke PDF (DR-11). Direksi juga dapat mengunduh atau mencetak dokumen yang sudah terbit (DR-12).
-- Apakah revisi dilakukan sebelum atau sesudah terbit adalah pertanyaan terbuka.
-- Apakah DR-08 (Menerbitkan Invoice PDF) dan DR-11 (Mengekspor Invoice ke PDF) adalah aksi yang sama adalah pertanyaan terbuka.
+| Dari | Ke | Pemicu | Catatan |
+|---|---|---|---|
+| (baru) | `draft` | PT-06 | |
+| `draft` | `menunggu_review` | PT-07 | isi `submitted_at` |
+| `menunggu_review` | `perlu_revisi` | AD-09 | catatan wajib |
+| `menunggu_review` | `menunggu_approval_direksi` | AD-08 | isi `forwarded_at` |
+| `perlu_revisi` | `menunggu_review` | PT-09 | diputuskan di Analisis Fitur v3 |
+| `menunggu_approval_direksi` | `disetujui` | DR-06 | |
+| `menunggu_approval_direksi` | `ditolak` | DR-07 | |
+| `disetujui` | `dokumen_terbit` | penerbitan dokumen | pemicu **[REKOMENDASI]**: setelah invoice dan technical report terbit |
+| `ditolak` | (diajukan ulang) | - | tujuan **[TERBUKA]** |
 
-### 4.5 Riwayat aktivitas dan riwayat perbaikan
+**Tagihan (`BILLINGS.status`)**
 
-- Petugas dapat melihat dan mengekspor riwayat aktivitas (PT-10, PT-11).
-- Admin dapat melihat riwayat aktivitas, mengekspornya ke PDF (AD-14, AD-15), melihat riwayat revisi (AD-10), dan melihat pekerjaan kapal di masa lalu (AD-11).
-- Direksi dapat melihat riwayat aktivitas termasuk perubahan harga dan diskon, serta mengekspornya ke PDF (DR-16, DR-17).
-- Direksi dapat mencari riwayat perbaikan berdasarkan nama kapal atau nomor lambung dari halaman Transaksi Disetujui (DR-15).
+| Dari | Ke | Pemicu |
+|---|---|---|
+| (dibuat) | `menunggu_approval` | otomatis saat AD-08 **[REKOMENDASI]** |
+| `menunggu_approval` | `disetujui` | DR-06 |
+| `menunggu_approval` | `ditolak` | DR-07 |
+| `ditolak` | (diajukan ulang) | **[TERBUKA]** |
 
-### 4.6 Nilai status opnam (dari desain basis data)
+Transisi yang tidak tercantum tidak diizinkan.
 
-Sumber tidak menjelaskan diagram transisi yang lengkap. Transisi di atas hanya yang dinyatakan dalam deskripsi use case.
+**Kapan data boleh diubah**
 
-| Tabel dan kolom | Nilai |
+| Status opnam | Yang boleh mengubah item dan data opnam |
 |---|---|
-| `OPNAMS.status` | `draft`, `menunggu_review`, `perlu_revisi`, `menunggu_approval_direksi`, `ditolak`, `disetujui`, `dokumen_terbit` |
-| `BILLINGS.status` | `menunggu_approval`, `disetujui`, `ditolak` |
+| `draft`, `perlu_revisi` | Petugas pemilik opnam |
+| `menunggu_review` | Admin (AD-07) |
+| `menunggu_approval_direksi` | Direksi (DR-03) |
+| Status lain | Tidak ada |
 
-**Alur alternatif dan pengecualian:** Akun nonaktif tidak dapat masuk (UC-U1). Petugas tidak dapat menjalankan aksi Admin atau Direksi yang tercantum di Bagian 5. Alur pengecualian lainnya: tidak dispesifikasikan dalam dokumen sumber.
+### 4.7 Pembuatan tagihan dan penyelarasan status **[REKOMENDASI]**
+- Saat AD-08, sistem membuat satu `BILLINGS` dengan `status = menunggu_approval`, `subtotal_amount = OPNAMS.total_biaya`, `adjustment_amount = 0`, `total_amount = subtotal_amount`.
+- Saat DR-04, `BILLINGS.adjustment_amount` diisi dari total `BILLING_ADJUSTMENTS` dan `total_amount` dihitung ulang.
+- Keputusan Direksi (DR-06, DR-07) ditulis ke `BILLINGS` dan dicerminkan ke `OPNAMS.status` dalam satu transaksi basis data.
 
 ---
 
 ## 5. Aturan Bisnis
 
-Setiap aturan di bawah ini dinyatakan secara eksplisit dalam dokumen sumber. Sumber mengaitkan setiap aturan dengan use case atau bagian yang tercantum. Tidak ada aturan yang ditambahkan. Celah dicantumkan di akhir bagian ini dan di Bagian 9.
-
-| ID | Aturan bisnis | Sumber |
-|---|---|---|
-| BR-01 | Akun yang tidak aktif tidak dapat masuk. | UC-U1; AD-01 (penonaktifan) |
-| BR-02 | Petugas tidak dapat mengubah tarif dasar. | Bagian 8; Bagian 2 |
-| BR-03 | Petugas tidak dapat memberikan diskon atau markup. | Bagian 8 |
-| BR-04 | Petugas tidak dapat memberikan persetujuan akhir atas tagihan. | Bagian 8 |
-| BR-05 | Petugas tidak dapat mengekspor invoice. | Bagian 8 |
-| BR-06 | Admin mengelola tarif dasar serta memeriksa dan merevisi opnam. | Bagian 8; AD-04, AD-06 |
-| BR-07 | Direksi memberikan persetujuan akhir dan penyesuaian harga (diskon atau markup). | Bagian 8; DR-04, DR-06 |
-| BR-08 | Setiap diskon atau markup wajib memiliki alasan atau catatan disposisi. | Bagian 8; DR-04, DR-05 |
-| BR-09 | Invoice menampilkan harga. Technical report tidak menampilkan harga. | Bagian 8; AD-13, DR-08, DR-09 |
-| BR-10 | Perubahan tarif tidak mengubah transaksi yang sudah tercatat. | Bagian 8 |
-| BR-11 | Pemilihan kapal selalu wajib sebelum transaksi opnam dibuat. | Bagian 7 (PT-01 menyertakan PT-02) |
-| BR-12 | Penambahan detail pekerjaan bersifat opsional. | Bagian 7 (PT-03 memperluas PT-01) |
-| BR-13 | Unggah bukti bersifat opsional. | Bagian 7 (PT-04 memperluas PT-03) |
-| BR-14 | Estimasi biaya dihitung otomatis dari tarif yang berlaku. | PT-05; Bagian 9 (estimasi biaya otomatis) |
-| BR-15 | Pengajuan opnam mengubah status menjadi Menunggu Review. | PT-07 |
-| BR-16 | Persetujuan hasil review selalu didahului oleh pemeriksaan. | Bagian 7 (AD-08 menyertakan AD-06) |
-| BR-17 | Pengembalian opnam selalu didahului oleh pemeriksaan. | Bagian 7 (AD-09 menyertakan AD-06) |
-| BR-18 | Pengembalian opnam wajib disertai catatan. | AD-09 |
-| BR-19 | Admin mengubah data opnam hanya sesuai kebutuhan pemeriksaan. | AD-07; Bagian 7 |
-| BR-20 | Direksi mengubah data opnam hanya jika diperlukan saat pemeriksaan tagihan. | DR-03; Bagian 7 (extend bersyarat) |
-| BR-21 | Petugas hanya dapat memperbaiki opnam berstatus Perlu Revisi. | PT-09 |
-| BR-22 | Keputusan tagihan (setujui atau tolak) selalu didahului oleh pemeriksaan draft tagihan. | Bagian 7 (DR-06 dan DR-07 menyertakan DR-02) |
-| BR-23 | Invoice dan technical report hanya diterbitkan setelah tagihan disetujui. | Bagian 7 (DR-08 dan DR-09 memperluas DR-06) |
-| BR-24 | Penyesuaian harga bersifat opsional. | Bagian 7 (DR-04 memperluas DR-02) |
-| BR-25 | Riwayat perbaikan dicari berdasarkan nama kapal atau nomor lambung, melalui halaman Transaksi Disetujui. | DR-15 |
-| BR-26 | Unggahan file divalidasi formatnya dan ukurannya. | PT-04; Bagian 9 |
-| BR-27 | Daftar transaksi mendukung pencarian, filter status dan tanggal, serta paginasi. | Bagian 9 (fitur pendukung); AD-05 |
-
-**Perubahan tarif dan transaksi:** BR-10 berarti tarif disalin ke setiap transaksi. Desain basis data menyimpan nilai snapshot di `OPNAM_ITEMS` (`unit_price` dan `subtotal`) dan di `OPNAMS` (`total_biaya`) serta di `INVOICES` dan `TECHNICAL_REPORTS` (detail kapal dan owner).
-
-**Nilai status:** Nilai status opnam dan tagihan tercantum di Bagian 4.6.
-
-### Aturan yang tidak dispesifikasikan dalam dokumen sumber
-
-- Ukuran file maksimum dan jenis file yang diizinkan untuk unggahan.
-- Apakah tarif memiliki tanggal berakhir. `TARIFFS` hanya menyimpan `effective_from`.
-- Apakah tagihan yang ditolak dapat diperbaiki dan diajukan ulang.
-- Tempat penyimpanan alasan penolakan tagihan.
-- Aturan revisi invoice (sebelum atau sesudah terbit) dan apakah Direksi boleh merevisi opnam dan invoice.
-- Aturan password dan batas waktu sesi.
-- Aturan isi dan perhitungan laporan.
+| ID | Aturan |
+|---|---|
+| BR-01 | Akun nonaktif tidak dapat masuk. |
+| BR-02 | Petugas tidak dapat mengubah tarif dasar. |
+| BR-03 | Petugas tidak dapat memberi diskon atau markup. |
+| BR-04 | Petugas tidak dapat memberi persetujuan akhir. |
+| BR-05 | Petugas tidak dapat mengekspor invoice. |
+| BR-06 | Admin mengelola tarif dasar serta memeriksa dan merevisi opnam. |
+| BR-07 | Direksi memberi persetujuan akhir dan penyesuaian harga. |
+| BR-08 | Setiap diskon atau markup wajib punya catatan disposisi. |
+| BR-09 | Invoice menampilkan harga. Technical report tidak. |
+| BR-10 | Perubahan tarif tidak mengubah transaksi yang sudah tercatat (snapshot). |
+| BR-11 | Pemilihan kapal wajib sebelum opnam dibuat. |
+| BR-12 | Penambahan detail pekerjaan opsional. |
+| BR-13 | Unggah bukti opsional. |
+| BR-14 | Estimasi biaya dihitung otomatis dari tarif berlaku. |
+| BR-15 | Pengajuan opnam mengubah status menjadi `menunggu_review`. |
+| BR-16 | Persetujuan hasil review selalu didahului pemeriksaan. |
+| BR-17 | Pengembalian opnam selalu didahului pemeriksaan. |
+| BR-18 | Pengembalian opnam wajib disertai catatan. |
+| BR-19 | Admin mengubah data opnam hanya sesuai kebutuhan pemeriksaan. |
+| BR-20 | Direksi mengubah data opnam hanya jika perlu saat pemeriksaan tagihan. |
+| BR-21 | Petugas hanya dapat memperbaiki opnam berstatus `perlu_revisi`. |
+| BR-22 | Keputusan tagihan selalu didahului pemeriksaan draft tagihan. |
+| BR-23 | Invoice dan technical report hanya terbit setelah tagihan disetujui. |
+| BR-24 | Penyesuaian harga bersifat opsional. |
+| BR-25 | Riwayat perbaikan dicari berdasarkan nama kapal atau nomor lambung, lewat halaman Transaksi Disetujui (untuk Direksi). |
+| BR-26 | Unggahan file divalidasi format dan ukurannya. |
+| BR-27 | Daftar transaksi mendukung pencarian, filter status dan tanggal, dan paginasi. |
+| BR-28 | Item opnam hanya dapat ditambah, diubah, atau dihapus sesuai tabel "Kapan data boleh diubah" (4.6). |
+| BR-29 | Tagihan yang ditolak dapat diajukan ulang. |
+| BR-30 | Riwayat Perubahan hanya dapat diakses Admin dan Direksi. Riwayat Aktivitas dapat diakses semua role. |
+| BR-31 | Tarif yang dipakai item opnam adalah tarif berlaku pada saat item dibuat, lalu dibekukan di `unit_price` **[REKOMENDASI]**: tarif dengan `effective_from` terbaru yang tidak lebih dari tanggal opnam. |
+| BR-32 | `subtotal` item = `volume` x `unit_price` x `faktor_ketebalan` x `faktor_kompleksitas`. Faktor bernilai 1 bila tidak diisi. `total_biaya` = jumlah `subtotal` semua item **[REKOMENDASI]**. |
+| BR-33 | Material tanpa tarif berlaku pada `tanggal_opnam`: item tidak dapat disimpan dan harga tidak diisi nol **[REKOMENDASI]**. |
+| BR-34 | Kategori, jenis pekerjaan, dan material pada item ditelusuri dari `tariff_id` dan tidak disimpan ulang di `OPNAM_ITEMS`. |
+| BR-35 | Mengubah material pada item mencari ulang tarif dan memperbarui `unit_price`. Mengubah hanya volume atau faktor tidak mengubah `unit_price` **[REKOMENDASI]**. |
 
 ---
 
 ## 6. Spesifikasi Basis Data
 
-Sumber: `Perancangan_database_Laravel_rev.pdf` (ERD revisi, 17 tabel, 24 relasi). Teks ERD merujuk ke `Database_Design_SIMSHIP.md`, Bagian 4, untuk detail kolom, constraint, dan asumsi. File tersebut tidak disediakan. Tabel di bawah ini mereproduksi ERD secara persis. Constraint yang tidak ditampilkan di ERD ditandai "Tidak dispesifikasikan".
+Sumber: ERD revisi (17 tabel, 24 relasi) ditambah Bagian 6.7. Panjang string dan presisi decimal belum ditetapkan **[TERBUKA]**.
 
-**Catatan umum:** ERD tidak menampilkan kolom `created_at` atau `updated_at` pada sebagian besar tabel. Nullability hanya ditampilkan jika ERD menyebutkannya nullable. Panjang kolom string dan presisi kolom decimal: tidak dispesifikasikan.
+### 6.1 Identitas dan master data
 
-### 6.1 Identitas dan data master
+**USERS**: `id` PK; `name`; `username` UK; `email` UK; `password`; `role` (petugas, admin, direksi); `is_active` boolean; `last_login_at` datetime.
 
-#### USERS
+**OWNERS**: `id` PK; `name`; `address` text nullable; `deleted_at`.
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| name | string | |
-| username | string | UK |
-| email | string | UK |
-| password | string | |
-| role | string | Nilai: `petugas`, `admin`, `direksi` |
-| is_active | boolean | |
-| last_login_at | datetime | |
+**SHIPS**: `id` PK; `owner_id` FK OWNERS; `name`; `hull_number` UK; `deleted_at`.
 
-#### OWNERS
+**UNITS**: `id` PK; `code` UK; `name`.
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| name | string | |
-| address | text | nullable |
-| deleted_at | datetime | Nullability: tidak dispesifikasikan |
+**WORK_CATEGORIES**: `id` PK; `name` UK; `description` text nullable; `deleted_at`; `is_active` (penambahan, 6.7).
 
-#### SHIPS
+**WORK_TYPES**: `id` PK; `work_category_id` FK; `name`; `deleted_at`.
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| owner_id | bigint | FK ke OWNERS.id |
-| name | string | |
-| hull_number | string | UK |
-| deleted_at | datetime | Nullability: tidak dispesifikasikan |
+**MATERIAL_SPECS**: `id` PK; `work_type_id` FK; `name`; `deleted_at`.
 
-#### UNITS
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| code | string | UK |
-| name | string | |
-
-#### WORK_CATEGORIES
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| name | string | UK |
-| description | text | nullable |
-| deleted_at | datetime | Nullability: tidak dispesifikasikan |
-
-#### WORK_TYPES
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| work_category_id | bigint | FK ke WORK_CATEGORIES.id |
-| name | string | |
-| deleted_at | datetime | Nullability: tidak dispesifikasikan |
-
-#### MATERIAL_SPECS
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| work_type_id | bigint | FK ke WORK_TYPES.id |
-| name | string | |
-| deleted_at | datetime | Nullability: tidak dispesifikasikan |
-
-#### TARIFFS
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| material_spec_id | bigint | FK ke MATERIAL_SPECS.id |
-| unit_id | bigint | FK ke UNITS.id |
-| created_by | bigint | FK ke USERS.id |
-| price | decimal | |
-| effective_from | date | |
-| created_at | datetime | |
+**TARIFFS**: `id` PK; `material_spec_id` FK; `unit_id` FK; `created_by` FK USERS; `price` decimal; `effective_from` date; `created_at`.
 
 ### 6.2 Opnam
 
-#### OPNAMS
+**OPNAMS**: `id` PK; `opnam_number` UK; `ship_id` FK; `created_by` FK USERS; `status` (draft, menunggu_review, perlu_revisi, menunggu_approval_direksi, ditolak, disetujui, dokumen_terbit); `submitted_at` nullable; `forwarded_at` nullable; `tanggal_opnam` date; `catatan` text nullable; `total_biaya` decimal (snapshot); `created_at`; `updated_at`.
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| opnam_number | string | UK |
-| ship_id | bigint | FK ke SHIPS.id |
-| created_by | bigint | FK ke USERS.id |
-| status | string | Nilai: `draft`, `menunggu_review`, `perlu_revisi`, `menunggu_approval_direksi`, `ditolak`, `disetujui`, `dokumen_terbit` |
-| submitted_at | datetime | nullable |
-| forwarded_at | datetime | nullable |
-| tanggal_opnam | date | - |
-| catatan | text | nullable |
-| total_biaya | decimal | Snapshot |
-| created_at | datetime | - |
-| updated_at | datetime | - |
+**OPNAM_ITEMS**: `id` PK; `opnam_id` FK; `tariff_id` FK; `volume` decimal; `unit_price` decimal (snapshot); `subtotal` decimal (snapshot); `description` text nullable; `sort_order` int; `lokasi` string nullable; `created_at`; `updated_at`.
 
-#### OPNAM_ITEMS
+**OPNAM_ATTACHMENTS**: `id` PK; `opnam_item_id` FK; `uploaded_by` FK USERS; `file_path`; `original_name`; `mime_type`; `file_size` int (byte); `keterangan` text nullable; `created_at`; `updated_at`.
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| opnam_id | bigint | FK ke OPNAMS.id |
-| tariff_id | bigint | FK ke TARIFFS.id |
-| volume | decimal | |
-| unit_price | decimal | Snapshot: nilai dibekukan saat transaksi terjadi |
-| subtotal | decimal | Snapshot: nilai dibekukan saat transaksi terjadi |
-| description | text | nullable |
-| sort_order | int | |
-| lokasi | string | nullable |
-| created_at | datetime | - |
-| updated_at | datetime | - |
+**STATUS_HISTORIES** (polimorfik, dipakai opnam dan tagihan): `id` PK; `statusable_type`; `statusable_id`; `from_status` nullable; `to_status`; `note` text nullable; `changed_by` FK USERS nullable; `created_at`.
 
-#### OPNAM_ATTACHMENTS
+### 6.3 Tagihan, invoice, laporan
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| opnam_item_id | bigint | FK ke OPNAM_ITEMS.id |
-| uploaded_by | bigint | FK ke USERS.id |
-| file_path | string | |
-| original_name | string | |
-| mime_type | string | |
-| file_size | int | Satuan: byte |
-| keterangan | text | nullable |
-| created_at | datetime | - |
-| updated_at | datetime | - |
+**BILLINGS**: `id` PK; `opnam_id` FK; `billing_number` UK nullable; `status` (menunggu_approval, disetujui, ditolak); `subtotal_amount`; `adjustment_amount`; `total_amount`; `decided_by` FK USERS nullable; `decided_at` nullable.
 
-#### STATUS_HISTORIES
+**BILLING_ADJUSTMENTS**: `id` PK; `billing_id` FK; `created_by` FK USERS; `adjustment_type` (diskon, markup); `adjustment_value`; `adjustment_amount`; `disposition_note` text.
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| statusable_type | string | Polimorfik |
-| statusable_id | bigint | Polimorfik |
-| from_status | string | nullable |
-| to_status | string | |
-| note | text | nullable |
-| changed_by | bigint | FK ke USERS.id; nullable |
-| created_at | datetime | |
+**INVOICES**: `id` PK; `billing_id` FK; `issued_by` FK USERS; `invoice_number` UK; `issue_date`; snapshot: `ship_name`, `hull_number`, `owner_name`, `owner_address` (nullable), `subtotal_amount`, `adjustment_amount`, `total_amount`; `revision_count` int.
 
-### 6.3 Tagihan, invoice, dan laporan
-
-#### BILLINGS
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| opnam_id | bigint | FK ke OPNAMS.id |
-| billing_number | string | UK; nullable |
-| status | string | Nilai: `menunggu_approval`, `disetujui`, `ditolak` |
-| subtotal_amount | decimal | |
-| adjustment_amount | decimal | |
-| total_amount | decimal | |
-| decided_by | bigint | FK ke USERS.id; nullable |
-| decided_at | datetime | nullable |
-
-#### BILLING_ADJUSTMENTS
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| billing_id | bigint | FK ke BILLINGS.id |
-| created_by | bigint | FK ke USERS.id |
-| adjustment_type | string | Nilai: `diskon`, `markup` |
-| adjustment_value | decimal | |
-| adjustment_amount | decimal | |
-| disposition_note | text | |
-
-#### INVOICES
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| billing_id | bigint | FK ke BILLINGS.id |
-| issued_by | bigint | FK ke USERS.id |
-| invoice_number | string | UK |
-| issue_date | date | |
-| ship_name | string | Snapshot |
-| hull_number | string | Snapshot |
-| owner_name | string | Snapshot |
-| owner_address | text | Snapshot; nullable |
-| subtotal_amount | decimal | Snapshot |
-| adjustment_amount | decimal | Snapshot |
-| total_amount | decimal | Snapshot |
-| revision_count | int | |
-
-#### TECHNICAL_REPORTS
-
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| billing_id | bigint | FK ke BILLINGS.id |
-| issued_by | bigint | FK ke USERS.id |
-| report_number | string | UK |
-| issue_date | date | |
-| ship_name | string | Snapshot |
-| hull_number | string | Snapshot |
-| owner_name | string | Snapshot |
-| owner_address | text | Snapshot; nullable |
+**TECHNICAL_REPORTS**: `id` PK; `billing_id` FK; `issued_by` FK USERS; `report_number` UK; `issue_date`; snapshot: `ship_name`, `hull_number`, `owner_name`, `owner_address` (nullable). Tidak memuat harga.
 
 ### 6.4 Log aktivitas
 
-#### ACTIVITY_LOGS
+Setiap use case di bawah ini dilacak ke sumbernya dan ke lokasi PRD tempat ia didokumentasikan. Referensi sumber: DOCX = `Daftar_Use_Case_SIMSHIP.docx`, nomor bagian. DIAG = `Usecase.pdf`, nomor halaman. ERD = `Design_Database_Project.pdf`.
 
-| Kolom | Tipe | Kunci dan constraint |
-|---|---|---|
-| id | bigint | PK |
-| user_id | bigint | FK ke USERS.id; nullable |
-| event | string | |
-| subject_type | string | Polimorfik |
-| subject_id | bigint | Polimorfik |
-| description | string | |
-| old_values | json | nullable |
-| new_values | json | nullable |
-| ip_address | string | nullable |
-| created_at | datetime | |
+Kolom "role" di tampilan diambil dari `USERS.role`. Kolom "modul" diturunkan dari `subject_type`.
 
-### 6.5 Relasi (foreign key sesuai ERD)
+### 6.5 Relasi
 
-| Tabel.kolom anak | Induk | Relasi (dari label ERD dan FK) |
-|---|---|---|
-| SHIPS.owner_id | OWNERS.id | Satu owner memiliki banyak kapal |
-| WORK_TYPES.work_category_id | WORK_CATEGORIES.id | Satu kategori memiliki banyak jenis pekerjaan |
-| MATERIAL_SPECS.work_type_id | WORK_TYPES.id | Satu jenis pekerjaan memiliki banyak spesifikasi material |
-| TARIFFS.material_spec_id | MATERIAL_SPECS.id | Satu spesifikasi material memiliki banyak tarif |
-| TARIFFS.unit_id | UNITS.id | Satu satuan dipakai banyak tarif |
-| TARIFFS.created_by | USERS.id | Satu user membuat banyak tarif |
-| OPNAMS.ship_id | SHIPS.id | Satu kapal memiliki banyak opnam |
-| OPNAMS.created_by | USERS.id | Satu user membuat banyak opnam |
-| OPNAM_ITEMS.opnam_id | OPNAMS.id | Satu opnam memiliki banyak item |
-| OPNAM_ITEMS.tariff_id | TARIFFS.id | Satu tarif dipakai banyak item |
-| OPNAM_ATTACHMENTS.opnam_item_id | OPNAM_ITEMS.id | Satu item memiliki banyak lampiran |
-| OPNAM_ATTACHMENTS.uploaded_by | USERS.id | Satu user mengunggah banyak lampiran |
-| STATUS_HISTORIES.changed_by | USERS.id | Nullable |
-| STATUS_HISTORIES.statusable_type dan statusable_id | Polimorfik | Riwayat status untuk record statusable apa pun |
-| BILLINGS.opnam_id | OPNAMS.id | Satu opnam memiliki tagihan |
-| BILLINGS.decided_by | USERS.id | Nullable |
-| BILLING_ADJUSTMENTS.billing_id | BILLINGS.id | Satu tagihan memiliki banyak penyesuaian |
-| BILLING_ADJUSTMENTS.created_by | USERS.id | |
-| INVOICES.billing_id | BILLINGS.id | |
-| INVOICES.issued_by | USERS.id | |
-| TECHNICAL_REPORTS.billing_id | BILLINGS.id | |
-| TECHNICAL_REPORTS.issued_by | USERS.id | |
-| ACTIVITY_LOGS.user_id | USERS.id | Nullable |
-| ACTIVITY_LOGS.subject_type dan subject_id | Polimorfik | Aktivitas pada record subjek apa pun |
+| Anak | Induk |
+|---|---|
+| SHIPS.owner_id | OWNERS |
+| WORK_TYPES.work_category_id | WORK_CATEGORIES |
+| MATERIAL_SPECS.work_type_id | WORK_TYPES |
+| TARIFFS.material_spec_id, unit_id, created_by | MATERIAL_SPECS, UNITS, USERS |
+| OPNAMS.ship_id, created_by | SHIPS, USERS |
+| OPNAM_ITEMS.opnam_id, tariff_id | OPNAMS, TARIFFS |
+| OPNAM_ATTACHMENTS.opnam_item_id, uploaded_by | OPNAM_ITEMS, USERS |
+| STATUS_HISTORIES.changed_by | USERS (nullable) |
+| STATUS_HISTORIES.statusable_* | polimorfik |
+| BILLINGS.opnam_id, decided_by | OPNAMS, USERS (nullable) |
+| BILLING_ADJUSTMENTS.billing_id, created_by | BILLINGS, USERS |
+| INVOICES.billing_id, issued_by | BILLINGS, USERS |
+| TECHNICAL_REPORTS.billing_id, issued_by | BILLINGS, USERS |
+| ACTIVITY_LOGS.user_id | USERS (nullable) |
+| ACTIVITY_LOGS.subject_* | polimorfik |
 
-Kardinalitas relasi untuk setiap baris dibaca dari arah foreign key. Diagram ERD menampilkan label satu-ke-banyak dan satu-ke-nol-atau-satu; simbol pasti per relasi tidak dikonfirmasi dari hasil ekstraksi teks. Kardinalitas karena itu ditandai sebagai turunan.
+### 6.6 Aturan data
+- Snapshot: lihat Bagian 0. `OPNAMS.total_biaya` adalah jumlah `subtotal` semua item. Dihitung ulang selama opnam masih boleh diubah, dibekukan saat diteruskan ke Direksi **[REKOMENDASI]**.
+- Nomor dokumen (`opnam_number`, `billing_number`, `invoice_number`, `report_number`) unik. Format dan cara pembuatan **[TERBUKA]**.
+- Soft delete hanya pada OWNERS, SHIPS, WORK_CATEGORIES, WORK_TYPES, MATERIAL_SPECS. USERS tidak dihapus, hanya dinonaktifkan.
+- UNITS dan TARIFFS tidak punya `deleted_at`. Penghapusan ditolak bila sudah dipakai transaksi **[REKOMENDASI]**.
+- Riwayat revisi invoice disimpan di `ACTIVITY_LOGS` (`old_values`, `new_values`), dan `INVOICES.revision_count` menghitung jumlah revisi **[REKOMENDASI]**.
 
-### 6.6 Elemen basis data yang tidak dispesifikasikan dalam dokumen sumber
+### 6.7 Penambahan terhadap ERD
+Berikut hal yang dibutuhkan PRD tetapi belum ada di ERD. Menurut keputusan, PRD yang dipakai.
 
-- Timestamp (`created_at`, `updated_at`) pada tabel selain TARIFFS, OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS, STATUS_HISTORIES, dan ACTIVITY_LOGS.
-- Presisi dan skala kolom decimal; panjang kolom string dan text.
-- Index, nilai default, dan aturan on-delete atau on-update.
-- Apakah soft delete (`deleted_at`) berlaku untuk tabel yang tidak memilikinya, dan tabel mana yang memakai hard delete.
-- Tempat penyimpanan alasan penolakan tagihan.
-- Tempat penyimpanan riwayat revisi invoice di luar `revision_count`.
-- Daftar lengkap nilai role, dan apakah status ditegakkan oleh basis data atau kode aplikasi.
+| No | Penambahan | Alasan | Status |
+|---|---|---|---|
+| 1 | `WORK_CATEGORIES.is_active` boolean | AD-03 mengelola kategori beserta status aktifnya (Analisis Fitur v3) | Perlu konfirmasi |
+| 2 | Penandaan invoice belum terbit atau sudah terbit pada `INVOICES` (misalnya `status` atau `issued_at`) | AD-12 dan DR-10 hanya boleh merevisi sebelum terbit, tetapi ERD tidak bisa membedakan | **[TERBUKA]**, lihat Bagian 9 no. 2 |
+| 3 | `OPNAMS.jenis_kapal` string nullable | Opnam perlu mencatat jenis kapal. Disimpan di `OPNAMS` sebagai nilai saat opnam supaya tabel `SHIPS` tidak berubah | Perlu konfirmasi, daftar nilai **[TERBUKA]**, lihat Bagian 9 no. 18 |
+| 4 | `OPNAM_ITEMS.ketebalan` decimal nullable; `OPNAM_ITEMS.kompleksitas` string nullable; `OPNAM_ITEMS.faktor_ketebalan` dan `faktor_kompleksitas` decimal default 1 (snapshot) | Perhitungan ketebalan pelat dan kompleksitas pekerjaan butuh tempat input dan hasil di item opnam, tanpa mengubah `TARIFFS` | **[TERBUKA]**, lihat Bagian 9 no. 14, 19, 20, 23 |
+| 5 | Kolom pekerjaan tambahan permintaan client di `OPNAM_ITEMS` atau `OPNAMS` | Permintaan client | **[TERBUKA]**, lihat Bagian 9 no. 22 |
 
-**Catatan desain basis data:** ERD mencantumkan kolom snapshot (`unit_price`, `subtotal` di OPNAM_ITEMS; `total_biaya` di OPNAMS; field kapal, hull, owner, dan nominal di INVOICES dan TECHNICAL_REPORTS). Kolom ini menyimpan nilai yang dibekukan saat transaksi terjadi, sesuai legenda ERD.
+Tidak ada tabel baru. Alasan penolakan, catatan pengembalian, dan riwayat revisi invoice memakai tabel yang sudah ada.
 
 ---
 
 ## 7. Persyaratan Sistem
 
-Bagian ini hanya memuat persyaratan teknis dan sistem yang muncul dalam dokumen sumber. Semua hal lain ditandai "Tidak dispesifikasikan".
+**Dari sumber:**
+- Login dengan username atau email; akun nonaktif diblokir.
+- Output PDF: riwayat aktivitas, invoice, technical report.
+- Output PDF atau Excel: laporan rekapitulasi.
+- Dokumen terbit dapat diunduh atau dicetak.
+- Unggah file dengan validasi format dan ukuran.
+- Pencarian, filter, dan paginasi pada daftar transaksi dan riwayat.
+- Perhitungan biaya otomatis dari tarif.
+- Snapshot nilai pada transaksi.
+- Pencatatan IP, nilai lama, dan nilai baru pada log aktivitas.
 
-### 7.1 Dinyatakan dalam dokumen sumber
+**Konteks teknis:** aplikasi dikembangkan dengan Laravel dan AI coding agent (konteks permintaan, bukan persyaratan dari dokumen desain).
 
-| Persyaratan | Sumber | Detail |
-|---|---|---|
-| Login dengan username atau email dan password | UC-U1 | Akun diidentifikasi melalui username atau email. |
-| Akun nonaktif diblokir dari login | UC-U1, AD-01 | Penanda `is_active` pada USERS. |
-| Output PDF | PT-11, AD-13, AD-15, DR-11, DR-12, DR-08, DR-09, DR-17 | Riwayat aktivitas, invoice, technical report, dan dokumen diekspor atau diterbitkan dalam format PDF. |
-| Output PDF dan Excel untuk laporan | AD-16, DR-14 | Laporan rekap diekspor ke PDF atau Excel. |
-| Pencetakan | DR-12 | Dokumen yang sudah terbit dapat diunduh atau dicetak. |
-| Unggah file dengan validasi format dan ukuran | PT-04 | Foto dan dokumen sebagai bukti. Aturan spesifiknya tidak dispesifikasikan. |
-| Pencarian, filter, dan paginasi | AD-05, DR-15, Bagian 9 sumber | Berlaku pada daftar transaksi. |
-| Perhitungan biaya otomatis dari tarif | PT-05, Bagian 9 sumber | Dihitung otomatis dari tarif yang berlaku. |
-| Kolom soft delete | ERD | `deleted_at` ada pada OWNERS, SHIPS, WORK_CATEGORIES, WORK_TYPES, dan MATERIAL_SPECS. Cara penghapusan tidak dispesifikasikan. |
-| Nilai snapshot pada transaksi | ERD | OPNAMS, OPNAM_ITEMS, INVOICES, dan TECHNICAL_REPORTS menyimpan nilai yang dibekukan. |
-| IP klien pada catatan aktivitas | ERD | `ACTIVITY_LOGS.ip_address` (nullable). |
-| Nilai lama dan baru pada catatan aktivitas | ERD | `ACTIVITY_LOGS.old_values` dan `new_values` bertipe json (nullable). |
-| Nomor dokumen unik | ERD | `opnam_number`, `billing_number` (nullable), `invoice_number`, dan `report_number` bersifat unik. Cara pembuatan nomor tidak dispesifikasikan. |
-| Referensi desain basis data | ERD | ERD merujuk ke `Database_Design_SIMSHIP.md`, Bagian 4. File tersebut tidak disediakan. |
-
-### 7.2 Tidak dispesifikasikan dalam dokumen sumber
-
-- Bahasa pemrograman, framework, dan versinya.
-- Mesin basis data.
-- Hosting, deployment, dan lingkungan.
-- Browser dan perangkat yang didukung.
-- Persyaratan performa, kapasitas, dan waktu respons.
-- Persyaratan keamanan selain login dan ubah password, termasuk kebijakan password, batas waktu sesi, dan aturan pencatatan akses.
-- Backup dan pemulihan.
-- Ukuran unggah maksimum, jenis file yang diizinkan, dan lokasi penyimpanan unggahan.
-- Aturan pembuatan laporan, penjadwalan, dan periodenya.
-- Email atau notifikasi lain.
-- Integrasi dengan sistem eksternal.
-- Lokalisasi. Dokumen sumber ditulis dalam bahasa Indonesia.
-- Aksesibilitas.
-
-### 7.3 Konteks dari permintaan PRD ini
-
-Permintaan PRD ini menyatakan bahwa PRD akan dipakai sebagai acuan pengembangan aplikasi Laravel dengan AI coding agent. Ini dicatat sebagai konteks saja. Dokumen desain sumber tidak menyatakan Laravel sebagai persyaratan. Tidak ada teknologi lain yang ditambahkan.
+**Tidak dispesifikasikan (jangan ditebak):** versi framework, mesin basis data, hosting, browser yang didukung, performa, kebijakan password dan batas waktu sesi, backup, batas unggah dan lokasi penyimpanan file, penjadwalan laporan, notifikasi atau email, integrasi eksternal, aksesibilitas.
 
 ---
 
-## 8. Ketertelusuran Persyaratan
+## 8. Ketertelusuran
 
-<<<<<<< Updated upstream
-Setiap use case di bawah ini dilacak ke sumbernya dan ke lokasi PRD tempat ia didokumentasikan. Referensi sumber: DOCX = `Daftar_Use_Case_SIMSHIP.docx`, nomor bagian. DIAG = `Usecase.pdf`, nomor halaman. ERD = `Design_Database_Project.pdf`.
+| ID | Use case | Aktor | Modul | Aturan | Tabel utama |
+|---|---|---|---|---|---|
+| UC-U1 sampai UC-U5 | Akun dan akses | Semua | 3.1 | BR-01 | USERS |
+| PT-01 sampai PT-05 | Pencatatan, pilih kapal, detail, bukti, biaya | Petugas | 3.2 | BR-11 sampai BR-14, BR-26, BR-28 | OPNAMS, OPNAM_ITEMS, OPNAM_ATTACHMENTS |
+| PT-01, PT-03, PT-05 (rincian) | Jenis kapal, faktor, dan kalkulasi biaya | Petugas | 3.10 | BR-32 sampai BR-35 | OPNAMS, OPNAM_ITEMS |
+| PT-06, PT-07 | Draft dan ajukan | Petugas | 3.2 | BR-15 | OPNAMS, STATUS_HISTORIES |
+| PT-08, PT-09 | Status dan perbaikan | Petugas | 3.2 | BR-21 | OPNAMS, STATUS_HISTORIES |
+| PT-10, PT-11 | Riwayat aktivitas dan ekspor | Petugas | 3.3 | BR-30 | ACTIVITY_LOGS |
+| AD-01 sampai AD-04 | Pengguna dan master data | Admin | 3.4 | BR-01, BR-02, BR-06, BR-10 | USERS, OWNERS, SHIPS, WORK_*, MATERIAL_SPECS, UNITS, TARIFFS |
+| AD-05 sampai AD-09 | Daftar, periksa, revisi, teruskan, kembalikan | Admin | 3.5 | BR-16 sampai BR-19, BR-27 | OPNAMS, OPNAM_ITEMS, STATUS_HISTORIES |
+| AD-10, AD-11 | Riwayat perubahan, riwayat kapal | Admin | 3.3 | BR-25, BR-30 | ACTIVITY_LOGS, SHIPS, OPNAMS |
+| AD-12, AD-13 | Revisi dan ekspor invoice | Admin | 3.7 | BR-05, BR-09 | INVOICES |
+| AD-14, AD-15 | Riwayat aktivitas dan ekspor | Admin | 3.3 | BR-30 | ACTIVITY_LOGS |
+| AD-16 | Laporan rekapitulasi | Admin | 3.8 | - | agregasi |
+| DR-01, DR-02 | Draft dan periksa tagihan | Direksi | 3.6 | BR-22 | BILLINGS, BILLING_ADJUSTMENTS |
+| DR-03 | Revisi data opnam | Direksi | 3.6 | BR-20 | OPNAMS, OPNAM_ITEMS |
+| DR-04, DR-05 | Diskon, markup, disposisi | Direksi | 3.6 | BR-07, BR-08, BR-24 | BILLING_ADJUSTMENTS |
+| DR-06, DR-07 | Setujui, tolak | Direksi | 3.6 | BR-22, BR-23, BR-29 | BILLINGS, STATUS_HISTORIES |
+| DR-08, DR-09 | Terbit invoice, technical report | Sistem (setelah DR-06) | 3.6 | BR-09, BR-23 | INVOICES, TECHNICAL_REPORTS |
+| DR-10 sampai DR-12 | Revisi, ekspor, unduh dokumen | Direksi | 3.7 | BR-09 | INVOICES, TECHNICAL_REPORTS |
+| DR-13, DR-14 | Rekap tagihan, laporan | Direksi | 3.8 | - | BILLINGS |
+| DR-15 | Riwayat pekerjaan kapal | Direksi | 3.3 | BR-25 | SHIPS, OPNAMS |
+| DR-16 | Riwayat perubahan | Direksi | 3.3 | BR-30 | ACTIVITY_LOGS |
+| DR-17, DR-18 | Riwayat aktivitas dan ekspor | Direksi | 3.3 | BR-30 | ACTIVITY_LOGS |
 
-### 8.1 Use case
-
-| ID | Use case | Sumber | Lokasi PRD (tabel Bagian 3, alur, aturan, DB) |
-|---|---|---|---|
-| UC-U1 | Login | DOCX 3; DIAG 1, 2, 3 | 3.1; 4; BR-01; USERS |
-| UC-U2 | Logout | DOCX 3; DIAG 1, 2, 3 | 3.1; USERS |
-| UC-U3 | Mengubah Password | DOCX 3; DIAG 1, 2, 3 | 3.1; USERS |
-| UC-U4 | Melihat Dashboard | DOCX 3; DIAG 1, 2, 3 | 3.1 |
-| UC-U5 | Melihat dan Mengubah Profil | DOCX 3; DIAG 1, 2, 3 (Melihat Profil) | 3.1; USERS |
-| PT-01 | Mencatat Opnam Pekerjaan | DOCX 4, 7, 8; DIAG 3 | 3.2; 4.1; BR-11, BR-14; OPNAMS, OPNAM_ITEMS |
-| PT-02 | Memilih Data Kapal | DOCX 4, 7; DIAG 3 | 3.2; 4.1; BR-11; SHIPS, OWNERS |
-| PT-03 | Menambahkan Detail Pekerjaan | DOCX 4, 7; DIAG 3 | 3.2; 4.1; BR-12; OPNAM_ITEMS |
-| PT-04 | Mengunggah Foto/Bukti Pekerjaan | DOCX 4, 7, 9; DIAG 3 | 3.2; 4.1; BR-13, BR-26; OPNAM_ATTACHMENTS |
-| PT-05 | Melihat Perhitungan Biaya | DOCX 4; DIAG 3 | 3.2; BR-14; OPNAM_ITEMS, TARIFFS |
-| PT-06 | Menyimpan Draft Opnam | DOCX 4, 10; DIAG 3 | 3.2; 4.1; OPNAMS |
-| PT-07 | Mengajukan Opnam untuk Review | DOCX 4; DIAG 3 | 3.2; 4.1; BR-15; OPNAMS |
-| PT-08 | Melihat Status Pengajuan | DOCX 4; DIAG 3 | 3.2; OPNAMS, STATUS_HISTORIES |
-| PT-09 | Memperbaiki Opnam yang Dikembalikan | DOCX 4; tidak ada di DIAG 3 | 3.2; 4.2; BR-21; OPNAMS |
-| PT-10 | Melihat Riwayat Aktivitas | DOCX 4, 10; tidak ada di DIAG 3 | 3.2; ACTIVITY_LOGS |
-| PT-11 | Mengekspor Riwayat Aktivitas ke PDF | DOCX 4; DIAG 3 (Mengekspor Rekap Aktivitas) | 3.2; ACTIVITY_LOGS |
-| AD-01 | Mengelola Pengguna | DOCX 5; DIAG 2 | 3.3; BR-01; USERS |
-| AD-02 | Mengelola Data Owner dan Kapal | DOCX 5; DIAG 2 | 3.3; OWNERS, SHIPS |
-| AD-03 | Mengelola Kategori Pekerjaan | DOCX 5; DIAG 2 | 3.3; BR-06; WORK_CATEGORIES |
-| AD-04 | Mengelola Jenis Pekerjaan, Material/Spesifikasi, Satuan, dan Tarif | DOCX 5; DIAG 2 | 3.3; BR-06, BR-10; WORK_TYPES, MATERIAL_SPECS, UNITS, TARIFFS |
-| AD-05 | Melihat Daftar Opnam | DOCX 5, 9; DIAG 2 | 3.3; BR-27; OPNAMS |
-| AD-06 | Memeriksa Opnam | DOCX 5, 7; DIAG 2 | 3.3; 4.2; BR-16, BR-17; OPNAMS, OPNAM_ITEMS |
-| AD-07 | Merevisi Data Opnam | DOCX 5, 7; DIAG 2 | 3.3; 4.2; BR-19 |
-| AD-08 | Menyetujui Hasil Review | DOCX 5, 7; DIAG 2 | 3.3; 4.2; BR-16, BR-22; OPNAMS |
-| AD-09 | Mengembalikan Opnam untuk Revisi | DOCX 5, 7; DIAG 2 | 3.3; 4.2; BR-17, BR-18; OPNAMS |
-| AD-10 | Melihat Riwayat Revisi | DOCX 5, 10; DIAG 2 | 3.3; STATUS_HISTORIES, INVOICES |
-| AD-11 | Melihat Riwayat Pekerjaan Kapal | DOCX 5, 10; DIAG 2 | 3.3; SHIPS, OPNAMS, OPNAM_ITEMS |
-| AD-12 | Merevisi Invoice | DOCX 5, 10; DIAG 2 | 3.3; 4.4; INVOICES |
-| AD-13 | Mengekspor Invoice ke PDF | DOCX 5, 8; DIAG 2 | 3.3; BR-09; INVOICES |
-| AD-14 | Melihat Riwayat Aktivitas | DOCX 5, 10; DIAG 2 (Melihat Audit Log) | 3.3; ACTIVITY_LOGS |
-| AD-15 | Mengekspor Riwayat Aktivitas ke PDF | DOCX 5; DIAG 2 (Mengekspor Rekap Aktivitas) | 3.3; ACTIVITY_LOGS |
-| AD-16 | Melihat dan Mengekspor Laporan Rekapitulasi | DOCX 5, 10; tidak ada di DIAG 2 | 3.3; 7.1 |
-| DR-01 | Melihat Draft Menunggu Approval | DOCX 6; DIAG 1 | 3.4; BILLINGS |
-| DR-02 | Memeriksa Draft Tagihan | DOCX 6, 7; DIAG 1 | 3.4; 4.3; BR-22; BILLINGS |
-| DR-03 | Merevisi Data Opnam | DOCX 6, 7, 10; tidak ada di DIAG 1 | 3.4; 4.3; BR-20; OPNAMS |
-| DR-04 | Memberikan Diskon atau Markup | DOCX 6, 7, 8; DIAG 1 | 3.4; 4.3; BR-07, BR-08, BR-24; BILLING_ADJUSTMENTS |
-| DR-05 | Mencatat Disposisi | DOCX 6, 7; DIAG 1 | 3.4; BR-08; BILLING_ADJUSTMENTS |
-| DR-06 | Menyetujui Tagihan | DOCX 6, 7; DIAG 1 | 3.4; 4.3; BR-07, BR-22, BR-23; BILLINGS |
-| DR-07 | Menolak Tagihan | DOCX 6, 7, 10; DIAG 1 | 3.4; 4.3; BR-22; BILLINGS |
-| DR-08 | Menerbitkan Invoice PDF | DOCX 6, 7, 8; DIAG 1 | 3.4; 4.3; BR-09, BR-23; INVOICES |
-| DR-09 | Menerbitkan Technical Report PDF | DOCX 6, 7, 8; DIAG 1 | 3.4; 4.3; BR-09, BR-23; TECHNICAL_REPORTS |
-| DR-10 | Merevisi Invoice | DOCX 6, 10; DIAG 1 | 3.4; 4.4; INVOICES |
-| DR-11 | Mengekspor Invoice ke PDF | DOCX 6, 10; DIAG 1 | 3.4; 4.4; INVOICES |
-| DR-12 | Mengunduh atau Mencetak Dokumen | DOCX 6; DIAG 1 | 3.4; INVOICES, TECHNICAL_REPORTS |
-| DR-13 | Melihat Rekap Tagihan | DOCX 6; DIAG 1 | 3.4; BILLINGS |
-| DR-14 | Mengekspor Laporan PDF/Excel | DOCX 6, 10; tidak ada di DIAG 1 | 3.4; 7.1 |
-| DR-15 | Mencari dan Melihat Riwayat Perbaikan Kapal | DOCX 6, 9, 10; DIAG 1 | 3.4; 4.5; BR-25; SHIPS, OPNAMS |
-| DR-16 | Melihat Riwayat Aktivitas | DOCX 6, 10; DIAG 1 (Melihat Riwayat Perubahan, Melihat Audit Log) | 3.4; ACTIVITY_LOGS |
-| DR-17 | Mengekspor Riwayat Aktivitas ke PDF | DOCX 6; DIAG 1 (Mengekspor Rekap Aktivitas) | 3.4; ACTIVITY_LOGS |
-
-### 8.2 Item sumber lainnya
-
-| Item sumber | Sumber | Lokasi PRD |
-|---|---|---|
-| Ringkasan, tujuan, dan lingkup dokumen use case | DOCX 1 | Bagian 1 |
-| Aktor dan tanggung jawab (Petugas, Admin, Direksi) | DOCX 2; DIAG 1, 2, 3 | Bagian 2 |
-| Relasi include dan extend (Bagian 7 sumber) | DOCX 7 | Bagian 4; Bagian 5 (BR-11 sampai BR-24) |
-| Aturan bisnis (Bagian 8 sumber) | DOCX 8 | Bagian 5 (BR-01 sampai BR-10) |
-| Fitur pendukung (Bagian 9 sumber) | DOCX 9 | Bagian 3.5; BR-26, BR-27 |
-| Pertanyaan terbuka (Bagian 10 sumber) | DOCX 10 | Bagian 9 |
-| Basis data: 17 tabel, 24 relasi, relasi snapshot dan polimorfik | ERD | Bagian 6 (6.1 sampai 6.6) |
-| Mockup antarmuka (operator, supervisor, direksi) | UI_Project_FPW.pdf | Tidak dipakai sebagai sumber persyaratan. Dicatat di Bagian 9. |
-
-### 8.3 Pemeriksaan cakupan
-
-- Use case dalam sumber: 49 (UC-U1 sampai UC-U5, PT-01 sampai PT-11, AD-01 sampai AD-16, DR-01 sampai DR-17). Semua 49 muncul di Bagian 3 dan di 8.1 di atas.
-- Tabel basis data di ERD: 17. Semua 17 muncul di Bagian 6.
-- Aktor: 3. Semua 3 muncul di Bagian 2.
+Cakupan: 50 use case, 3 aktor, 17 tabel ERD, semuanya tercakup.
 
 ---
 
-## 9. Informasi yang Belum Lengkap
+## 9. Hal yang Masih Terbuka
 
-Daftar ini hanya memuat item yang tidak jelas, belum didefinisikan, atau bertentangan dalam dokumen sumber. Item 1 sampai 9 adalah pertanyaan terbuka dari Bagian 10 dokumen use case sumber. Item 10 dan seterusnya ditemukan selama analisis PRD ini. Tidak ada yang di sini yang sudah diselesaikan atau dijadikan persyaratan.
+Agent harus bertanya sebelum mengerjakan bagian terkait.
 
-### 9.1 Pertanyaan terbuka dari dokumen sumber (Bagian 10)
-
-| No. | Pertanyaan | Dampak pada PRD ini |
+| No | Pertanyaan | Terkait |
 |---|---|---|
-| 1 | Riwayat Perubahan dan Audit Log digabung menjadi Riwayat Aktivitas di dokumen sumber, tetapi diagram menampilkannya terpisah. | AD-10, AD-14, DR-16 |
-| 2 | Cakupan Riwayat Aktivitas untuk Petugas: hanya aktivitas sendiri, atau seluruh aktivitas. | PT-10, PT-11 |
-| 3 | Apakah Direksi boleh merevisi data opnam dan invoice. Sumber tidak mencantumkannya untuk Direksi. | DR-03, DR-10 |
-| 4 | Apakah Menerbitkan Invoice PDF dan Mengekspor Invoice ke PDF berbeda untuk Direksi. Jika sama, salah satunya dihapus. | DR-08, DR-11 |
-| 5 | Waktu revisi invoice: sebelum atau sesudah invoice terbit. | AD-12, DR-10 |
-| 6 | Alur setelah tagihan ditolak: final, atau dapat diperbaiki lalu diajukan ulang. | DR-07 |
-| 7 | Apakah Riwayat Pekerjaan Kapal (Admin) dan Mencari dan Melihat Riwayat Perbaikan Kapal (Direksi) adalah dua fitur atau satu. | AD-11, DR-15 |
-| 8 | Apakah tombol Simpan Draft tersedia dalam proses pencatatan opnam. | PT-06 |
-| 9 | Laporan Rekapitulasi tetap terpisah dari Riwayat Aktivitas (dinyatakan dalam sumber). Konfirmasi bahwa pemisahan ini final. | AD-16, DR-14, PT-11, AD-15, DR-17 |
-
-### 9.2 Celah dan konflik tambahan yang ditemukan selama analisis
-
-| No. | Item | Detail |
-|---|---|---|
-| 10 | Input, output, dan alur kerja rinci untuk setiap fitur | Tidak dispesifikasikan dalam dokumen sumber. Hanya deskripsi dan relasi yang tersedia. |
-| 11 | Kriteria penerimaan untuk setiap fitur | Tidak dispesifikasikan dalam dokumen sumber. Hanya pernyataan eksplisit yang dicantumkan di Bagian 3. |
-| 12 | File detail basis data | ERD merujuk ke `Database_Design_SIMSHIP.md`, Bagian 4, yang tidak disediakan. Constraint, detail kolom, dan asumsi di luar ERD tidak diketahui. |
-| 13 | Panjang, presisi, dan nullability | Tidak dispesifikasikan untuk kolom string, text, dan decimal. Nullability tidak ditampilkan untuk beberapa kolom. |
-| 14 | Tempat penyimpanan alasan penolakan | DR-07 mensyaratkan alasan. BILLINGS tidak memiliki kolom alasan di ERD. `STATUS_HISTORIES.note` mungkin kandidat, tetapi sumber tidak menyatakannya. |
-| 15 | Cara tagihan dibuat dari opnam yang diteruskan | Sumber tidak menjelaskan langkah ini. `BILLINGS.opnam_id` ada. |
-| 16 | Transisi status opnam saat diajukan ulang | PT-09 menyebut opnam diajukan kembali, tetapi status tujuan tidak dinyatakan secara eksplisit. |
-| 17 | Tanggal berakhir tarif | TARIFFS hanya memiliki `effective_from`. Apakah perlu tanggal berakhir tidak dispesifikasikan. |
-| 18 | Batas unggahan | Format yang diizinkan dan ukuran maksimum untuk PT-04 tidak dispesifikasikan. |
-| 19 | Isi dashboard per role | Tidak dispesifikasikan untuk UC-U4. |
-| 20 | Isi laporan dan format ekspor | Tidak dispesifikasikan untuk AD-16 dan DR-14. Laporan tidak memiliki tabel di ERD. |
-| 21 | Perilaku hapus | AD-02 dan AD-03 menyebut hapus, tetapi sumber tidak menyatakan apakah penghapusan bersifat soft (`deleted_at`) atau hard. Kolom soft delete hanya ada pada sebagian tabel. |
-| 22 | Nonaktifkan versus hapus untuk pengguna | AD-01 menyebut penonaktifan. Sumber tidak menyatakan apakah pengguna dapat dihapus. |
-| 23 | Timestamp dan field audit | Tidak dispesifikasikan pada sebagian besar tabel. |
-| 24 | Ubah password | Apakah password lama wajib diisi, dan aturan password: tidak dispesifikasikan. |
-| 25 | Field profil | Field mana yang dapat diubah di UC-U5: tidak dispesifikasikan. |
-| 26 | Penamaan role Admin | Sumber menggunakan Admin. Antarmuka menggunakan Supervisor untuk role yang sama. Nilai role di basis data adalah `admin`. |
-| 27 | Penamaan role Petugas | Sumber menggunakan Petugas. Antarmuka menggunakan Operator. Nilai role di basis data adalah `petugas`. |
-| 28 | Nama di diagram log aktivitas | Usecase.pdf menggunakan Rekap Aktivitas di beberapa tempat. Sumber menggunakan Riwayat Aktivitas. |
-| 29 | Celah diagram use case | Usecase.pdf Petugas tidak menampilkan PT-09 atau PT-10. Admin tidak menampilkan AD-16. Direksi tidak menampilkan DR-03 atau DR-14. |
-| 30 | Mockup antarmuka | UI_Project_FPW.pdf ditandai sedang direvisi di dokumen sumber, sehingga tidak dijadikan persyaratan. Mockup menampilkan field yang tidak ada di use case atau ERD, misalnya contact person owner, nomor telepon, tanggal berakhir tarif (Berlaku hingga), kuantitas minimum, dan faktor tarif (Faktor Tambahan). Field tersebut tidak dimasukkan ke PRD ini. |
-| 31 | Nilai status pada mockup UI | Menampilkan status seperti Draft, Menunggu Review, Perlu Revisi, Diteruskan, Disetujui, Ditolak, dan Menunggu Approval Direksi. ERD dan sumber menggunakan kata yang berbeda untuk sebagian status. PRD ini memakai nilai dari ERD. |
-| 32 | Penomoran dokumen | Aturan pembuatan `opnam_number`, `billing_number`, `invoice_number`, dan `report_number`: tidak dispesifikasikan. |
-| 33 | Riwayat revisi invoice | ERD hanya menyimpan `revision_count` pada INVOICES. Tempat penyimpanan revisi sebelumnya: tidak dispesifikasikan. |
-| 34 | Kolom ERD baru yang tidak dijelaskan di dokumen use case | ERD revisi menambahkan `tanggal_opnam`, `catatan`, `total_biaya` (snapshot), `created_at`, dan `updated_at` pada OPNAMS; `lokasi`, `created_at`, dan `updated_at` pada OPNAM_ITEMS; `keterangan`, `created_at`, dan `updated_at` pada OPNAM_ATTACHMENTS. Dokumen use case tidak menjelaskan kolom-kolom ini. Makna, cara input, dan aturannya: tidak dispesifikasikan. |
-| 35 | Status opnam yang berganti nama | ERD revisi mengganti `diteruskan_ke_direksi` menjadi `menunggu_approval_direksi`, dan menambahkan `ditolak`, `disetujui`, dan `dokumen_terbit`. Dokumen use case (AD-08, Bagian 4) masih memakai istilah lama. Konfirmasi pemetaannya. |
-| 36 | Himpunan status yang tumpang tindih | OPNAMS.status dan BILLINGS.status kini memakai nilai yang sama (`disetujui`, `ditolak`). Tabel mana yang berwenang untuk tiap keputusan, dan status mana yang dibaca DR-01: tidak dispesifikasikan. |
-| 37 | Pemicu `dokumen_terbit` | Aksi mana (DR-08, DR-09, atau keduanya) yang mengubah OPNAMS.status menjadi `dokumen_terbit`: tidak dispesifikasikan. |
-| 38 | Sumber `total_biaya` | Aturan perhitungan dan saat snapshot diambil: tidak dispesifikasikan. BR-14 hanya mencakup estimasi per item. |
-| 39 | Penggunaan `catatan` dan `tanggal_opnam` | Hubungan dengan catatan pengembalian AD-09 dan tanggal opnam pada PT-01: tidak dispesifikasikan. |
+| 1 | Tagihan atau opnam yang ditolak lalu diajukan ulang: kembali ke status apa (`menunggu_review` atau `perlu_revisi`), dan siapa yang mengajukan ulang? | DR-07, BR-29 |
+| 2 | Invoice dibuat otomatis saat disetujui (DR-08), tetapi revisi hanya boleh "sebelum terbit". Bagaimana status invoice draft dan terbit dibedakan, dan kapan revisi dilakukan? | AD-12, DR-10, 6.7 no. 2 |
+| 3 | DR-11 (ekspor invoice) dan DR-12 (unduh atau cetak dokumen): digabung atau terpisah? | DR-11, DR-12 |
+| 4 | Konfirmasi bahwa Riwayat Revisi benar-benar digabung ke Riwayat Perubahan. | AD-10, DR-16 |
+| 5 | Format file dan batas ukuran unggahan, serta lokasi penyimpanan. | PT-04 |
+| 6 | Isi dashboard per role. | UC-U4 |
+| 7 | Isi, kolom, dan periode laporan rekapitulasi. | AD-16, DR-13, DR-14 |
+| 8 | Format penomoran opnam, tagihan, invoice, technical report. | 6.6 |
+| 9 | Aturan password, apakah password lama wajib, batas sesi. | UC-U3 |
+| 10 | Field profil yang boleh diubah. | UC-U5 |
+| 11 | `adjustment_value` berupa persen atau nominal? Boleh lebih dari satu penyesuaian per tagihan? | DR-04 |
+| 12 | Konfirmasi rekomendasi pembuatan tagihan, perhitungan `total_biaya`, dan pemicu `dokumen_terbit`. | 4.6, 4.7 |
+| 13 | `issued_by` saat dokumen diterbitkan sistem: diisi Direksi yang menyetujui? | DR-08, DR-09 |
+| 14 | "Faktor tambahan tarif sesuai spesifikasi teknis" (muncul di pembagian tugas, tidak ada di use case atau ERD): dipakai atau tidak, dan bagaimana kolomnya? | AD-04 |
+| 15 | Konfirmasi `WORK_CATEGORIES.is_active`. | AD-03 |
+| 16 | Tahapan akhir pencatatan: Analisis Fitur menyebut "bukti pekerjaan", dokumen use case menyebut "tinjauan akhir". Mana yang dipakai? | PT-01 |
+| 17 | Tarif tidak punya tanggal berakhir. Apakah perlu? | TARIFFS |
+| 18 | Daftar jenis kapal untuk `OPNAMS.jenis_kapal`: pilihan tetap atau teks bebas, dan apa nilainya? (ditanyakan ke client dan pemilik SHIPS) | 3.10.2, 6.7 no. 3 |
+| 19 | Faktor ketebalan: Petugas mengisi angka ketebalan lalu faktor dihitung dari rentang, atau Petugas memilih faktor langsung? Apa aturan rentang dan satuannya? (ditanyakan ke pemilik master tarif dan client) | 3.10.4, 6.7 no. 4, no. 14 |
+| 20 | Faktor kompleksitas: apa saja tingkatnya dan berapa nilai tiap tingkat? (ditanyakan ke pemilik master tarif dan client) | 3.10.4, 6.7 no. 4, no. 14 |
+| 21 | Aturan pembulatan `subtotal` dan `total_biaya`. | 3.10.4 |
+| 22 | Daftar kolom pekerjaan tambahan dari client, dan apakah masing-masing per item atau per opnam. | 3.10.2, 6.7 no. 5 |
+| 23 | Faktor tambahan tetap dipakai atau dihapus dari tupoksi (`tupoksi.md` bagian 3 no. 10). Keputusan ini menentukan 6.7 no. 4. | 3.10.4, no. 14 |
 
 ---
 
-## 10. Checklist Progres dan Kepemilikan (Progress Checklist and Ownership)
-
-### Aturan untuk AI agent (AI agent rules)
-
-- Sebelum mengerjakan apa pun, cari item di tabel ini. Kerjakan hanya item yang Pemiliknya sama dengan orang yang meminta.
-- Item tanpa pemilik, atau yang menyentuh modul lintas tim (USERS, login, dan tabel bersama), jangan dikerjakan. Tanyakan dulu.
-- Setelah item selesai, ubah Status dan isi Catatan dalam perubahan yang sama.
-- Nilai Status: `Belum`, `Dikerjakan`, `Selesai`, `Perlu konfirmasi`.
-
-### 10.1 Pembagian tugas (Tupoksi)
-
-**Aturan khusus:** middleware dan policy (Halvina) dipakai oleh semua modul, jadi perubahannya hanya dilakukan oleh Halvina. Tugas Rifqy untuk ekspor laporan berstatus membantu, sehingga mesin ekspor bersama perlu dikonfirmasi (lihat 10.5).
-
-Modul yang bisa dipakai sebagai dasar pembagian: Umum (UC-U), Petugas (PT), Admin (AD), Direksi (DR), dan Basis data (17 tabel). Pembagian ini sudah sesuai `Pembagian_Tugas_Tim.docx`.
-
-| Anggota | Modul | Tugas (dari Pembagian_Tugas_Tim.docx) |
-|---|---|---|
-| Regina | Opnam dan Kalkulasi Biaya | Halaman daftar opnam; form pencatatan opnam; tambah, edit, hapus detail pekerjaan sesuai status transaksi; hubungkan opnam dengan data kapal; kalkulasi biaya otomatis berdasarkan tarif dan spesifikasi; unggah foto/bukti pekerjaan |
-| Anisa | Master Data Pekerjaan dan Tarif | CRUD kategori pekerjaan; CRUD jenis pekerjaan; CRUD material dan spesifikasi; CRUD satuan pekerjaan; CRUD tarif dasar; faktor tambahan tarif sesuai spesifikasi teknis |
-| Rifqy | Master Data Owner dan Kapal serta Laporan | CRUD owner kapal; CRUD kapal; hubungkan kapal dengan owner; pencarian riwayat perbaikan kapal; halaman rekapitulasi pekerjaan; membantu ekspor laporan PDF/Excel; riwayat perubahan dan audit log |
-| Halvina | Autentikasi, Pengguna, dan Dashboard | Login dan logout; ubah password; CRUD pengguna; tiga role (Admin, Petugas, Direksi); middleware dan policy; dashboard per role; lihat dan ubah profil |
-| Hazel | Review, Approval, Disposisi, dan Dokumen Tagihan | Halaman review opnam; setujui hasil review atau kembalikan opnam untuk revisi; proses approval tagihan Direksi; tolak tagihan; diskon dan markup; catat disposisi; Invoice PDF; Technical Report PDF; unduh dan cetak dokumen |
-
-### 10.2 Checklist basis data (17 tabel ERD)
+## 10. Keputusan yang Sudah Dimasukkan dari Analisis Fitur v3
 
 | ID | Item | Pemilik | Status | Catatan |
 |---|---|---|---|---|
@@ -888,7 +667,6 @@ Item berikut tidak tercantum di tugas anggota mana pun, atau pemiliknya belum je
 | 7 | AD-10, AD-11, AD-14, PT-10, DR-13, DR-16 | Cakupan riwayat dan audit untuk Petugas, Admin, dan Direksi belum dipisah | Konfirmasi cakupan masing-masing |
 | 8 | Mesin ekspor PDF/Excel | Modul ekspor bersama belum punya pemilik | Tentukan pemilik |
 | 9 | Middleware dan policy | Dipakai semua modul | Sudah ditetapkan ke Halvina, konfirmasi tim |
-=======
 | Keputusan | Dampak di PRD |
 |---|---|
 | Riwayat Aktivitas dilihat semua role atas seluruh aktivitas | PT-10, AD-14, DR-17 |
@@ -899,7 +677,7 @@ Item berikut tidak tercantum di tugas anggota mana pun, atau pemiliknya belum je
 | Invoice dan technical report diterbitkan oleh sistem setelah persetujuan | DR-08, DR-09 |
 | Tombol Simpan Draft tersedia di tahapan pencatatan | PT-06 |
 | Pengajuan ulang setelah perbaikan Petugas kembali ke `menunggu_review` | PT-09 |
-| Tagihan yang ditolak bersifat final, pengajuan ulang tidak diimplementasikan (keputusan Hazel 2026-11-26) | DR-07 |
+| Tagihan yang ditolak dapat diajukan ulang (tujuan status terbuka) | DR-07 |
 | Catatan pengembalian disimpan di riwayat status | AD-09 |
 | Hapus pada owner dan kapal memakai soft delete | AD-02 |
 | Profil harus ada untuk Admin dan Direksi | UC-U5 |
@@ -911,4 +689,3 @@ Item berikut tidak tercantum di tugas anggota mana pun, atau pemiliknya belum je
 | `INVOICES.status` (`draft`/`terbit`) ditambahkan sebagai penanda revisi dan publikasi | AD-12, DR-10, 6.7 no. 2 |
 | Mesin PDF menjadi milik Hazel memakai dompdf, ekspor Excel belum diputuskan | AD-13, DR-11, DR-12 |
 | Status opnam menjadi `dokumen_terbit` saat invoice dipublikasikan dan technical report tersedia | ST-07 |
->>>>>>> Stashed changes

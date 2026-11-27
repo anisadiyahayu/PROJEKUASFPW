@@ -1,17 +1,27 @@
 <?php
 
-<<<<<<< Updated upstream
-=======
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ReviewOpnamController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Direksi\DokumenController;
 use App\Http\Controllers\Direksi\TagihanController;
 use App\Http\Controllers\MaterialSpecController;
->>>>>>> Stashed changes
+use App\Http\Controllers\Admin\OwnerController;
+use App\Http\Controllers\Admin\ShipController;
+use App\Http\Controllers\Audit\ActivityLogController;
+use App\Http\Controllers\Direksi\ApprovedTransactionController;
 use App\Http\Controllers\OpnamController;
+use App\Http\Controllers\Reports\ShipRepairHistoryController;
+use App\Http\Controllers\Reports\WorkRecapitulationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\MaterialSpecController;
+use App\Http\Controllers\OpnamController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\WorkCategoryController;
+use App\Http\Controllers\WorkTypeController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,8 +37,8 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', function (Request $request) {
         $data = $request->validate([
-        'username' => ['required', 'string', 'max:255'],
-        'password' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:255'],
         ]);
 
         $credentials = [
@@ -57,6 +67,11 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
+/*
+|--------------------------------------------------------------------------
+| Petugas
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:petugas'])
     ->prefix('petugas')
     ->name('petugas.')
@@ -65,6 +80,10 @@ Route::middleware(['auth', 'role:petugas'])
         Route::get('/opnams', [OpnamController::class, 'indexMine'])->name('opnams.index');
         Route::get('/opnams/create', [OpnamController::class, 'create'])->name('opnams.create');
         Route::post('/opnams/create', [OpnamController::class, 'storeStep'])->name('opnams.store-step');
+        Route::get('/opnams/{opnam}/edit', [OpnamController::class, 'edit'])->name('opnams.edit');
+        Route::post('/opnams/{opnam}/items', [OpnamController::class, 'storeItem'])->name('opnams.items.store');
+        Route::put('/opnams/{opnam}/items/{item}', [OpnamController::class, 'updateItem'])->name('opnams.items.update');
+        Route::delete('/opnams/{opnam}/items/{item}', [OpnamController::class, 'destroyItem'])->name('opnams.items.destroy');
     });
 
 Route::middleware(['auth', 'role:admin'])
@@ -81,6 +100,29 @@ Route::middleware(['auth', 'role:admin'])
         Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
         Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
         Route::get('/opnams', [OpnamController::class, 'index'])->name('opnams.index');
+
+        // AD-02: data pemilik dan kapal.
+        Route::resource('owners', OwnerController::class)->except(['show']);
+        Route::resource('ships', ShipController::class)->except(['show']);
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Direksi
+|--------------------------------------------------------------------------
+*/
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'show'])->name('opnams.show');
+        Route::resource('work-categories', WorkCategoryController::class)
+            ->except('show')
+            ->parameters(['work-categories' => 'workCategory']);
+        Route::resource('work-types', WorkTypeController::class)
+            ->except('show')
+            ->parameters(['work-types' => 'workType']);
+        Route::resource('units', UnitController::class)
+            ->except('show');
+        Route::resource('material-specs', MaterialSpecController::class)
+            ->except('show')
+            ->parameters(['material-specs' => 'materialSpec']);
     });
 
 Route::middleware(['auth', 'role:direksi'])
@@ -88,9 +130,6 @@ Route::middleware(['auth', 'role:direksi'])
     ->name('direksi.')
     ->group(function () {
         Route::view('/dashboard', 'dashboard.direksi')->name('dashboard');
-<<<<<<< Updated upstream
-    });
-=======
         Route::get('/tagihans', [TagihanController::class, 'index'])->name('tagihans.index');
         Route::get('/tagihans/{billing}', [TagihanController::class, 'show'])->name('tagihans.show');
         Route::post('/tagihans/{billing}/adjustment', [TagihanController::class, 'applyAdjustment'])->name('tagihans.apply-adjustment');
@@ -102,4 +141,35 @@ Route::middleware(['auth', 'role:direksi'])
         Route::get('/dokumen/invoices/{invoice}/download', [DokumenController::class, 'downloadInvoice'])->name('dokumen.download-invoice');
         Route::post('/dokumen/unduh', [DokumenController::class, 'unduh'])->name('dokumen.unduh');
     });
->>>>>>> Stashed changes
+        Route::get('/transaksi-disetujui', [ApprovedTransactionController::class, 'index'])->name('approved.index');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Laporan dan riwayat perbaikan (Admin + Direksi)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin,direksi'])->group(function () {
+    // AD-11 dan DR-15: riwayat perbaikan kapal (satu halaman bersama).
+    Route::get('/riwayat-perbaikan', [ShipRepairHistoryController::class, 'index'])->name('repair-history.index');
+    Route::get('/riwayat-perbaikan/{ship}', [ShipRepairHistoryController::class, 'show'])
+        ->withTrashed()
+        ->name('repair-history.show');
+
+    // AD-16 dan DR-14: laporan rekapitulasi pekerjaan.
+    Route::get('/laporan/rekapitulasi', [WorkRecapitulationController::class, 'index'])
+        ->name('reports.recapitulation.index');
+    Route::get('/laporan/rekapitulasi/pdf', [WorkRecapitulationController::class, 'exportPdf'])
+        ->name('reports.recapitulation.pdf');
+    Route::get('/laporan/rekapitulasi/excel', [WorkRecapitulationController::class, 'exportExcel'])
+        ->name('reports.recapitulation.excel');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Riwayat aktivitas dan audit log (semua role, cakupan diatur controller)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    Route::get('/riwayat-aktivitas', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+});
