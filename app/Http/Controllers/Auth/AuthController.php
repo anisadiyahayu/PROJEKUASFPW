@@ -20,8 +20,8 @@ class AuthController extends Controller
         $identifier = strtolower(trim($data['username']));
 
         $user = User::query()
-            ->where('username', $identifier)
-            ->orWhere('email', $identifier)
+            ->whereRaw('LOWER(username) = ?', [$identifier])
+            ->orWhereRaw('LOWER(email) = ?', [$identifier])
             ->first();
 
         if (! $user || ! Auth::attempt([
@@ -34,10 +34,10 @@ class AuthController extends Controller
                 ->onlyInput('username');
         }
 
-        $request->user()->update(['last_login_at' => now()]);
+        $user->forceFill(['last_login_at' => now()])->save();
         $request->session()->regenerate();
 
-        return redirect()->route($request->user()->dashboardRoute());
+        return redirect()->route($user->dashboardRoute());
     }
 
     public function logout(Request $request): RedirectResponse
