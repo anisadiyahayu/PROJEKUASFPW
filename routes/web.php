@@ -20,6 +20,7 @@ use App\Http\Controllers\Reports\WorkRecapitulationController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\WorkCategoryController;
 use App\Http\Controllers\WorkTypeController;
+use App\Http\Controllers\PetugasShipController as PetugasShipController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -58,6 +59,8 @@ Route::middleware(['auth', 'role:petugas'])
         Route::post('/opnams/{opnam}/items', [OpnamController::class, 'storeItem'])->name('opnams.items.store');
         Route::put('/opnams/{opnam}/items/{item}', [OpnamController::class, 'updateItem'])->name('opnams.items.update');
         Route::delete('/opnams/{opnam}/items/{item}', [OpnamController::class, 'destroyItem'])->name('opnams.items.destroy');
+
+        Route::get('/ships', [PetugasShipController::class, 'index'])->name('ships.index');
     });
 
 Route::middleware(['auth', 'role:admin'])

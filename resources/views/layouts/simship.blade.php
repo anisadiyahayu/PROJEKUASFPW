@@ -679,7 +679,7 @@
     $menus = [
     'petugas' => [
     ['label' => 'Dashboard', 'url' => route('petugas.dashboard'), 'active' => 'petugas.dashboard'],
-    ['label' => 'Data Kapal', 'url' => null, 'active' => null],
+    ['label' => 'Data Kapal', 'url' => route('petugas.ships.index'), 'active' => 'petugas.ships.index'],
     ['label' => 'Buat Opname', 'url' => route('petugas.opnams.create'), 'active' => 'petugas.opnams.create'],
     ['label' => 'Opname Saya', 'url' => route('petugas.opnams.index'), 'active' => 'petugas.opnams.index'],
     ['label' => 'Riwayat Aktivitas', 'url' => route('activity-logs.index'), 'active' => 'activity-logs.*'],
