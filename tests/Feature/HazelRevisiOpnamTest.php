@@ -179,8 +179,14 @@ test('Admin mengubah volume tanpa mencari ulang tarif master dan validasi ditola
         ->assertRedirect();
 
     $item = $opnam->items()->firstOrFail();
-    $tarif['tariff']->update(['price' => 150000]);
-
+    Tariff::create([
+        'material_spec_id' => $tarif['spec']->id,
+        'unit_id' => $tarif['unit']->id,
+        'created_by' => $admin->id,
+        'price' => 150000,
+        'effective_from' => '2026-11-20',
+    ]);
+    
     $payload = hazelRevisiPayload($tarif, 12);
     $payload['kompleksitas'] = 'tidak-ada';
     $this->actingAs($admin)
