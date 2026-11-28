@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\OwnerController;
 use App\Http\Controllers\Admin\ShipController;
 use App\Http\Controllers\Audit\ActivityLogController;
 use App\Http\Controllers\Direksi\ApprovedTransactionController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OpnamController;
 use App\Http\Controllers\TariffController;
 use App\Http\Controllers\ProfileController;
@@ -51,10 +52,11 @@ Route::middleware(['auth', 'role:petugas'])
     ->prefix('petugas')
     ->name('petugas.')
     ->group(function () {
-        Route::view('/dashboard', 'dashboard.petugas')->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'petugas'])->name('dashboard');
         Route::get('/opnams', [OpnamController::class, 'indexMine'])->name('opnams.index');
         Route::get('/opnams/create', [OpnamController::class, 'create'])->name('opnams.create');
         Route::post('/opnams/create', [OpnamController::class, 'storeStep'])->name('opnams.store-step');
+        Route::get('/opnams/{opnam}', [OpnamController::class, 'showPetugas'])->name('opnams.show');
         Route::get('/opnams/{opnam}/edit', [OpnamController::class, 'edit'])->name('opnams.edit');
         Route::post('/opnams/{opnam}/items', [OpnamController::class, 'storeItem'])->name('opnams.items.store');
         Route::put('/opnams/{opnam}/items/{item}', [OpnamController::class, 'updateItem'])->name('opnams.items.update');
@@ -67,7 +69,7 @@ Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::view('/dashboard', 'dashboard.admin')->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
 
         Route::get('/review-opnams', [ReviewOpnamController::class, 'index'])->name('review-opnams.index');
         Route::get('/review-opnams/{opnam}', [ReviewOpnamController::class, 'show'])->name('review-opnams.show');
@@ -128,7 +130,7 @@ Route::middleware(['auth', 'role:direksi'])
     ->prefix('direksi')
     ->name('direksi.')
     ->group(function () {
-        Route::view('/dashboard', 'dashboard.direksi')->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'direksi'])->name('dashboard');
 
         Route::get('/tagihans', [TagihanController::class, 'index'])->name('tagihans.index');
         Route::get('/tagihans/{billing}', [TagihanController::class, 'show'])->name('tagihans.show');

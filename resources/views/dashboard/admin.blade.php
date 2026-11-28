@@ -7,6 +7,14 @@
     <h1>Dashboard Admin</h1>
     <p class="subtitle">Pilih menu untuk memproses opnam dan invoice.</p>
 
+    <div class="stat-grid">
+        <div class="stat"><small>Menunggu Review</small><strong>{{ $antrean[\App\Models\Opnam::STATUS_MENUNGGU_REVIEW] }}</strong></div>
+        <div class="stat"><small>Perlu Revisi</small><strong>{{ $antrean[\App\Models\Opnam::STATUS_PERLU_REVISI] }}</strong></div>
+        <div class="stat"><small>Disetujui</small><strong>{{ $antrean[\App\Models\Opnam::STATUS_DISETUJUI] }}</strong></div>
+        <div class="stat"><small>Pengguna Aktif</small><strong>{{ $penggunaAktif }}</strong></div>
+        <div class="stat"><small>Pengguna Nonaktif</small><strong>{{ $penggunaNonaktif }}</strong></div>
+    </div>
+
     <div class="grid">
         <div class="card">
             <h3 style="margin:0 0 8px;">Review Opname</h3>

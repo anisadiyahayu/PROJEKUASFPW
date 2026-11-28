@@ -29,7 +29,7 @@
             <h1>{{ $opnam->opnam_number }}</h1>
             <p class="subtitle">Detail opnam bersifat baca saja.</p>
         </div>
-        <a href="{{ route('admin.opnams.index') }}" class="btn btn-light">← Kembali</a>
+        <a href="{{ $backRoute }}" class="btn btn-light">← Kembali</a>
     </div>
 
     <div class="card">

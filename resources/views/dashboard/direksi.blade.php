@@ -7,6 +7,11 @@
     <h1>Dashboard Direksi</h1>
     <p class="subtitle">Pilih menu untuk memproses tagihan dan dokumen yang diterbitkan.</p>
 
+    <div class="stat-grid">
+        <div class="stat"><small>Tagihan Menunggu Approval</small><strong>{{ $jumlahMenunggu }}</strong></div>
+        <div class="stat"><small>Total Nilai Menunggu</small><strong>Rp {{ number_format($totalMenunggu, 0, ',', '.') }}</strong></div>
+    </div>
+
     <div class="grid">
         <div class="card">
             <h3 style="margin:0 0 8px;">Tagihan</h3>

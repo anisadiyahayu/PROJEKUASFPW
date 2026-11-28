@@ -97,7 +97,26 @@ class OpnamController extends Controller
             'items.attachments',
         ]);
 
-        return view('opnams.show', compact('opnam'));
+        return view('opnams.show', compact('opnam'))
+            ->with('backRoute', route('admin.opnams.index'));
+    }
+
+    public function showPetugas(Opnam $opnam): View
+    {
+        if ($opnam->created_by !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses ke opnam ini.');
+        }
+
+        $opnam->load([
+            'ship.owner',
+            'creator',
+            'items.tariff.unit',
+            'items.tariff.materialSpec' => fn ($query) => $query->withTrashed(),
+            'items.attachments',
+        ]);
+
+        return view('opnams.show', compact('opnam'))
+            ->with('backRoute', route('petugas.opnams.index'));
     }
 
     public function indexMine(Request $request): View
