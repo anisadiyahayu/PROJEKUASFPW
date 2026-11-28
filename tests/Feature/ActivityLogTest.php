@@ -161,7 +161,7 @@ test('admin melihat seluruh aktivitas dan dapat memfilternya', function () {
         ->assertDontSee('Pemilik dibuat oleh admin');
 });
 
-test('perubahan harga tarif tercatat pada audit log', function () {
+test('perubahan langsung pada tarif tersimpan ditolak dan tidak mencatat update', function () {
     $admin = buatAdminLog();
 
     $category = WorkCategory::create(['name' => 'Pengecatan']);
@@ -177,7 +177,8 @@ test('perubahan harga tarif tercatat pada audit log', function () {
         'effective_from' => '2026-01-01',
     ]);
 
-    $tariff->update(['price' => 125000]);
+    expect(fn () => $tariff->update(['price' => 125000]))
+        ->toThrow(LogicException::class);
 
     $log = ActivityLog::query()
         ->where('event', 'updated')
@@ -186,9 +187,8 @@ test('perubahan harga tarif tercatat pada audit log', function () {
         ->latest('id')
         ->first();
 
-    expect($log)->not->toBeNull()
-        ->and((float) $log->old_values['price'])->toBe(100000.0)
-        ->and((float) $log->new_values['price'])->toBe(125000.0);
+    expect($log)->toBeNull()
+        ->and($tariff->fresh()->price)->toBe('100000.00');
 });
 
 test('tamu tidak boleh mengakses riwayat aktivitas', function () {

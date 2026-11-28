@@ -35,11 +35,72 @@ test('admin dapat melihat daftar jenis pekerjaan dan nama kategori', function ()
 
 test('admin dapat membuka form tambah dengan pilihan kategori', function () {
     WorkCategory::create(['name' => 'Perawatan Kapal']);
+    WorkCategory::create(['name' => 'Kategori Nonaktif', 'is_active' => false]);
 
     $this->actingAs(penggunaJenisPekerjaan())
         ->get(route('admin.work-types.create'))
         ->assertOk()
-        ->assertSee('Perawatan Kapal');
+        ->assertSee('Perawatan Kapal')
+        ->assertDontSee('Kategori Nonaktif');
+});
+
+test('backend menolak kategori nonaktif untuk jenis pekerjaan baru', function () {
+    $category = WorkCategory::create([
+        'name' => 'Kategori Tidak Dapat Dipilih',
+        'is_active' => false,
+    ]);
+
+    $this->actingAs(penggunaJenisPekerjaan())
+        ->from(route('admin.work-types.create'))
+        ->post(route('admin.work-types.store'), [
+            'name' => 'Jenis Baru',
+            'work_category_id' => $category->id,
+        ])
+        ->assertRedirect(route('admin.work-types.create'))
+        ->assertSessionHasErrors('work_category_id');
+
+    $this->assertDatabaseMissing('work_types', [
+        'name' => 'Jenis Baru',
+        'work_category_id' => $category->id,
+    ]);
+});
+
+test('kategori nonaktif yang sudah terhubung ditampilkan informatif saat edit tetapi bukan pilihan aktif', function () {
+    $category = WorkCategory::create([
+        'name' => 'Kategori Lama Nonaktif',
+        'is_active' => false,
+    ]);
+    $workType = WorkType::create([
+        'work_category_id' => $category->id,
+        'name' => 'Jenis Lama',
+    ]);
+
+    $this->actingAs(penggunaJenisPekerjaan())
+        ->get(route('admin.work-types.edit', $workType))
+        ->assertOk()
+        ->assertSee('Kategori saat ini')
+        ->assertSee('Kategori Lama Nonaktif')
+        ->assertSee('Pilih kategori aktif untuk menyimpan perubahan.');
+});
+
+test('kategori yang diaktifkan kembali tersedia pada form jenis pekerjaan baru', function () {
+    $admin = penggunaJenisPekerjaan();
+    $category = WorkCategory::create([
+        'name' => 'Kategori Aktif Kembali',
+        'is_active' => false,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.work-categories.update', $category), [
+        'name' => $category->name,
+        'description' => '',
+        'is_active' => '1',
+    ])->assertRedirect(route('admin.work-categories.index'));
+
+    $this->actingAs($admin)
+        ->get(route('admin.work-types.create'))
+        ->assertOk()
+        ->assertSee('Kategori Aktif Kembali');
 });
 
 test('admin berhasil menambahkan jenis pekerjaan', function () {

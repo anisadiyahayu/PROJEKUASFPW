@@ -6,6 +6,15 @@
 @section('content')
     @php
         $rupiah = fn ($n) => 'Rp '.number_format((float) $n, 0, ',', '.');
+        $statusLabels = [
+            'draft' => 'Draft',
+            'menunggu_review' => 'Menunggu Review',
+            'perlu_revisi' => 'Perlu Revisi',
+            'menunggu_approval_direksi' => 'Menunggu Approval Direksi',
+            'ditolak' => 'Ditolak',
+            'disetujui' => 'Disetujui',
+            'dokumen_terbit' => 'Dokumen Terbit',
+        ];
         $attachments = $opnam->items->flatMap(fn ($item) => $item->attachments);
     @endphp
 
@@ -30,7 +39,7 @@
             <div><label>Lokasi Pekerjaan</label><div>{{ $opnam->items->first()?->lokasi ?? '-' }}</div></div>
             <div><label>Tanggal Opname</label><div>{{ $opnam->tanggal_opnam?->format('d M Y') ?? '-' }}</div></div>
             <div><label>Operator</label><div>{{ $opnam->creator?->name ?? '-' }}</div></div>
-            <div><label>Status</label><div><span class="badge badge-{{ $opnam->status }}">Menunggu Review</span></div></div>
+            <div><label>Status</label><div><span class="badge badge-{{ $opnam->status }}">{{ $statusLabels[$opnam->status] ?? $opnam->status }}</span></div></div>
         </div>
         @if ($opnam->catatan)
             <div style="margin-top:12px;"><label>Catatan Opnam</label><div>{{ $opnam->catatan }}</div></div>

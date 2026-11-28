@@ -956,6 +956,45 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Manual modifications:** -
 **Notes / follow-up:** Item/Modul: AD-05. Cakupan sengaja minimal: hanya view detail, test, dan log prompt. Tidak ada migrasi, model, atau file `.md` progres lain yang diubah; `tasklist.md` tidak disentuh karena status AD-05 sudah `Selesai`.
 
+## 2026-11-27 20:27 WIB (retroactive (jam tidak tercatat))
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`<ShipSeeder lengkap 15 kapal dengan field imo_number, name, ship_type, is_special_type, flag, port_of_registry, gross_tonnage, length_overall, breadth, draft, main_engine_brand, main_engine_hp, propeller_type, propeller_diameter, propeller_blades, rudder_type, owner_name> Masukkan seeder data kapal tersebut. Lalu sinkronkan dengan sistem yang mempunyai korelasi terhadap data kapal`"
+**Output summary:** Tidak bisa dieksekusi apa adanya: seeder menulis kolom di luar ERD SHIPS dan tidak mengisi `owner_id`/`hull_number`; skema `ships` hanya `owner_id`, `name`, `hull_number` (UK), `jenis_kapal` (nullable), `deleted_at`, timestamps. Per aturan "jangan menebak" berhenti dan tanya format Bagian 8 (peminta, sumber `hull_number`, sinkronisasi OWNERS, `jenis_kapal`, field di luar ERD, cakupan sinkronisasi).
+**Files:** -
+**Commands:** pemeriksaan repo (`SKILL.md`, `taskinstruction.md`, `prd.md`, `tasklist.md`, migrasi, `Ship`, `Owner`, `ShipController`, `ShipRequest`, `DatabaseSeeder`, `PROMPT_LOG.md`, `PERTANYAAN_TERBUKA.md`)
+**Manual modifications:** -
+**Notes / follow-up:** Item DB-03 SHIPS / AD-02 (Rifqy). Belum mengubah file.
+
+## 2026-11-27 20:27 WIB (retroactive (jam tidak tercatat))
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`rekomendasikan saya jawaban untuk memverifikasi yang kamu butuhkan`"
+**Output summary:** Rekomendasi per pertanyaan Bagian 8 dengan penanda terverifikasi vs best pick: peminta Rifqy; `hull_number`=salin `imo_number`; upsert OWNERS dari `owner_name`, `address` NULL, transaction; `jenis_kapal`=salin `ship_type` verbatim (cadangan NULL; PRD 9 no.18 tetap terbuka); field di luar ERD dibuang, tarif→Anisa tidak disentuh; cakupan sync data master + korelasi otomatis + seeder terdaftar + snapshot tidak dihitung ulang. Tidak mengubah file.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Menunggu konfirmasi user; masih terbuka PRD 9 no.18/no.21/no.33.
+
+## 2026-11-27 20:27 WIB
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`setuju dengan rekomendasi`"
+**Output summary:** Membuat `database/seeders/ShipSeeder.php` (15 kapal; hanya kolom ERD; `hull_number`=`imo_number`; `jenis_kapal`=`ship_type` verbatim; `firstOrCreate` OWNERS `address` NULL; `updateOrCreate` SHIPS; `DB::transaction`; re-runnable) dan mendaftarkan di `DatabaseSeeder` setelah `UserSeeder`. Memverifikasi standalone pada schema ERD persis (15+15, 0 orphan, 0 duplikat, tanpa kolom tambahan) lalu end-to-end pada worktree `main` bersih: `artisan migrate:fresh --seed` semua migrasi + seeder; `artisan db:table ships` 8 kolom + UK + FK; `ships=15` `owners=15` `activity_logs=30`; `artisan test` 171/171 lolos (826 assertions); `ShipManagementTest`+`OwnerManagementTest` 19/19 lolos. Tidak menulis kolom snapshot/tabel lintas tupoksi. Snapshot lama tidak dihitung ulang.
+**Files:** `database/seeders/ShipSeeder.php`, `database/seeders/DatabaseSeeder.php`, `app/Providers/AppServiceProvider.php`, `PROMPT_LOG.md`
+**Commands:** `artisan migrate:fresh --seed`, `artisan db:table ships`, `artisan tinker`, `artisan test`, `artisan test tests/Feature/ShipManagementTest.php tests/Feature/OwnerManagementTest.php`, `composer install`, `git worktree add`, `php -l`, verifikasi standalone PHP, `php artisan` dicoba di `ship-management`
+**Manual modifications:** -
+**Notes / follow-up:** Item DB-03 SHIPS dikerjakan; DB-02 OWNERS ikut disentuh (sinkronisasi owner). **Tertahan di `ship-management`:** `php artisan` tidak bisa dijalankan karena committed merge conflict di ~21 file (`app/Models/{Opnam,Invoice,OpnamItem,User}.php`, `app/Http/Controllers/OpnamController.php`, `routes/web.php`, `composer.json`, `composer.lock`, `.gitignore`, views, tests, `AGENTS.md`, `tasklist.md`, `app/Providers/AppServiceProvider.php`). `main` bersih kecuali `.gitignore`. Verifikasi penuh dilakukan pada worktree `main`. `AppServiceProvider.php` diperbaiki minimal menghapus penanda conflict (memulihkan sisi HEAD/`main`; wajib agar `artisan` boot). Perlu keputusan tim sisi mana yang dipakai / basis `main`. `tasklist.md` belum ditandai `Selesai`. Butuh konfirmasi: PRD 9 no.18/no.21/no.33.
+
+## 2026-11-27 20:53 WIB
+**Pemilik:** Rifqy
+**AI:** - (tidak tercatat)
+**Prompt:** "`A, selesaikan di branch ship-management saja tanpa push atau merge ke main, lalu rangkum daftar open items per pemilik (Halvina, Anisa, Regina, Hazel) untuk saya konfirmasikan ke tim.`"
+**Output summary:** Opsi A dipilih. Menyelesaikan committed merge conflict di `ship-management` (tanpa push, tanpa `git merge`, hanya resolusi teks + konten bersih `main` sebagai basis untuk file konflik). Konflik `app/Providers/AppServiceProvider.php` dipulihkan; model `Opnam`/`OpnamItem`/`Invoice`/`User` di-UNION; `UserFactory` dilengkapi; `OpnamController`, views opnam, layouts, `routes/web.php`, `tests/Feature/{LoginTest,OpnamDraftTest,OpnamListTest,OpnamMineTest}.php`, `AGENTS.md`, `tasklist.md` diambil versi `main` bersih; `composer.json` UNION 3 paket (`dompdf/dompdf`, `barryvdh/laravel-dompdf`, `phpoffice/phpspreadsheet`, karena app memakai ketiganya); `composer.lock` di-`composer update`; `.gitignore` dibersihkan; konflik `tasklist.md` di-union + DB-02/DB-03 saya pertahankan. 0 penanda conflict. `ShipSeeder` + `DatabaseSeeder` + seeder kapal saya tetap. VERIFIKASI di `ship-management`: `artisan migrate:fresh --seed` OK; `artisan db:table ships` 8 kolom + UK + FK; `ships=15` `owners=15` `activity_logs=30` `orphans=0`; `ShipManagementTest`+`OwnerManagementTest` 19/19; suite penuh 133/134 dengan satu kegagalan known-baseline `ExampleTest` `/` 302 guest (AGENTS mencatat; bukan regresi). TIDAK ada push; TIDAK `git merge` ke `main`; hanya working tree `ship-management`. Item semantik ditandai SEMENTARA/open, tidak saya putuskan. Rangkum daftar open items per pemilik (Halvina/Anisa/Regina/Hazel).
+**Files:** .gitignore, AGENTS.md, app/Http/Controllers/OpnamController.php, app/Models/{Invoice,Opnam,OpnamItem,User}.php, app/Providers/AppServiceProvider.php, composer.json, composer.lock, database/factories/UserFactory.php, database/seeders/DatabaseSeeder.php, database/seeders/ShipSeeder.php, resources/views/layouts/{app,simship}.blade.php, resources/views/opnams/{_summary,create,index,mine}.blade.php, routes/web.php, tasklist.md, tests/Feature/{LoginTest,OpnamDraftTest,OpnamListTest,OpnamMineTest}.php, PROMPT_LOG.md
+**Commands:** composer update; artisan migrate:fresh --seed; artisan db:table ships; artisan tinker; artisan test; artisan test tests/Feature/ShipManagementTest.php tests/Feature/OwnerManagementTest.php; git grep (conflict scan); git status
+**Manual modifications:** -
+**Notes / follow-up:** Resolusi conflict di ship-management; pilihan sementara perlu konfirmasi pemilik (terutama Regina opnam-kalkulasi, Halvina login, Hazel invoice status, Anisa master tarif) + PRD 9 open + taskinstruction Bagian 6 parkir. Belum `Selesai`. Tidak push/merge main.
 ## 2026-11-27 10:20 WIB
 **Pemilik:** Hazel
 **AI:** opencode/big-pickle (Big Pickle)
@@ -965,3 +1004,502 @@ Riwayat prompt, ringkasan output, dan perubahan. Fields in English, isi bebas (I
 **Commands:** `Get-Date` (2026-11-27 10:20 SE Asia Standard Time), `git status --short`, `git diff --stat`, `composer dump-autoload --no-interaction`, `C:\php\php.exe -l` pada controller, rute, dan test, `C:\php\php.exe artisan route:list --except-vendor`, `C:\php\php.exe -d extension=pdo_sqlite vendor\bin\pest` (99/99 lolos), `C:\php\php.exe -d extension=pdo_sqlite artisan test` (driver sqlite tidak terbawa ke subprocess, diganti pest langsung)
 **Manual modifications:** -
 **Notes / follow-up:** `prompt_history.md` sengaja dipertahankan sesuai instruksi Pemilik, sehingga menjadi pengecualian dari aturan `AGENTS.md`. Blok 18:33 dan 18:45 WIB dipulihkan sebagai `retroactive`. Narasi desain mengikuti `layouts/simship.blade.php` dengan dial ENERGY 1 / RHYTHM 1 / MOTION 1, bukan desain baru. `pdo_sqlite` tersedia sebagai DLL tetapi tidak aktif di `C:\php\php.ini`, sehingga test dijalankan dengan `-d extension=pdo_sqlite`.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Selesaikan verifikasi BR-10 pasca-guard: perbarui skenario integrasi Tarif/Opnam agar membuat tarif baru (tarif awal 1.000 berlaku 2026-01-01, Opnam 2026-06-25, tarif baru 5.000 berlaku 2026-06-20), pastikan snapshot transaksi lama tetap, jalankan test terkait dan regresi relevan, catat hasil aktual; jangan commit, push, atau merge."
+**Output summary:** Skenario di `OpnamTarifBerlakuTest` diubah dari meng-update Tarif tersimpan menjadi membuat record Tarif baru. Test membuktikan Tarif baru berlaku pada tanggal Opnam, sementara `tariff_id`, `unit_price`, `subtotal`, dan `total_biaya` Opnam tersimpan tetap merujuk snapshot lama. Test target lulus (3/3, 17 assertions); `OpnamDraftTest` lulus (9/9, 90 assertions); `OpnamItemEditTest` lulus (10/10, 44 assertions). `TariffTest` gagal 1 dari 11: assertion activity log mengharapkan `effective_from` sebagai `2026-01-01`, aktualnya `2026-01-01 00:00:00` (baris 117). BR-10 belum dinyatakan lulus penuh karena regresi Tarif ini gagal.
+**Files:** `tests/Feature/OpnamTarifBerlakuTest.php`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/OpnamTarifBerlakuTest.php` (3/3), `C:\php84\php.exe artisan test tests/Feature/TariffTest.php` (10/11; gagal pada format tanggal di activity log), `C:\php84\php.exe artisan test tests/Feature/OpnamDraftTest.php` (9/9), `C:\php84\php.exe artisan test tests/Feature/OpnamItemEditTest.php` (10/10)
+**Manual modifications:** -
+**Notes / follow-up:** Tidak diubah implementasi Opnam maupun assertion TarifTest yang berada di luar skenario perubahan ini. Tidak ada commit, push, atau merge.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Lanjutkan dari hasil pekerjaan BR-10 terakhir. Periksa format data ActivityLog dan konsistensi format tanggal; jika datetime memang benar, sesuaikan assertion test saja tanpa mengubah implementasi aplikasi. Jalankan ulang TariffTest, OpnamTarifBerlakuTest, OpnamDraftTest, dan OpnamItemEditTest; perbarui prompt_history_anisa.md; jangan commit, push, atau merge."
+**Output summary:** Pemeriksaan menunjukkan kolom Tarif adalah `DATE`, model meng-cast `effective_from` ke `date`, dan observer menulis nilai mentah `getChanges()` ke JSON ActivityLog, aktual `2026-01-01 00:00:00`. Assertion pada `TariffTest` disesuaikan dengan nilai ActivityLog tersebut, tanpa mengubah implementasi aplikasi. Keempat suite lulus: TariffTest 11/11 (80 assertions), OpnamTarifBerlakuTest 3/3 (17), OpnamDraftTest 9/9 (90), OpnamItemEditTest 10/10 (44).
+**Files:** `tests/Feature/TariffTest.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/TariffTest.php` (11/11), `C:\php84\php.exe artisan test tests/Feature/OpnamTarifBerlakuTest.php` (3/3), `C:\php84\php.exe artisan test tests/Feature/OpnamDraftTest.php` (9/9), `C:\php84\php.exe artisan test tests/Feature/OpnamItemEditTest.php` (10/10)
+**Manual modifications:** -
+**Notes / follow-up:** Implementasi aplikasi tidak diubah. Tidak ada commit, push, atau merge.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Audit final DB-05 dan AD-03 untuk `WORK_CATEGORIES.is_active`: verifikasi migrasi, model, CRUD, integrasi WORK_TYPES dan penggunaan kategori; implementasikan keputusan kategori aktif/nonaktif dengan validasi backend, retensi relasi, serta test; jalankan dua test terkait dan seluruh suite. Jangan mengubah modul milik Halvina, Regina, atau Hazel, PRD, taskinstruction, atau item parkir; jangan lakukan operasi Git."
+**Output summary:** Audit menemukan kolom `is_active` belum ada dan CRUD kategori serta integrasi WORK_TYPES belum mengimplementasikan status. Migration aditif dengan default aktif ditambahkan; Admin dapat mengelola status, kategori nonaktif tetap terlihat di index dan dikecualikan dari opsi serta validasi backend WORK_TYPES. Test menegaskan relasi jenis lama tetap utuh dan aktivasi kembali memulihkan pilihan kategori. `WorkCategoryTest` 11/11 (42 assertions), `WorkTypeTest` 11/11 (46 assertions), seluruh suite 162/162 (789 assertions) lulus. Temuan tersisa: Opnam masih menampilkan dan menerima kategori nonaktif; tidak diubah karena batasan eksplisit untuk tidak mengubah modul Regina, sehingga status lintas-modul belum sepenuhnya bersih.
+**Files:** `database/migrations/2026_11_27_120000_add_is_active_to_work_categories_table.php`, `app/Models/WorkCategory.php`, `app/Http/Controllers/WorkCategoryController.php`, `app/Http/Controllers/WorkTypeController.php`, `resources/views/work-categories/_form.blade.php`, `resources/views/work-categories/index.blade.php`, `resources/views/work-types/_form.blade.php`, `tests/Feature/WorkCategoryTest.php`, `tests/Feature/WorkTypeTest.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/WorkCategoryTest.php` (11/11), `C:\php84\php.exe artisan test tests/Feature/WorkTypeTest.php` (11/11), `C:\php84\php.exe artisan test` (162/162)
+**Manual modifications:** -
+**Notes / follow-up:** Tidak mengubah controller/view/test Opnam, PRD, taskinstruction, middleware/policy, atau faktor tambahan Tarif. Tidak menjalankan `git add`, commit, push, merge, atau stash. Status DB-05/AD-03 masih memiliki temuan Opnam lintas-modul yang perlu ditangani pemiliknya.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Lakukan verifikasi ulang khusus DB-08 terkait aturan immutability Tarif. Periksa model dan seluruh jalur save/update/fill/forceFill, create baru, proteksi hapus Tarif yang direferensikan OPNAM_ITEMS, dan bypass query builder/raw SQL. Tambahkan atau sesuaikan test hanya bila ada celah nyata. Jangan ubah unique constraint, data, migration, atau modul Opnam; jangan commit, push, merge, stash, atau staging."
+**Output summary:** Verifikasi aktual menemukan guard model tidak ada dan `ActivityLogTest` mengharapkan `$tariff->update()` berhasil. Ditambahkan guard event `updating` yang menolak update instance Eloquent; test membuktikan update/save setelah fill/save setelah forceFill ditolak dan nilai DB tetap. Create baru tetap diperbolehkan. Penghapusan Tarif terpakai tetap ditolak oleh pemeriksaan controller dan FK restrictive. Query builder mass update dan raw SQL melewati event model; tidak ditemukan pemakaian bypass di kode aplikasi dan proteksi database tidak ditambahkan sesuai batasan. `TariffTest` 12/12, `ActivityLogTest` 6/6, `OpnamTarifBerlakuTest` 3/3, suite penuh 163/163 lulus.
+**Files:** `app/Models/Tariff.php`, `tests/Feature/TariffTest.php`, `tests/Feature/ActivityLogTest.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/TariffTest.php` (12/12), `C:\php84\php.exe artisan test tests/Feature/ActivityLogTest.php` (6/6), `C:\php84\php.exe artisan test tests/Feature/OpnamTarifBerlakuTest.php` (3/3), `C:\php84\php.exe artisan test` (163/163)
+**Manual modifications:** -
+**Notes / follow-up:** Tidak mengubah migration, unique constraint, data, atau modul Opnam. Eloquent query-builder bulk update/raw SQL serta event-silenced writes tetap dapat melewati model guard; tidak ada jalur tersebut dalam aplikasi. Tidak ada operasi staging atau Git lainnya.
+
+## 2026-11-27 (retroactive, jam tidak tercatat)
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Verifikasi DB-07: periksa validasi MaterialSpec soft-deleted pada pembuatan dan pengeditan Opnam, bedakan transaksi baru dari histori/snapshot, dan laporkan kebutuhan perbaikan. Jangan mengubah modul Opnam milik Regina tanpa koordinasi/persetujuan, jangan mengubah migration/data/PRD/taskinstruction, dan jangan staging atau melakukan operasi Git."
+**Output summary:** Dropdown Opnam memakai query Eloquent yang mengecualikan MaterialSpec soft-deleted. Backend masih menggunakan `exists:material_specs,id`: wizard step 2 dapat melewati validasi lalu gagal dengan 404 di `findOrFail`; tambah/edit item menolak kemudian di pemeriksaan kombinasi, bukan di validasi material. Belum ada Feature Test request untuk soft-deleted ID di Opnam. Draft historis tetap memiliki snapshots/relasi tarif tersimpan, dan detail baca-saja menggunakan `withTrashed`; namun edit draft terkait material terhapus tidak berjalan mulus karena query/lookup biasa mengecualikan material itu. Tanpa perubahan kode karena harus mendapat koordinasi Regina.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `C:\php84\php.exe artisan test tests/Feature/OpnamDraftTest.php` (9/9), `C:\php84\php.exe artisan test tests/Feature/OpnamItemEditTest.php` (10/10), `C:\php84\php.exe artisan test tests/Feature/MaterialSpecTest.php` (13/13)
+**Manual modifications:** -
+**Notes / follow-up:** Koordinasikan dengan Regina sebelum mengubah `OpnamController`, view, atau test Opnam. Rekomendasi: validasi material baru hanya untuk row yang tidak soft-deleted; tetapkan perilaku khusus untuk mempertahankan ID material historis saat edit draft, lalu uji penolakan material terhapus pada transaksi/tambah item baru dan preservasi snapshots. Tidak mengubah migration/data, PRD/taskinstruction, serta tidak melakukan staging, commit, push, merge, reset, atau stash.
+
+## 2026-11-27 19:38 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Buat UnitSeeder untuk 17 satuan master IPERINDO dengan code sebagai identitas unik, idempotent, integrasikan ke DatabaseSeeder bila belum, periksa struktur project dan tabel sebelum perubahan, jalankan seeder khusus dan verifikasi jumlah/kode serta test Unit bila aman; jangan mengubah schema atau file yang tidak diperlukan, jangan menjalankan migrate:fresh/db:wipe, dan jangan melakukan operasi Git."
+**Output summary:** Dibuat `UnitSeeder` menggunakan `Unit::updateOrCreate()` untuk 17 pasangan code/name yang diminta dan ditambahkan pemanggilan seeder ke `DatabaseSeeder`. Skema aktual `units` memiliki `id`, `code`, `name`, `created_at`, `updated_at`, unique `code`; tabel kosong sebelum seeding. Seeder khusus sukses dua kali; hasil akhir 17 baris dan 17 code unik sesuai daftar. `UnitTest` tidak dijalankan karena menggunakan `RefreshDatabase` dan batasan melarang menjalankan migration.
+**Files:** `database/seeders/UnitSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`
+**Commands:** `& 'C:\php84\php.exe' artisan tinker --execute="echo json_encode(DB::select('SHOW CREATE TABLE units'), JSON_PRETTY_PRINT); echo PHP_EOL; echo json_encode(DB::table('units')->orderBy('code')->get(['id','code','name']), JSON_PRETTY_PRINT);"`; `& 'C:\php84\php.exe' artisan db:seed --class=Database\Seeders\UnitSeeder --no-interaction` (dua kali); `& 'C:\php84\php.exe' artisan tinker --execute="echo 'count=' . DB::table('units')->count() . PHP_EOL; echo json_encode(DB::table('units')->orderBy('code')->get(['code','name']), JSON_PRETTY_PRINT) . PHP_EOL;"`; `& 'C:\php84\php.exe' artisan tinker --execute="echo 'count=' . DB::table('units')->count() . '; distinct=' . DB::table('units')->distinct()->count('code') . PHP_EOL; echo implode(',', DB::table('units')->orderBy('code')->pluck('code')->all()) . PHP_EOL;"`; `& 'C:\php84\php.exe' -l database/seeders/UnitSeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`.
+**Manual modifications:** -
+**Notes / follow-up:** `UnitTest` belum dijalankan untuk menghindari migration melalui `RefreshDatabase`. `DatabaseSeeder` penuh tidak dijalankan agar `UserSeeder` tidak mengubah akun DB lokal. Tidak ada migration/schema change atau operasi Git.
+
+## 2026-11-27 19:45 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Buat WorkCategorySeeder berdasarkan delapan kategori IPERINDO 2019, gunakan nama sebagai key unik, idempotent, aktifkan hanya kategori baru, jangan mengubah kategori lama, serta preflight dan laporkan kategori soft-deleted bernama sama alih-alih membuat duplikat/memulihkannya. Integrasikan ke DatabaseSeeder; jalankan seeder dua kali dan verifikasi; jangan menjalankan migrate:fresh/db:wipe atau DatabaseSeeder penuh."
+**Output summary:** Struktur migration/model dan DB lokal cocok; tidak ada data kategori atau nama target soft-deleted sebelum perubahan. Dibuat seeder dengan preflight soft-delete dan `firstOrCreate()` agar row lama/statusnya tidak berubah; kategori baru dibuat aktif. DatabaseSeeder memanggil seeder setelah UnitSeeder. Seeder khusus sukses dua kali; masing-masing verifikasi mendapatkan 8 kategori dan 8 nama unik dengan seluruh data sesuai. `WorkCategoryTest` tidak dijalankan karena `RefreshDatabase` berisiko menjalankan reset/migrasi test database.
+**Files:** `database/seeders/WorkCategorySeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** `& 'C:\php84\php.exe' artisan tinker --execute="echo json_encode(DB::select('SHOW CREATE TABLE work_categories'), JSON_PRETTY_PRINT) . PHP_EOL; echo 'count=' . DB::table('work_categories')->count() . PHP_EOL; echo json_encode(DB::table('work_categories')->orderBy('name')->get(['id','name','is_active','deleted_at']), JSON_PRETTY_PRINT) . PHP_EOL;"`; `& 'C:\php84\php.exe' -l database/seeders/WorkCategorySeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan db:seed --class=Database\Seeders\WorkCategorySeeder --no-interaction` (dua kali); tinker verifikasi sesudah eksekusi pertama dan kedua (masing-masing count 8, distinct name 8).
+**Manual modifications:** -
+**Notes / follow-up:** `WorkCategoryTest` belum dijalankan karena `RefreshDatabase` berpotensi melakukan reset/migrasi test DB. Tidak menjalankan migration, penghapusan data, atau DatabaseSeeder penuh. UnitSeeder dipertahankan. Tidak ada operasi Git.
+
+## 2026-11-27 19:49 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Audit struktur WORK_TYPES dan relasi master, periksa aturan PRD/taskinstruction serta cari dokumen IPERINDO 2019; inventarisasi jenis pekerjaan A–H sesuai sumber tanpa mengarang, jangan membuat Seeder atau mengubah kode/data/schema, dan catat audit di prompt_history_anisa.md."
+**Output summary:** Migration/model/CRUD konsisten dengan WORK_TYPES ber-FK kategori, SoftDeletes, dan tidak memiliki unique constraint nama; PRD/ERD tidak menyebut unique constraint. DB aktual cocok, delapan kategori tersedia dan aktif, tabel WORK_TYPES kosong. Tidak ditemukan dokumen IPERINDO 2019 di repository (PDF/DOC/spreadsheet maupun isi PRD/taskinstruction). Nama jenis pekerjaan serta pemilahan MATERIAL_SPEC tidak dapat diinventarisasi tanpa sumber; tidak ada nama ditebak dan tidak ada implementasi dibuat.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Introspeksi read-only `SHOW CREATE TABLE work_types` dan query tabel work_types/work_categories melalui `artisan tinker`; pencarian repository untuk file PDF/DOC/DOCX/XLS/XLSX/CSV dan kata kunci IPERINDO/A1–H3. Tidak menjalankan test, migration, atau seeder.
+**Manual modifications:** -
+**Notes / follow-up:** Perlu dokumen sumber IPERINDO 2019 yang dimaksud sebelum inventarisasi lengkap dan desain WorkTypeSeeder. Tidak ada perubahan kode, data, schema, ataupun operasi Git.
+
+## 2026-11-27 19:59 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Dokumen sumber IPERINDO 2019 sudah tersedia di `docs/referensi/Standar_Tarif_IPERINDO_2019.pdf`. Baca PDF langsung termasuk scan/tabel; inventarisasi kategori A–H dengan bagian dan halaman PDF/cetak; pilah WORK_TYPE dan MATERIAL_SPEC; cocokkan struktur master; jangan mengubah database atau membuat Seeder; perbarui audit."
+**Output summary:** File sumber yang benar tersedia sebagai `docs/referensi/Standar Tarif Iperindo.pdf` (spasi), 24 halaman scan. Halaman tercetak 1–22 cocok dengan PDF 2–23. Inventarisasi kandidat A–H dicatat di `prompt_history_anisa.md` dan dirinci dalam respons. E3 tidak ada di urutan scan (E2 diikuti E4); tidak diisi dengan tebakan. PDF p24 “Replate Cost” tidak masuk kategori A–H secara eksplisit. Tidak ada kode/data/schema/seeder yang diubah.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Pembacaan visual langsung `docs/referensi/Standar Tarif Iperindo.pdf`; pembacaan read-only migration WorkType/MaterialSpec, model WorkType/WorkCategory/MaterialSpec, PRD/SKILL/task instruction dari audit sebelumnya. Tidak menjalankan test, migration, seeder, atau operasi database.
+**Manual modifications:** -
+**Notes / follow-up:** Nama file yang diberikan user berbeda dari file aktual hanya pada spasi/underscore. Usulan klasifikasi menunggu review sebelum implementasi WorkTypeSeeder. Konfirmasi sumber untuk E3 diperlukan.
+
+## 2026-11-27 20:23 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Finalisasi inventarisasi WORK_TYPES berdasarkan PDF IPERINDO 2019 setelah review. Terapkan pemisahan C5 (pengelasan fitting/sambungan), E1 menjadi empat WorkType, E2 menjadi lima WorkType; pertahankan kategori lain; A12 bukan WorkType; jangan membuat E3 atau memasukkan Replate Cost PDF24; tampilkan tabel lengkap dengan referensi halaman, MaterialSpec dan catatan tarif; jangan implementasi; perbarui history."
+**Output summary:** Final table lengkap A–H disampaikan. Pemisahan yang disetujui diterapkan pada daftar inventarisasi saja: C5 dua jenis pengelasan; E1 empat pekerjaan; E2 lima pekerjaan. A12 tetap aturan waktu/hari; E3 tetap tidak ada; PDF24 Replate Cost tidak dimasukkan. Variasi ukuran/kapasitas/material/lokasi tetap MaterialSpec. Tidak ada duplikasi tak disengaja yang direncanakan.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Pemeriksaan timestamp WIB; menggunakan hasil pembacaan visual sumber `docs/referensi/Standar Tarif Iperindo.pdf` dan struktur master dari audit sebelumnya. Tidak menjalankan test, migration, seeder, atau perintah database.
+**Manual modifications:** -
+**Notes / follow-up:** Menunggu review akhir sebelum pembuatan WorkTypeSeeder. Tidak ada perubahan kode, database, schema, migration, atau operasi Git.
+
+## 2026-11-27 20:36 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Implementasikan WorkTypeSeeder idempotent untuk seluruh 52 WorkType sesuai inventarisasi final; lakukan preflight migration/model/CRUD/seeder/database/kategori/data termasuk soft-delete; hentikan jika konflik; integrasikan setelah WorkCategorySeeder; uji dua kali, verifikasi distribusi, unique pair, FK, lint/test aman; dokumentasikan; tanpa operasi Git destruktif."
+**Output summary:** Preflight read-only selesai. Skema aktual cocok; delapan kategori target aktif/tidak terhapus; tabel work_types kosong termasuk soft-deleted; WorkTypeSeeder belum ada dan DatabaseSeeder belum memanggilnya. Ditemukan konflik jumlah: tabel inventarisasi final sebelumnya menghasilkan A=12 dan C=16 (total 54), bukan distribusi diminta A=11 dan C=15 (total 52). Implementasi dihentikan untuk menghindari menebak data yang disetujui.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Read-only `artisan tinker` untuk `SHOW CREATE TABLE work_types`, membaca kategori dan seluruh baris work_types via query builder yang memasukkan soft-deleted; pemeriksaan file migration/model/controller/seeder. Tidak menjalankan lint/test/seeder/migration.
+**Manual modifications:** -
+**Notes / follow-up:** Mohon tetapkan daftar final 52, khusus keputusan apakah dua layanan Tunda/Pandu menjadi satu WorkType dan status kandidat `Pembersihan dan Pengecatan Tank Top, Bilge Space`/C4. Tidak ada perubahan kode atau database dan tidak ada operasi Git.
+
+## 2026-11-27 20:45 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** "Keputusan final adalah seluruh 54 WorkType dengan distribusi A=12, B=4, C=16, D=3, E=10, F=5, G=1, H=3. Jangan gabung Tunda/PANDU atau Tank Top/Bilge Space. Buat WorkTypeSeeder idempotent, preflight SoftDeletes, integrasikan setelah WorkCategorySeeder, jalankan khusus dua kali, verifikasi count/distribusi/pasangan/orphan, PHP lint dan test aman; jangan ubah schema atau melakukan operasi Git."
+**Output summary:** WorkTypeSeeder dibuat berisi 54 nama inventarisasi final dan melakukan preflight kategori/pasangan soft-deleted; memakai relasi kategori dengan `firstOrCreate`. DatabaseSeeder memanggilnya setelah WorkCategorySeeder. Seeder khusus sukses dua kali; verifikasi menghasilkan 54 aktif, distribusi tepat sesuai keputusan, 0 pasangan duplikat, 0 orphan. PHP lint lulus untuk kedua file; WorkTypeTest 11 passed/46 assertions.
+**Files:** `database/seeders/WorkTypeSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** `& 'C:\php84\php.exe' -l database/seeders/WorkTypeSeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan db:seed --class='Database\Seeders\WorkTypeSeeder' --no-interaction` (dua kali); read-only `artisan tinker` untuk schema/kategori/data dan verifikasi distribusi, unique pairs, orphan; `& 'C:\php84\php.exe' artisan test --filter=WorkTypeTest`.
+**Manual modifications:** -
+**Notes / follow-up:** Preflight awal menemukan 8 kategori aktif dan work_types kosong termasuk soft-deleted. Percobaan pertama query verifikasi parse error karena quoting PowerShell; dikoreksi dan query verifikasi berhasil. Tidak menjalankan migration, DatabaseSeeder penuh, operasi penghapusan, atau operasi Git.
+
+## 2026-11-27 21:00 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Implementasikan MaterialSpecSeeder berdasar langsung PDF IPERINDO 2019 untuk 54 WorkType, hanya spesifikasi teknis yang benar-benar didukung; periksa skema/model/relasi/CRUD/seeder; idempotensi dan preflight soft-delete; integrasi, dua kali seeding, verifikasi, lint/test aman dan dokumentasi; tanpa ubah schema atau Git.
+**Output summary:** Pemeriksaan struktur dan DB selesai (54 WorkType aktif, 0 MaterialSpec termasuk soft-deleted). PDF scan tidak memiliki lapisan teks dan perintah ekstraksi tidak memperoleh rincian tabel; catatan audit lama hanya memberi kandidat umum, tidak cukup membuktikan rentang spesifik. Draft mapping yang belum terverifikasi dibuang sebelum dijalankan; integrasi draft dibatalkan. Tidak ada data yang diubah. Lint DatabaseSeeder lulus; MaterialSpecTest lulus 13/13 (62 assertions) pada sqlite `:memory:`. Implementasi dan seeding MaterialSpec belum selesai.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`; draft `database/seeders/MaterialSpecSeeder.php` dihapus sebelum dijalankan, perubahan draft pada `database/seeders/DatabaseSeeder.php` dibatalkan.
+**Commands:** read-only pemeriksaan migration/model/CRUD/tests/seeder; read-only `artisan tinker` untuk schema/count; `pdftotext -layout 'docs/referensi/Standar Tarif Iperindo.pdf' -` (hasil scan hanya pemisah halaman); PHP lint draft dan `DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan test --filter=MaterialSpecTest` (13 passed, 62 assertions; sqlite `:memory:`).
+**Manual modifications:** -
+**Notes / follow-up:** Tidak menjalankan seeder, migration, DatabaseSeeder penuh, penghapusan data, atau operasi Git. Untuk melanjutkan tanpa mengarang, nilai/rentang pada tabel scan perlu ditranskripsikan secara visual dan dicocokkan per WorkType.
+
+## 2026-11-27 21:03 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Periksa langsung secara visual halaman scan PDF IPERINDO 2019, transkripsikan variasi spesifikasi teknis A–H, cocokkan dengan 54 WorkType, pisahkan tarif/metode/satuan/catatan, tandai item yang perlu verifikasi, jangan membuat seeder atau mengubah database/schema/aplikasi, dokumentasikan dan tampilkan inventarisasi lengkap.
+**Output summary:** Seluruh 24 halaman dirender dan diperiksa visual; bagian A–H berada pada PDF 2–23. Inventarisasi kandidat MaterialSpec disusun per WorkType dengan ukuran/rentang, material, tipe, kapasitas dan lokasi bila eksplisit. Tarif, satuan, metode kerja dan band GT tarif dikecualikan; 30 WorkType memiliki kandidat, 24 tidak. Celah rentang dan ejaan meragukan ditandai, tidak diisi/normalisasi. Hasil disimpan di prompt_history_anisa.md; tidak ada seeder/data/aplikasi berubah.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Membuka/render visual `docs/referensi/Standar Tarif Iperindo.pdf`; pemeriksaan daftar WorkType pada `database/seeders/WorkTypeSeeder.php`. Tidak ada perintah database/seeder/lint/test.
+**Manual modifications:** -
+**Notes / follow-up:** PDF 24 “Replate Cost” tidak dipetakan ke A–H. C3 “Bulbows Bow” dan F4 “Galvanish” perlu verifikasi ejaan sebelum normalisasi; celah C3 6–8 mm dan E2 sleeve 251–255/351–355 mm tetap tidak diisi. Seeder tetap belum dibuat atau dijalankan.
+
+## 2026-11-27 21:19 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Implementasikan MaterialSpecSeeder berdasarkan 30 kandidat transkripsi visual; periksa schema/model/relasi/data; idempotensi dan preflight konflik/soft-delete; integrasikan setelah WorkTypeSeeder; jalankan seeder dua kali, verifikasi distribusi/relasi/duplikasi, PHP lint dan test aman; dokumentasikan tanpa Git.
+**Output summary:** MaterialSpecSeeder dibuat untuk 30 WorkType kandidat dan diintegrasikan; dua run khusus sukses, menghasilkan 271 MaterialSpec aktif. Verifikasi: 0 soft-deleted, 0 pasangan duplikat, 0 orphan dan 0 relasi ke WorkType terhapus. Kedua PHP lint lulus; MaterialSpecTest 13 passed/62 assertions. Status DB-07 disinkronkan sebagai Selesai pada tasklist.md dan prd.md.
+**Files:** `database/seeders/MaterialSpecSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`, `tasklist.md`, `prd.md`
+**Commands:** read-only `artisan tinker` preflight; `& 'C:\php84\php.exe' -l database/seeders/MaterialSpecSeeder.php`; `& 'C:\php84\php.exe' -l database/seeders/DatabaseSeeder.php`; `& 'C:\php84\php.exe' artisan db:seed --class='Database\Seeders\MaterialSpecSeeder' --no-interaction` (dua kali); read-only tinker verifikasi total/distribusi/dupe/orphan/soft-deletes; `& 'C:\php84\php.exe' artisan test --filter=MaterialSpecTest`.
+**Manual modifications:** -
+**Notes / follow-up:** Tidak menjalankan DatabaseSeeder penuh, migration, penghapusan data, atau operasi Git. Query verifikasi pertama parse error karena quoting PowerShell; query read-only dikutip ulang dan sukses.
+
+## 2026-11-27 21:41 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Audit dan siapkan tarif DB-08 dari PDF IPERINDO dengan pemeriksaan schema/model/relasi/seeder/immutability/pemakaian Opnam; transkripsi visual A–H, pemetaan WorkType/MaterialSpec/Unit/harga/tanggal, implementasi hanya jika valid; dokumentasi hasil aktual tanpa mengubah Opnam/schema/Git.
+**Output summary:** Schema aktual unik pada material/unit/effective_from; tarif immutable; preflight menemukan 0 tarif, 17 Unit, 271 MaterialSpec. Inventarisasi awal menyebut 153 kandidat dan 331 pending; audit unique key/MaterialSpec merevisi 72 kandidat komposit (pipa/elbow/katup) menjadi pending, sehingga exact-map valid 81. Hasil tindak lanjut tercatat di entri prompt berikut.
+**Files:** `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`, `tasklist.md`, `prd.md`
+**Commands:** Read-only `artisan tinker` untuk SHOW CREATE TABLE, count/tariff duplicates, Unit codes, MaterialSpec counts, dan user roles; pemeriksaan migration/model/relasi/UnitSeeder/MaterialSpecSeeder/TariffController/OpnamController/TariffTest/SKILL.md; membaca visual PDF scan 24 halaman. Tidak menjalankan seeder, migration, lint, test, atau operasi Git.
+**Manual modifications:** -
+**Notes / follow-up:** Pada tahap awal menunggu keputusan pemilik; Anisa kemudian menyetujui subset exact-map. PDF 24 “Replate Cost” tidak dipetakan ke A–H. Query awal yang mencoba `tariffs.deleted_at` gagal karena kolom tidak ada; skema diintrospeksi, lalu query count dan duplikasi read-only berhasil.
+
+## 2026-11-27 22:14 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Lanjutkan hanya subset tarif exact-map; pakai effective_from 2019-01-01, cek unique key, idempotent tanpa overwrite, jalankan seeder dua kali, pertahankan pending, lint/test aman, dokumentasikan tanpa perubahan schema/model/controller/Opnam/Git.
+**Output summary:** Audit merevisi kandidat awal 153 menjadi 81 exact-map karena 72 harga pipa/elbow/katup tidak memiliki MaterialSpec kombinasi diameter×jenis yang unik. Seeder run 1: 81 dibuat/0 dilewati; run 2: 0 dibuat/81 dilewati. Verifikasi 81 row, effective date benar, 0 FK invalid/duplicate. TariffSeederTest + TariffTest lulus (13 tests/90 assertions); PHP lint lulus. Total pending 403 (331 awal beserta alasan + 72 yang dikoreksi).
+**Files:** `database/seeders/TariffSeeder.php` (baru), `database/seeders/DatabaseSeeder.php`, `tests/Feature/TariffSeederTest.php` (baru), `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`, `tasklist.md`, `prd.md`
+**Commands:** PHP lint; `artisan db:seed --class=Database\\Seeders\\TariffSeeder` dua kali; read-only Tinker verification; `artisan test --compact tests/Feature/TariffSeederTest.php tests/Feature/TariffTest.php`. Tidak menjalankan migration/DatabaseSeeder penuh atau Git.
+**Manual modifications:** -
+**Notes / follow-up:** DB-08 berstatus Dikerjakan karena 403 nilai masih tertahan. Schema, migration, model, controller, dan Opnam tidak diubah.
+
+## 2026-11-28 00:04 WIB
+**Pemilik:** Anisa
+**AI:** openai/gpt-6-luna (GPT-6 Luna)
+**Prompt:** Sinkronkan dokumentasi final tupoksi Anisa dengan implementasi dan audit terakhir. Tandai DB-04/05/06 selesai, pertahankan DB-07 selesai dan DB-08 parsial (81 tarif, 403 tertunda), tutup konfirmasi is_active, bedakan CRUD AD-04 dari kelengkapan data tarif, dan tetapkan faktor tambahan tarif sebagai tupoksi Hazel, bukan Anisa. Jangan ubah kode, database, test, tupoksi anggota lain, atau Git.
+**Output summary:** Status DB-04/05/06 diperbarui menjadi Selesai; DB-07 dipertahankan Selesai dengan 271 specs/30 WorkType; DB-08 tetap Dikerjakan dengan 81 tarif berlaku 2019-01-01 dan 403 nilai tertunda. AD-03/AD-04 tetap Selesai dengan penjelasan scope yang diperjelas. Catatan `is_active` ditutup; faktor tambahan dihapus dari tupoksi Anisa dan dinyatakan sebagai tupoksi Hazel. Hasil audit test terdahulu dicatat sebagai 62/309, tanpa menjalankan test baru.
+**Files:** `tasklist.md`, `prd.md`, `taskinstruction.md`, `tupoksi.md`, `prompt_history_anisa.md`, `PROMPT_LOG.md`, `prompt.md`
+**Commands:** Pembacaan dokumen progres dan patch dokumentasi saja; tidak ada command aplikasi/database/test/Git.
+**Manual modifications:** -
+**Notes / follow-up:** Tidak mengubah baris tanggung jawab anggota lain. Tidak ada kode, seeder, migration, schema, test, maupun data database yang berubah.
+## 2026-11-27 17:25 WIB
+**Pemilik:** Regina (menyebut Anisa sebagai pihak terkait)
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`saya regina dan teman saya anisa butuh konfimasi seperti di bawah ini`"
+**Output summary:** Isi yang dimaksud dengan "di bawah ini" tidak terbaca (tidak ada teks/lampiran yang menyusul). Agent berhenti dan mengirim pertanyaan konfirmasi memakai format `taskinstruction.md` Bagian 8; belum ada perubahan kode atau keputusan nilai.
+**Files:** `PROMPT_LOG.md`
+**Commands:** `date` (2026-11-27 17:25 WIB), `git status --short`
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: belum ditentukan. Menunggu Regina/Anisa mengirim butir konfirmasi atau ID item sebelum implementasi.
+
+## 2026-11-27 17:32 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`Regina, aku baru selesai audit DB-07 terkait Material Specs dan menemukan satu temuan pada integrasi Opnam.\n\nSaat ini dropdown Opnam sudah mengecualikan material yang soft-deleted, tetapi validasi backend masih menggunakan exists:material_specs,id. Akibatnya, ID material yang sudah di-soft-delete masih lolos validasi awal dan baru gagal pada proses berikutnya.\n\nSelain itu, ada potensi masalah ketika mengedit draft lama yang menggunakan material yang sekarang sudah di-soft-delete.\n\nUsulan aturan:\n1. Material soft-deleted tidak boleh digunakan untuk transaksi baru.\n2. Pada draft lama, material yang sudah terhapus tetap boleh dipertahankan selama ID material tidak diganti.\n3. Jika pengguna mengganti material, hanya material aktif yang boleh dipilih.\n4. Snapshot tariff_id, unit_price, subtotal, dan total historis harus tetap dipertahankan.\n\nApakah kamu setuju dengan aturan tersebut? Kalau iya, kita bisa koordinasikan perubahan validasi dan test pada modul Opnam supaya tidak mengganggu implementasi yang sudah ada \nsaya regina dan anisa butuh konfirmasi dari saya, jawaban yang pas apa?`"
+**Output summary:** Membaca `SKILL.md`, `taskinstruction.md`, `prd.md`, `OpnamController`, `RevisiOpnamService`, model `MaterialSpec`, dan view edit; temuan Anisa dinyatakan valid. Menyusun balasan "setuju" dengan tiga penajaman: pengecualian draft lama hanya bila `material_spec_id` sama dengan `tariff.material_spec_id`; `tariff_id`/`unit_price` dibekukan sedangkan `subtotal`/`total_biaya` draft boleh dihitung ulang dari `unit_price` (BR-35); pengecualian juga untuk `WORK_TYPES`/`WORK_CATEGORIES`. Mengidentifikasi tiga titik validasi `exists:material_specs,id` dan kebutuhan `withTrashed()` di `kombinasiValid()` serta view edit, dan menandai jalur AD-07/DR-03 sebagai di luar tupoksi. Belum ada perubahan kode.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Item/Modul: DB-07 ↔ Opnam, koordinasi dengan Anisa. Mode: Plan. Timestamp asli diambil dari data sesi OpenCode. Isi prompt persis ada di `prompt_history.md`. Menunggu konfirmasi Anisa sebelum implementasi.
+
+## 2026-11-27 17:36 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`sebenarnya percakapan saya di simpan kemana si?`"
+**Output summary:** Menjelaskan bahwa transkrip sesi tersimpan otomatis di `~/.local/share/opencode/opencode.db` (tabel `session_v2`, `session_message`, `session_part`) untuk sesi `ses_de36fd51affeIYZzeD2e2La4Ej`, dapat dibaca lewat endpoint `/api/session`, `/api/session/{id}/message`, dan ekspor `/api/experimental/session/{id}/export`, dengan log di `~/.local/share/opencode/log/opencode.log`. Membedakan transkrip otomatis dari `PROMPT_LOG.md` yang ditulis manual. Karena masih Plan mode, prompt belum dicatat.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** `ls ~/.local/share/opencode`, `sqlite3 ~/.local/share/opencode/opencode.db '.tables'`, `sqlite3 ... "select name from sqlite_master ..."`, `sqlite3 ... "select count(*) ..."`, `webfetch` dokumentasi `llms.txt`, `api`, `troubleshooting`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli diambil dari data sesi OpenCode.
+
+## 2026-11-27 17:38 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`setiap saya ketika baik itu mode plan atau mode build di catet di file prompo-log.md dan prompt_history.md`"
+**Output summary:** Menerima aturan pencatatan ganda untuk setiap prompt Regina, di mode Plan maupun Build: blok lengkap di `PROMPT_LOG.md` dan entri timestamp + isi persis di `prompt_history.md`; prompt owner lain tetap hanya di `PROMPT_LOG.md`. Menjelaskan kendala Plan mode yang melarang penulisan file, mengusulkan penanda `Mode: Plan/Build` di kolom Notes/follow-up, dan bertanya soal penyesuaian `AGENTS.md`.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** `wc -l PROMPT_LOG.md prompt.md prompt_history.md`, `tail -n 40 PROMPT_LOG.md`, `tail -n 70 prompt_history.md`, `TZ=Asia/Jakarta date`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. `prompt.md` tidak ditemukan (hasil migrasi ke `PROMPT_LOG.md`). Timestamp asli diambil dari data sesi OpenCode.
+
+## 2026-11-27 17:42 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`agent.md ga usah di pegang fokus ke promt_history.md dan prompt_log.md aja`"
+**Output summary:** Mengonfirmasi `AGENTS.md` tidak diubah; hanya `PROMPT_LOG.md` dan `prompt_history.md` yang disentuh. Menegaskan kelima prompt sesi ini akan dicatat ke dua file tersebut setelah keluar dari Plan mode.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan 17:44 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. `AGENTS.md` sengaja tidak disentuh sesuai instruksi Pemilik. Timestamp asli diambil dari data sesi OpenCode.
+
+## 2026-11-27 17:44 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Mengambil waktu asli kelima prompt dari kolom `session_message.time_created` (WIB), lalu menambahkan lima blok ke `PROMPT_LOG.md` dan `prompt_history.md` sesuai format masing-masing. Tidak ada file lain yang diubah.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `sqlite3 -readonly ~/.local/share/opencode/opencode.db` (skema `session_message` serta query waktu dan teks prompt), `date '+%Z %Y-%m-%d %H:%M'`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu pengiriman asli dari data sesi, bukan `retroactive`. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 17:55 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`kenapa semua bagian yang ada jenis kapal belum masuk?`"
+**Output summary:** Menelusuri kemunculan `jenis_kapal` di migrasi, model, validasi, view, dan test. Field sudah ada di `SHIPS`, `OPNAMS`, wizard create, detail opnam, master kapal, review Hazel, dan repair-history; belum ada di daftar opnam (`mine`, `index`), header edit opnam, PDF invoice/technical report, dan rekap. Penyebabnya: `SHIPS.jenis_kapal` masih butuh konfirmasi Rifqy (DB-03 `Belum`), daftar nilai terbuka (PRD 9 no. 18), batas tupoksi, dan cakupan AD-05 yang sengaja minimal. Mengajukan empat opsi cakupan untuk diputuskan.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** `grep` untuk `jenis_kapal`/`jenis kapal`, `git log --oneline -12`, `git status --short`, `read` view dan dokumen terkait.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode.
+
+## 2026-11-27 18:01 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`semua bagian di tugas saya`"
+**Output summary:** Ruang lingkup ditetapkan ke item Regina (DB-09/10/11, PT-01–PT-06, PT-08, AD-05). Rencana: tambah kolom JENIS KAPAL di `opnams/mine.blade.php` dan `opnams/index.blade.php`, ringkasan di `opnams/edit.blade.php`, serta test terkait; memakai snapshot `OPNAMS.jenis_kapal`, tanpa filter/pencarian baru, tanpa menyentuh modul lain. Masih bertanya teks bebas atau pilihan tetap.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** `read tasklist.md`, `read prd.md` Bagian 10, `glob resources/views/opnams/*.blade.php`, `read opnams/mine.blade.php`, `read opnams/_summary.blade.php`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode.
+
+## 2026-11-27 18:04 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`yang b`"
+**Output summary:** Memilih pilihan tetap. Menguraikan konsekuensinya: daftar nilai harus jadi sumber kebenaran, validasi `ShipRequest` dan input master kapal berubah jadi dropdown, dan ada empat keputusan yang belum boleh ditebak — daftar nilai persis, lokasi definisi, izin Rifqy mengubah file master, dan perlakuan nilai lama.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** `read app/Http/Requests/Admin/ShipRequest.php`, `read config/opnam.php`, `glob app/Enums/*.php`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Stub `app/Enums/` sengaja tidak dipakai.
+
+## 2026-11-27 18:06 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`perlu saya tanyakn ke ripqy?`"
+**Output summary:** Menjawab ya, karena `ShipRequest.php`, `admin/ships/_form.blade.php`, `ShipManagementTest.php`, dan DB-03/AD-02 adalah milik Rifqy, sementara DB-03 masih `Belum` dengan catatan ⚠ perlu konfirmasi kolom di luar ERD. Disiapkan balasan siap kirim berisi tiga konfirmasi: penggunaan kolom `jenis_kapal`, izin mengubah file master, dan daftar nilai + perlakuan nilai lama. Alternatif tanpa Rifqy: tetap A, hanya menambah kolom tampilan dari snapshot.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode.
+
+## 2026-11-27 18:34 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`gapapa kata rifqy`"
+**Output summary:** Persetujuan Rifqy dicatat sebagai selesainya blocker tupoksi. Daftar nilai persis tetap diminta karena PRD 9 no. 18 tidak boleh ditebak; ditawarkan opsi A (Tugboat, Barge, Ferry, Kapal Kargo; nilai lama tetap dari snapshot), B (daftar lain), dan C (daftar lain + normalisasi). Lokasi definisi diputuskan sebagai key baru di `config/opnam.php`, bukan tabel/enum baru, supaya ERD tetap 17 tabel.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 18:39 WIB)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Keputusan Rifqy disampaikan Regina.
+
+## 2026-11-27 18:36 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`A langsung jalankan`"
+**Output summary:** Implementasi pilihan A. Menambah key `jenis_kapal` di `config/opnam.php` (Tugboat, Barge, Ferry, Kapal Kargo); `ShipRequest` memakai `Rule::in` dengan pengecualian untuk nilai lama yang tidak diganti dan pesan error khusus; form master kapal menjadi `<select>`; `opnams/mine.blade.php`, `opnams/index.blade.php`, dan `opnams/edit.blade.php` menampilkan snapshot `OPNAMS.jenis_kapal` (colspan disesuaikan); enam test baru di empat file test. Hasil: 38/38 lolos pada empat file target dan 170/170 untuk suite lengkap (811 assertions). Tidak ada migrasi, model, ERD, `AGENTS.md`, `tasklist.md`, atau `prd.md` yang diubah.
+**Files:** `config/opnam.php`, `app/Http/Requests/Admin/ShipRequest.php`, `resources/views/admin/ships/_form.blade.php`, `resources/views/opnams/mine.blade.php`, `resources/views/opnams/index.blade.php`, `resources/views/opnams/edit.blade.php`, `tests/Feature/ShipManagementTest.php`, `tests/Feature/OpnamMineTest.php`, `tests/Feature/OpnamListTest.php`, `tests/Feature/OpnamItemEditTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/ShipManagementTest.php tests/Feature/OpnamMineTest.php tests/Feature/OpnamListTest.php tests/Feature/OpnamItemEditTest.php` (38/38), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (170/170), `git status --short`, `git diff --stat`, `TZ=Asia/Jakarta date`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Nilai lama di luar daftar tidak dinormalisasi dan tetap tampil dari snapshot; validasi hanya untuk input baru atau nilai yang diganti. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 19:03 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`ini kan temen aku anisa pake jenis satuannya ada 5 ya itu tetep bisa ke hitung kan?`"
+**Output summary:** Menjawab bahwa perhitungan tetap bisa untuk lima satuan, karena `OpnamCostCalculator` tidak bergantung nama satuan dan `unit_price` diambil dari tarif `material_spec_id + unit_id + effective_from ≤ tanggal_opnam`; validasi backend hanya `exists:units,id`. Ditemukan celah: `OpnamController::edit()` baris 309 membatasi satuan hanya `m²`/`m`, sehingga satuan lain tidak bisa dipilih di edit dan item lama berisiko mengganti `unit_id` beserta tarifnya saat disimpan.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 19:15 WIB)
+**Commands:** `grep` untuk `Unit::`/`unit_id` di `app`, `read app/Services/OpnamCostCalculator.php`, `artisan tinker --execute` untuk daftar satuan dan tarif di DB dev.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. DB dev saat ini 4 satuan: `m²`, `unit`, `m²` (duplikat), `m`.
+
+## 2026-11-27 19:06 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`coba baca kode tugas temen saya nisa dia pakai satuan apa ajan dan perhitungannya gimana`"
+**Output summary:** Membaca model `Unit`/`Tariff`, `UnitController`, migrasi `units`/`tariffs`, `UnitTest`, `DatabaseSeeder`, `routes/web.php`, dan aturan tarif di `prd.md`. Temuan: `Unit` hanya `code` (unik) + `name` (boleh duplikat), tanpa enum/seed; tarif = `material_spec_id + unit_id + price decimal(15,2) + effective_from`, tanpa tanggal berakhir, tanpa `updated_at`, dan belum ada `TariffController`/UI CRUD; aturan BR-02/06/10/31/33; subtotal dihitung di modul Regina (`OpnamCostCalculator`), bukan di modul Anisa. Menguatkan celah edit dan duplikat nama pada JS wizard.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan 19:15 WIB)
+**Commands:** `glob` dan `grep` untuk controller/model/migrasi, `read` model + controller + migrasi + test + seeder, `grep prd.md` untuk BR-02/06/10/14/31/33, `artisan tinker --execute` untuk tarif per satuan.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Modul Anisa tidak mengubah tabel milik Regina.
+
+## 2026-11-27 19:13 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan yang akan menyamakan bagian anisa di tempat saya`"
+**Output summary:** Menyelaraskan daftar satuan di modul Opnam dengan master Anisa. `OpnamController::edit()` diubah dari `Unit::whereIn('name', ['m²', 'm'])` menjadi `Unit::orderBy('id')->get()`, sehingga seluruh satuan Anisa tersedia di halaman edit draft. Komentar filter satuan di `create.blade.php` diperbarui. Dua test ditambahkan: satuan `unit` tetap tersedia di edit tanpa mengubah `tariff_id`/`unit_price`, dan wizard create menghitung `2 × 1750 = 3500` dari tarif satuan `unit`. Hasil: 22/22 pada dua file target dan 172/172 untuk suite lengkap (835 assertions). Tidak ada perubahan pada master Anisa, migrasi, atau model.
+**Files:** `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/create.blade.php`, `tests/Feature/OpnamItemEditTest.php`, `tests/Feature/OpnamDraftTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/OpnamItemEditTest.php tests/Feature/OpnamDraftTest.php` (22/22), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Masih ada catatan: JS wizard mereduksi opsi satuan yang namanya sama menjadi satu (Anisa mengizinkan nama duplikat dengan `code` berbeda), belum diubah karena di luar kesepakatan. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:09 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`setiap saya promt langsung catat ke prompt_log.md dan promt_history.md jangan minta persetujuan mulu`"
+**Output summary:** Menerima aturan pencatatan ganda untuk setiap prompt Regina di mode Plan maupun Build tanpa meminta persetujuan: blok lengkap di `PROMPT_LOG.md` dan entri timestamp + isi persis di `prompt_history.md`. Menyampaikan satu kalimat kendala Plan mode.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan pada prompt `jalankan`)
+**Commands:** `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk mengambil waktu kirim asli tiap prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Timestamp asli dari data sesi OpenCode. Aturan ini mengulang instruksi 17:38/17:42 WIB. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:13 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`Satu kendala teknis: saya saat ini masih di Plan mode, dan mode ini melarang penulisan file — jadi prompt ini belum bisa saya tulis sekarang. Silakan pindah ke Build mode (switch agent). Begitu pindah, saya akan langsung menulis entri prompt ini (memakai waktu kirim asli dari data sesi) dan setiap prompt berikutnya otomatis, tanpa konfirmasi. \nseperti ini ga perlu lagi`"
+**Output summary:** Memahami bahwa penjelasan panjang tentang kendala Plan mode tidak perlu diulang; menyatakan tidak akan mengulanginya lagi.
+**Files:** `PROMPT_LOG.md`, `prompt_history.md` (pencatatan dijalankan pada prompt `jalankan`)
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Isi prompt berupa kutipan balasan agent sebelumnya yang ditolak Regina.
+
+## 2026-11-27 20:17 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`hazel sudah bikin review opnama kenapa saat saya klik buka review di data opname malah error?`"
+**Output summary:** Menyelidik tanpa mengubah file: rute `admin.review-opnams.show` dan `route()` di `opnams/index.blade.php:82` sudah benar. Penyebab error adalah `authorizeReview()` pada `ReviewOpnamController::show()` yang menolak 422 untuk status selain `menunggu_review`, sementara halaman Data Opname menampilkan semua status (sebagian besar `draft` karena PT-07 masih parkir). Mengajukan opsi menyembunyikan tombol atau mengaktifkan PT-07.
+**Files:** - (baca saja)
+**Commands:** `grep` pada views/routes/tests, `read` controller, model `Opnam`, dan view terkait.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Belum ada perubahan kode saat itu.
+
+## 2026-11-27 20:30 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`Tombol Buka Review mengarah ke review keseluruhan opname, mulai dari status kondisi sampai bagian waktu, bukan ke satu bagian tertentu saja.`"
+**Output summary:** Memperbaiki pemahaman: tombol memang ditujukan ke review keseluruhan opnam, bukan satu bagian tertentu. Opsi menyembunyikan tombol dibatalkan. Rencana revisi: `show()` boleh dibuka untuk semua status, sedangkan `approve()`, `returnForRevision()`, dan `revisi()` tetap dibatasi `menunggu_review`. Regina tidak menjawab pertanyaan tentang "bagian waktu", jadi tidak ditebak dan tidak ditambahkan.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `kondisi`/`waktu` di views dan `Review` di `tasklist.md`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada seksi baru yang ditambahkan.
+
+## 2026-11-27 20:33 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jangan ubah apapun selain yang saya minta`"
+**Output summary:** Membatasi cakupan secara ketat: hanya perbaikan agar tombol "Buka Review" membuka review keseluruhan opnam tanpa error. Membatalkan rencana menambah seksi, menyembunyikan tombol aksi, dan menyentuh file lain. Belum ada file yang diubah saat itu.
+**Files:** -
+**Commands:** -
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:39 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Memperbaiki error tombol "Buka Review": `ReviewOpnamController::show()` sekarang hanya memeriksa role admin (403) dan tidak lagi menolak status di luar `menunggu_review`, sehingga halaman review keseluruhan opnam bisa dibuka dari Data Opname. Method `approve()`, `returnForRevision()`, `revisi()`, dan method revisi item tetap memakai `authorizeReview()` (422 untuk status lain). Test `HazelReviewOpnamTest` disesuaikan: opnam berstatus `disetujui` kini mengembalikan 200 dan menampilkan "Rincian Pekerjaan". Suite lengkap 172/172 lolos (836 assertions). Tidak ada view, tombol, seksi baru, migrasi, atau modul lain yang diubah; badge status yang hard-coded di view sengaja dibiarkan sesuai instruksi "jangan ubah apa pun selain yang saya minta".
+**Files:** `app/Http/Controllers/Admin/ReviewOpnamController.php`, `tests/Feature/HazelReviewOpnamTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/HazelReviewOpnamTest.php tests/Feature/HazelRevisiOpnamTest.php` (10/10), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 20:51 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`di bagian saya format tanggalnya di samakan dengan yang lain`"
+**Output summary:** Mencari seluruh pemakaian format tanggal di views. Menemukan halaman modul Regina (`mine`, `index`, `show`, `edit`) memakai `d M Y`, sama seperti modul lain; satu-satunya yang berbeda adalah `create.blade.php:151` yang menampilkan `Y-m-d` mentah. Mengira maksudnya adalah menyamakan baris tersebut.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `format(` dan `tanggal` pada `resources/views`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file.
+
+## 2026-11-27 20:54 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`bukan itu maksud saya, itu format tanggal di tugas saya sama kan dengan format tanggal yang digunakan oleh anggota lain`"
+**Output summary:** Menjawab bahwa format tampilan tanggal di modul Regina sudah sama dengan anggota lain (`d M Y`); PDF/ekspor memakai `d/m/Y` secara konsisten di semua modul dan input `type="date"` memakai `Y-m-d` di semua modul.
+**Files:** -
+**Commands:** `grep` pada views (baca saja).
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Pertanyaan, bukan permintaan perubahan.
+
+## 2026-11-27 20:54 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`masuk saya jadi 2 format tanggal seperti tanggal dari dan tanggal sampai`"
+**Output summary:** Memperbaiki pemahaman: yang dimaksud adalah **filter tanggal**, bukan format tampilan. Halaman Regina memakai satu input `tanggal`, sementara Hazel/Direksi memakai `tanggal_dari` + `tanggal_sampai` dan Rifqy memakai `dari` + `sampai`. Menyusun rencana: dua input label pada `mine.blade.php` dan `index.blade.php`, filter rentang `whereDate >= / <=` di `indexMine()`/`index()`, serta penyesuaian `OpnamMineTest` dan `OpnamListTest`. Menandai bahwa ini membalik keputusan 03:20 WIB ("tanggal satu input").
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `tanggal_dari|tanggal_sampai|dari|sampai|tanggal` pada views, `read` controller dan test.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Belum ada perubahan file.
+
+## 2026-11-27 21:02 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menyamakan filter tanggal modul Regina dengan pola anggota lain: `opnams/mine.blade.php` dan `opnams/index.blade.php` kini memakai dua input berlabel `tanggal_dari` / `tanggal_sampai`; `OpnamController::index()` dan `indexMine()` mengganti `whereDate('tanggal_opnam', $tanggal)` dengan rentang `>= $dari` dan `<= $sampai` (sama seperti `ReviewOpnamController::index()`); `OpnamMineTest` dan `OpnamListTest` diubah ke kasus filter rentang dua batas. Suite lengkap 172/172 lolos (846 assertions). Tidak ada modul lain, view lain, atau dokumen progres yang diubah.
+**Files:** `app/Http/Controllers/OpnamController.php`, `resources/views/opnams/mine.blade.php`, `resources/views/opnams/index.blade.php`, `tests/Feature/OpnamMineTest.php`, `tests/Feature/OpnamListTest.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test tests/Feature/OpnamMineTest.php tests/Feature/OpnamListTest.php` (14/14), `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 21:16 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`tanggal dari dan tanggal sampai pindakan kebawah dan sejejerkan, tiga kolom lain paskan saja`"
+**Output summary:** Menata ulang form filter Halaman Data Opname: `tanggal_dari` dan `tanggal_sampai` dipindah ke baris kedua, sejajar satu sama lain (masing-masing 180px) bersama tombol Filter; tiga kolom lain (pencarian, status, operator) dibuat `flex: 1` dengan `min-width` agar pas mengisi baris pertama. Hanya `opnams/index.blade.php` yang diubah; `opnams/mine.blade.php` sengaja tidak disentuh karena hanya memiliki dua kolom lain, bukan tiga. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/opnams/index.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 21:36 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`saat saya buka review, status nya berbeda dari status yang ada di data opname`"
+**Output summary:** Menemukan penyebabnya: `admin/review-opnams/show.blade.php:33` menuliskan teks badge "Menunggu Review" secara hard-coded, sementara kelas `badge-{{ $opnam->status }}` mengikuti status asli. Di `opnams/index.blade.php` teks badge diambil dari peta `$statusLabels[$opnam->status]`, sehingga opnam `draft` tampil beda saat dibuka di review. Mengajukan perbaikan satu titik di view review memakai peta label yang sama.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `statusLabels` dan `badge-` pada views.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file saat itu.
+
+## 2026-11-27 21:37 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menyamakan label status di halaman review dengan Data Opname: `admin/review-opnams/show.blade.php` kini memuat peta `$statusLabels` yang sama (`Draft`, `Menunggu Review`, `Perlu Revisi`, `Menunggu Approval Direksi`, `Ditolak`, `Disetujui`, `Dokumen Terbit`) dan menampilkan `$statusLabels[$opnam->status] ?? $opnam->status`, menggantikan teks hardcoded "Menunggu Review". Kelas warna badge dan tombol aksi review tidak diubah. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/admin/review-opnams/show.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 21:45 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`di bagian opname saya yang tanggal dari dan tanggal sampai pindahkan ke bawah dan tambahkan botton filter. kolom yang lain sesuaikan saja dengan layout yang ada`"
+**Output summary:** Mengajukan penataan ulang form filter `opnams/mine.blade.php` mengikuti pola halaman Data Opname: dua baris, tanggal di baris bawah sejajar dengan tombol Filter; kolom pencarian dan status tetap di baris atas. `onchange` pada input tanggal dilepas karena filter sekarang dijalankan tombol.
+**Files:** - (baca saja)
+**Commands:** `read` pada `resources/views/opnams/mine.blade.php`.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file saat itu.
+
+## 2026-11-27 21:49 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Form filter Opname Saya dijadikan dua baris: baris pertama berisi pencarian (`q`, flex) dan status (auto-submit tetap); baris kedua berisi `tanggal_dari` + `tanggal_sampai` sejajar (180px) dan tombol **Filter** (90px). `onchange="this.form.submit()"` dilepas dari kedua input tanggal. Controller, route, test, dan view lain tidak diubah. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.
+
+## 2026-11-27 22:06 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`untuk fungsi yang klik langsung cari di hapus aja karna sekarang udah ada tomblok filter untuk mencari`"
+**Output summary:** Memahami rằng auto-submit pada `<select name="status">` di `opnams/mine.blade.php` harus dihapus karena pencarian sekarang memakai tombol Filter. Badge status di tabel yang bisa diklik sengaja diusulkan tetap dipertahankan karena merupakan fitur lama yang diminta Regina; tidak ada keputusan untuk menghapusnya.
+**Files:** - (baca saja)
+**Commands:** `grep` untuk `onchange`/`Klik untuk filter` pada views.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Plan. Tidak ada perubahan file saat itu.
+
+## 2026-11-27 22:11 WIB
+**Pemilik:** Regina
+**AI:** opencode/hy4-flash-free (Hy4 flash Free)
+**Prompt:** "`jalankan`"
+**Output summary:** Menghapus `onchange="this.form.submit()"` dari `<select name="status">` di `opnams/mine.blade.php`. Perubahan status sekarang baru diterapkan saat tombol Filter diklik, konsisten dengan input tanggal. Badge status yang bisa diklik di tabel sengaja tidak diubah. Suite lengkap 172/172 lolos (846 assertions).
+**Files:** `resources/views/opnams/mine.blade.php`, `PROMPT_LOG.md`, `prompt_history.md`
+**Commands:** `/Applications/MAMP/bin/php/php8.5.2/bin/php artisan test` (172/172), `sqlite3 -readonly ~/.local/share/opencode/opencode.db` untuk timestamp asli prompt.
+**Manual modifications:** -
+**Notes / follow-up:** Mode: Build. Timestamp memakai waktu kirim asli dari data sesi OpenCode. Sesuai instruksi Pemilik, `AGENTS.md` tidak disentuh.

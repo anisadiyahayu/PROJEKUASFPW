@@ -11,7 +11,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <div>
             <h1>{{ $opnam->opnam_number }}</h1>
-            <p class="subtitle">{{ $opnam->ship?->name }} &nbsp;•&nbsp; {{ $opnam->tanggal_opnam?->format('d M Y') }} &nbsp;•&nbsp; Estimasi {{ $rupiah($opnam->total_biaya) }}</p>
+            <p class="subtitle">{{ $opnam->ship?->name }} &nbsp;•&nbsp; Jenis Kapal: {{ $opnam->jenis_kapal ?: '-' }} &nbsp;•&nbsp; {{ $opnam->tanggal_opnam?->format('d M Y') }} &nbsp;•&nbsp; Estimasi {{ $rupiah($opnam->total_biaya) }}</p>
         </div>
         <a href="{{ route('petugas.opnams.index') }}" class="btn btn-light">← Kembali</a>
     </div>

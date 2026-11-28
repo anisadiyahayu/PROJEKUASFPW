@@ -232,3 +232,48 @@ test('item tidak dapat diubah pada status perlu_revisi', function () {
         ->put(route('petugas.opnams.items.update', [$data['opnam'], $data['item']]), dataItemEdit($data))
         ->assertForbidden();
 });
+
+test('halaman edit draft menampilkan jenis kapal dari snapshot', function () {
+    $data = siapkanDraftUntukEdit();
+    $data['opnam']->update(['jenis_kapal' => 'Kapal Kargo']);
+
+    $this->actingAs($data['petugas'])
+        ->get(route('petugas.opnams.edit', $data['opnam']))
+        ->assertOk()
+        ->assertSee('Jenis Kapal: Kapal Kargo');
+});
+
+test('satuan master Anisa di luar m² dan m tersedia di edit serta tidak mengubah tarif', function () {
+    $data = siapkanDraftUntukEdit();
+    $unitLain = Unit::create(['code' => 'UNIT-ANISA', 'name' => 'unit']);
+    $tarifLain = Tariff::create([
+        'material_spec_id' => $data['material']->id,
+        'unit_id' => $unitLain->id,
+        'created_by' => $data['admin']->id,
+        'price' => 1750,
+        'effective_from' => '2026-01-01',
+    ]);
+    $this->actingAs($data['petugas']);
+
+    $this->put(route('petugas.opnams.items.update', [$data['opnam'], $data['item']]), dataItemEdit($data, [
+        'unit_id' => $unitLain->id,
+        'volume' => 1,
+    ]))->assertRedirect(route('petugas.opnams.edit', $data['opnam']));
+
+    expect($data['item']->fresh()->tariff_id)->toBe($tarifLain->id);
+
+    $this->get(route('petugas.opnams.edit', $data['opnam']))
+        ->assertOk()
+        ->assertSee('value="'.$unitLain->id.'"', false)
+        ->assertSee('>unit</option>', false);
+
+    $this->put(route('petugas.opnams.items.update', [$data['opnam'], $data['item']]), dataItemEdit($data, [
+        'unit_id' => $unitLain->id,
+        'volume' => 2,
+    ]))->assertRedirect(route('petugas.opnams.edit', $data['opnam']));
+
+    $item = $data['item']->fresh();
+    expect($item->tariff_id)->toBe($tarifLain->id)
+        ->and((float) $item->unit_price)->toBe(1750.0)
+        ->and((float) $item->subtotal)->toBe(3500.0);
+});

@@ -424,3 +424,49 @@ test('satuan duplikat tetap dikirim supaya label opsi tidak kosong', function ()
         ->assertOk()
         ->assertSee('"id":'.$unitDuplikat->id.',"name":"m\\u00b2"', false);
 });
+
+test('wizard menghitung dari tarif satuan Anisa di luar m² dan m', function () {
+    $data = siapkanDataOpnam();
+    $unitLain = Unit::create(['code' => 'UNIT-ANISA', 'name' => 'unit']);
+    $tarifLain = Tariff::create([
+        'material_spec_id' => $data['material']->id,
+        'unit_id' => $unitLain->id,
+        'created_by' => $data['petugas']->id,
+        'price' => 1750,
+        'effective_from' => '2026-01-01',
+    ]);
+    $this->actingAs($data['petugas']);
+
+    $this->post(route('petugas.opnams.store-step'), [
+        'step' => 1,
+        'ship_id' => $data['ship']->id,
+        'tanggal_opnam' => '2026-06-25',
+        'lokasi' => 'Dock 01 — Graving Dock',
+    ])->assertRedirect(route('petugas.opnams.create', ['step' => 2]));
+
+    $this->post(route('petugas.opnams.store-step'), [
+        'step' => 2,
+        'items' => [[
+            'uid' => 'item-unit',
+            'work_category_id' => $data['category']->id,
+            'work_type_id' => $data['type']->id,
+            'material_spec_id' => $data['material']->id,
+            'unit_id' => $unitLain->id,
+            'volume' => 2,
+            'kompleksitas' => 'low',
+            'description' => 'Pekerjaan dengan satuan unit',
+        ]],
+    ])->assertRedirect(route('petugas.opnams.create', ['step' => 3]));
+
+    $this->post(route('petugas.opnams.store-step'), ['step' => 3])
+        ->assertRedirect(route('petugas.opnams.create', ['step' => 4]));
+    $this->post(route('petugas.opnams.store-step'), ['step' => 4])
+        ->assertRedirect(route('petugas.opnams.create', ['step' => 5]));
+    $this->post(route('petugas.opnams.store-step'), ['step' => 5])
+        ->assertRedirect(route('petugas.opnams.create'));
+
+    $item = OpnamItem::firstOrFail();
+    expect($item->tariff_id)->toBe($tarifLain->id)
+        ->and((float) $item->unit_price)->toBe(1750.0)
+        ->and((float) $item->subtotal)->toBe(3500.0);
+});

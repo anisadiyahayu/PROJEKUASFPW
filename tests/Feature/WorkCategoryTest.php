@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\WorkCategory;
+use App\Models\WorkType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -40,6 +41,72 @@ test('admin dapat menambahkan kategori dengan deskripsi nullable', function () {
     $this->assertDatabaseHas('work_categories', [
         'name' => 'Pekerjaan Mesin',
         'description' => null,
+        'is_active' => true,
+        'deleted_at' => null,
+    ]);
+});
+
+test('admin dapat menonaktifkan kategori tanpa menghapus relasi jenis pekerjaan lama', function () {
+    $admin = penggunaKategori();
+    $category = WorkCategory::create(['name' => 'Kategori Historis']);
+    $workType = WorkType::create([
+        'work_category_id' => $category->id,
+        'name' => 'Jenis Historis',
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.work-categories.update', $category), [
+            'name' => $category->name,
+            'description' => $category->description,
+            'is_active' => '0',
+        ])
+        ->assertRedirect(route('admin.work-categories.index'));
+
+    $this->assertDatabaseHas('work_categories', [
+        'id' => $category->id,
+        'is_active' => false,
+        'deleted_at' => null,
+    ]);
+    $this->assertDatabaseHas('work_types', [
+        'id' => $workType->id,
+        'work_category_id' => $category->id,
+        'deleted_at' => null,
+    ]);
+    expect($workType->fresh()->workCategory->is($category->fresh()))->toBeTrue();
+});
+
+test('kategori nonaktif tetap tampil di halaman pengelolaan', function () {
+    $admin = penggunaKategori();
+    WorkCategory::create([
+        'name' => 'Kategori Nonaktif Terlihat',
+        'is_active' => false,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.work-categories.index'))
+        ->assertOk()
+        ->assertSee('Kategori Nonaktif Terlihat')
+        ->assertSee('Nonaktif');
+});
+
+test('admin dapat mengaktifkan kembali kategori', function () {
+    $admin = penggunaKategori();
+    $category = WorkCategory::create([
+        'name' => 'Kategori Diaktifkan Kembali',
+        'is_active' => false,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.work-categories.update', $category), [
+            'name' => $category->name,
+            'description' => '',
+            'is_active' => '1',
+        ])
+        ->assertRedirect(route('admin.work-categories.index'));
+
+    $this->assertDatabaseHas('work_categories', [
+        'id' => $category->id,
+        'is_active' => true,
         'deleted_at' => null,
     ]);
 });
