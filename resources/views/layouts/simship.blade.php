@@ -747,7 +747,6 @@
             <header class="topbar">
                 <div class="crumbs">SIMSHIP &gt; <strong>@yield('crumb', 'Dashboard')</strong></div>
                 <div class="topbar-user">
-                    <span aria-hidden="true">&#128276;</span>
                     <div class="avatar">{{ $initials }}</div>
                     <div><strong>{{ auth()->user()->name }}</strong><small>{{ $roleLabel }}</small></div>
                 </div>
