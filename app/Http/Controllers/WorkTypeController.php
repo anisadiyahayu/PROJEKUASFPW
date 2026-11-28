@@ -7,6 +7,7 @@ use App\Models\WorkType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class WorkTypeController extends Controller
@@ -23,7 +24,7 @@ class WorkTypeController extends Controller
 
     public function create(): View
     {
-        $categories = WorkCategory::query()->orderBy('name')->get();
+        $categories = WorkCategory::query()->where('is_active', true)->orderBy('name')->get();
 
         return view('work-types.create', compact('categories'));
     }
@@ -32,7 +33,12 @@ class WorkTypeController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'work_category_id' => ['required', 'integer', 'exists:work_categories,id,deleted_at,NULL'],
+            'work_category_id' => [
+                'required',
+                'integer',
+                Rule::exists('work_categories', 'id')
+                    ->where(fn ($query) => $query->where('is_active', true)->whereNull('deleted_at')),
+            ],
         ]);
 
         WorkType::create($data);
@@ -43,16 +49,25 @@ class WorkTypeController extends Controller
 
     public function edit(WorkType $workType): View
     {
-        $categories = WorkCategory::query()->orderBy('name')->get();
+        $categories = WorkCategory::query()->where('is_active', true)->orderBy('name')->get();
 
-        return view('work-types.edit', compact('workType', 'categories'));
+        $inactiveCategory = $workType->workCategory?->is_active
+            ? null
+            : $workType->workCategory;
+
+        return view('work-types.edit', compact('workType', 'categories', 'inactiveCategory'));
     }
 
     public function update(Request $request, WorkType $workType): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'work_category_id' => ['required', 'integer', 'exists:work_categories,id,deleted_at,NULL'],
+            'work_category_id' => [
+                'required',
+                'integer',
+                Rule::exists('work_categories', 'id')
+                    ->where(fn ($query) => $query->where('is_active', true)->whereNull('deleted_at')),
+            ],
         ]);
 
         $workType->update($data);

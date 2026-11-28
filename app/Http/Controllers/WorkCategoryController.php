@@ -30,7 +30,9 @@ class WorkCategoryController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:work_categories,name'],
             'description' => ['nullable', 'string'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
+        $data['is_active'] = $request->has('is_active') ? (bool) $data['is_active'] : true;
 
         WorkCategory::create($data);
 
@@ -53,7 +55,11 @@ class WorkCategoryController extends Controller
                 Rule::unique('work_categories', 'name')->ignore($workCategory->id),
             ],
             'description' => ['nullable', 'string'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
+        if (array_key_exists('is_active', $data)) {
+            $data['is_active'] = (bool) $data['is_active'];
+        }
 
         $workCategory->update($data);
 

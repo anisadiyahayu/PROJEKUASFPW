@@ -13,6 +13,13 @@ Daftar pekerjaan dan status pengerjaan. Acuan persyaratan ada di `prd.md`, dan p
 | ID | Item | Pemilik | Status | Catatan |
 |---|---|---|---|---|
 | DB-01 | USERS | Halvina | Belum | |
+| DB-02 | OWNERS | Rifqy | Belum | |
+| DB-03 | SHIPS | Rifqy | Belum | ⚠ Kolom `jenis_kapal` ditambahkan di luar ERD atas permintaan Regina 2026-11-25; perlu konfirmasi Rifqy. |
+| DB-04 | UNITS | Anisa | Selesai | CRUD dan UnitSeeder tersedia; 17 satuan. UnitTest lulus pada audit final. |
+| DB-05 | WORK_CATEGORIES | Anisa | Selesai | CRUD, soft delete, dan `is_active` tersedia; 8 kategori. Kategori aktif menjadi pilihan WorkType; kategori nonaktif tetap tersimpan dan dapat diaktifkan kembali. WorkCategoryTest lulus. |
+| DB-06 | WORK_TYPES | Anisa | Selesai | CRUD, soft delete, dan WorkTypeSeeder tersedia; 54 WorkType. WorkTypeTest lulus. |
+| DB-07 | MATERIAL_SPECS | Anisa | Selesai | MaterialSpecSeeder idempotent terintegrasi setelah WorkTypeSeeder; 271 spec aktif pada 30 WorkType; 0 soft-deleted, duplikat, atau orphan. MaterialSpecTest lulus. |
+| DB-08 | TARIFFS | Anisa | Dikerjakan | Implementasi TariffSeeder selesai dan idempotent; 81 tarif berhasil dibuat dengan `effective_from=2019-01-01`. Data belum lengkap: 403 nilai tertunda karena pemetaan MaterialSpec/Unit belum dapat dipastikan. Lihat inventarisasi di prompt_history_anisa.md. |
 | DB-02 | OWNERS | Rifqy | Perlu konfirmasi | Disentuh lewat `ShipSeeder` sinkronisasi kapal: `firstOrCreate` OWNERS dari `owner_name`, `address` NULL, tidak menimpa existing; tidak ada kolom baru. CRUD owner mandiri (AD-02) belum dikerjakan. |
 | DB-03 | SHIPS | Rifqy | Perlu konfirmasi | `database/seeders/ShipSeeder.php` + didaftarkan di `DatabaseSeeder` (15 kapal; hanya kolom ERD; `hull_number`=`imo_number`; `jenis_kapal`=`ship_type` verbatim; `firstOrCreate` OWNERS `address` NULL + `updateOrCreate`; transaction; re-runnable). Verifikasi 171/171 `artisan test`. `hull_number`-mapping & PRD 9 no.18/21 tetap terbuka.  ⚠ Kolom `jenis_kapal` ditambahkan di luar ERD atas permintaan Regina 2026-11-25; perlu konfirmasi Rifqy.  |
 | DB-04 | UNITS | Anisa | Belum | |
@@ -60,8 +67,8 @@ Urutan pengerjaan:
 | PT-11 | Mengekspor Riwayat Aktivitas ke PDF | Hazel | Selesai | Ekspor PDF mengikuti filter aktif dan cakupan role; `ActivityLogPdfExporter` memakai `Dompdf\Dompdf`. |
 | AD-01 | Mengelola Pengguna | Halvina | Belum | Password minimal 8 karakter, tanpa aturan lain (keputusan tim). |
 | AD-02 | Mengelola Data Owner dan Kapal | Rifqy | Belum | |
-| AD-03 | Mengelola Kategori Pekerjaan | Anisa | Selesai | CRUD + soft delete di `admin.work-categories.*`; WorkCategoryTest lulus. |
-| AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Selesai | CRUD + soft delete di `admin.work-types.*`, `admin.material-specs.*`, `admin.units.*`; test terkait lulus. |
+| AD-03 | Mengelola Kategori Pekerjaan | Anisa | Selesai | CRUD, soft delete, dan status aktif/nonaktif di `admin.work-categories.*`; kategori aktif dapat dipilih untuk WorkType, kategori nonaktif tetap tersimpan dan dapat diaktifkan kembali. WorkCategoryTest lulus. |
+| AD-04 | Mengelola Jenis Pekerjaan, Material, Satuan, Tarif | Anisa | Selesai | Fitur CRUD master WorkType, MaterialSpec, Unit, dan Tarif tersedia; test terkait lulus. Penyelesaian CRUD tidak berarti seluruh data Tarif lengkap: DB-08 masih parsial (81 tarif dibuat, 403 nilai tertunda). |
 | AD-05 | Melihat Daftar Opnam | Regina | Selesai | Pencarian, filter status/operator/tanggal, paginasi (BR-27); tombol mata membuka detail baca-saja `admin.opnams.show`. |
 | AD-06 | Memeriksa Opnam | Hazel | Selesai | Daftar dan detail review dengan pencarian, filter tanggal, rincian pekerjaan, biaya, dan lampiran. |
 | AD-07 | Merevisi Data Opnam | Hazel | Selesai | Revisi saat `menunggu_review` oleh Admin; data, item, dan total dihitung ulang memakai `OpnamCostCalculator`, perubahan tercatat di ACTIVITY_LOGS. |

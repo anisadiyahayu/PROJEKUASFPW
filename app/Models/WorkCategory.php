@@ -10,7 +10,14 @@ class WorkCategory extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'is_active'];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
 
     public function workTypes(): HasMany
     {

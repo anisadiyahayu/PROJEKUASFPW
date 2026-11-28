@@ -364,8 +364,7 @@ Usulan aturan:
 3. Jika pengguna mengganti material, hanya material aktif yang boleh dipilih.
 4. Snapshot tariff_id, unit_price, subtotal, dan total historis harus tetap dipertahankan.
 
-Apakah kamu setuju dengan aturan tersebut? Kalau iya, kita bisa koordinasikan perubahan validasi dan test pada modul Opnam supaya tidak mengganggu implementasi yang sudah ada 
-saya regina dan anisa butuh konfirmasi dari saya, jawaban yang pas apa?
+Apakah kamu setuju dengan aturan tersebut? Kalau iya, kita bisa koordinasikan perubahan validasi dan test pada modul Opnam supaya tidak mengganggu implementasi yang sudah ada saya regina dan anisa butuh konfirmasi dari saya, jawaban yang pas apa?
 
 ---
 
