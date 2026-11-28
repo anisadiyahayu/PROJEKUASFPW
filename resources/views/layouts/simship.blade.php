@@ -718,11 +718,7 @@
     <div class="app">
         <aside class="sidebar">
             <div class="brand" style="display: flex; align-items: center; gap: 10px;">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M3 15h18l-2 4H5l-2-4Z" />
-                    <path d="M12 3v9M7 12h10" />
-                    <path d="M12 3c2 1.5 3 3.5 3 6h-6c0-2.5 1-4.5 3-6Z" />
-                </svg>
+                <img src="{{ asset('images/logo.png') }}" alt="Logo PT" style="height:40px;">
                 <div>
                     <strong>SIMSHIP</strong>
                     <small>Shipyard Management</small>
